@@ -14,6 +14,10 @@ syscalls.md
 
 Syscall generation -> abigen tool
 
+https://github.com/fuchsia-mirror/zircon/blob/master/kernel/syscalls/syscalls.cpp
+
+build-x64-clang/gen/global/include/zircon/syscall-kernel-wrappers.inc
+
 ### Monitor Context Switches
 
 Linux:  

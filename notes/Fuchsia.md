@@ -25,6 +25,19 @@
 
 
 
+Fuchsia/Zircon on Huawei (Honor Play):
+
+- <https://www.googlewatchblog.de/2018/11/fuchsia-android-nachfolger-huawei/>
+- <https://www.computerbase.de/2018-11/fuchsia-os-honor-play/>
+
+
+
+Bluetooth Tests/Show
+
+- <https://www.googlewatchblog.de/2018/11/fuchsia-googles-betriebssystem-testern/>
+
+
+
 ### Security in Zepyr and Fuchsia
 
 #### What is Fuchsia
