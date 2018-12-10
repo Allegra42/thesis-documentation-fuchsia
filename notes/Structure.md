@@ -30,6 +30,7 @@
 ### Linux
 
 - Concepts - specific
+  - Design decisions: http://vger.kernel.org/lkml/#s15-3
 - Example Implementation
   - Platform Introduction, Development Setup
 
@@ -47,10 +48,12 @@
   - System Calls and POSIX compatibility, Core libs
   - Driver Development
     - Kernel objects for drivers - Interrupts, Resource, Log
-    - Device Protocoll (Hooks)
-    - DDKTL - framework for writing drivers in fuchsia
+    - Device Protocol (Hooks)
+      - ioctl -> FIDL https://fuchsia.googlesource.com/docs/+/master/development/languages/fidl/README.md (FIDL string -> length limitation needed)
+    - DDKTL - framework for writing drivers in fuchsia [ulib/ddktl](https://github.com/Allegra42/zircon/blob/master/system/ulib/ddktl)
+  - Kernel Concept -> no academic microkernel -> see https://fuchsia.googlesource.com/zircon/+/HEAD/docs/ddk/getting_started.md (Process / protocol mapping) (still microkernel?)
 - Example Implementation
-  - Platform Introduction, Development Setup
+  - Platform Introduction, Development Setup, Driver Usage & Handling
 
 ### Evaluation
 
