@@ -1,0 +1,83 @@
+#!/bin/bash
+
+
+TEXROOT="MasterThesis"
+OUTDIR="build"
+SRCDIR="tex"
+
+
+build_tex()
+{
+    echo "############################################################################"
+    echo "Building PDFTeX for ${TEXROOT}"
+    echo "############################################################################"
+    pdflatex -shell-escape -synctex=1 -interaction=nonstopmode -output-directory=${OUTDIR} ${SRCDIR}/${TEXROOT}.tex
+}
+
+build_bib()
+{
+    echo "############################################################################"
+    echo "Running Biber for ${TEXROOT}"
+    echo "############################################################################"
+    biber ${OUTDIR}/${TEXROOT} --input-directory=${SRCDIR}
+}
+
+build_all()
+{
+    build_tex
+    build_bib
+    build_tex
+}
+
+print_help()
+{
+    echo "Usage: texmake [all|tex|bib|help]"
+    echo "       <texmake> without an option runs <texmake all>"
+    echo " "
+    echo "       Set LaTeX rootfile, src and build directory within this script."
+    echo "       It's designed for the use with minted, biber and the following structure:"
+    echo "          rootdir"
+    echo "              |"
+    echo "              -- src (.tex, .bib)"
+    echo "              |"
+    echo "              -- pictures "
+    echo "              |"
+    echo "              -- build (output directory)"
+}
+
+
+
+
+
+if [ "$1" == "" ];
+then
+    build_all
+    exit
+fi
+
+while [ "$1" != "" ]; do
+    case $1 in
+        all )                   build_all
+                                exit
+                                ;;
+
+        tex )                   build_tex
+                                exit
+                                ;;
+
+        bib )                   build_bib
+                                exit
+                                ;;
+
+        help | -h | --help )    print_help
+                                exit
+                                ;;             
+
+        * )                     print_help
+                                exit 1
+                                ;;
+                    
+
+    esac
+    shift
+done

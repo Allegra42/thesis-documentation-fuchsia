@@ -1,0 +1,113 @@
+\documentclass[a4paper, twoside, 12pt]{book}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx, changepage}
+\graphicspath{ {pictures/} }
+\usepackage{subfig}
+\usepackage{color, soul}
+\usepackage{hyperref}
+\usepackage[]{url}
+\usepackage[cache=false, outputdir=build]{minted}
+%\usepackage{subfigure}
+\usepackage{textcomp}
+\usepackage[nohyperlinks, withpage]{acronym}
+%\usepackage{array}
+%\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{pgfplots}
+\usepackage{pdfpages}
+\geometry{a4paper, top=35mm, left=30mm, right=25mm, bottom=35mm, headsep=10mm, footskip=12mm}
+\usepackage[backend=biber, style=numeric, citestyle=numeric]{biblatex}
+
+\apptocmd{\UrlBreaks}{\do\f\do\m}{}{}
+\setcounter{biburllcpenalty}{9000}% Kleinbuchstaben
+\setcounter{biburlucpenalty}{9000}% Großbuchstaben
+
+% \addbibresource{bib.bib}
+
+\newenvironment{code}{\captionsetup{type=listing}}{}
+
+
+
+\begin{document}
+
+\frontmatter
+%maketitel
+
+\begin{titlepage}
+{
+\centering
+\textsc{\LARGE University of Pforzheim} \par 
+\vspace{0.3cm}
+\textsc{\LARGE School of Engineering} \par 
+\vspace{1.0cm}
+\textsc{\Large Master Program Embedded Systems} \par 
+\vspace{3.0cm}
+\textsc{\Large Master Thesis} \par 
+\vspace{1.0cm}
+\huge\textbf{The Zircon Kernel \\ A Consideration of a Microkernel Approach and its Effects on Driver Development} \par 
+\vspace{4.3cm}
+\Large 
+}
+
+% TODO inovex, inovex supervisors
+\textbf{Examiner} \hfill Prof. Dr.-Ing. Rainer Dietz \par %Name
+\textbf{Second Supervisor} \hfill Prof. Dr.-Ing. Martin Pfeiffer \par %Name
+\textbf{Author} \hfill B.Sc. Anna-Lena Marx \par 
+\textbf{Matriculation Number} \hfill 317593 \par
+\vspace{2.0cm}
+\textbf{Submission Date} \hfill 20.06.2019
+
+
+\end{titlepage}
+
+%\includepdf{pics/titelpage_bea}
+
+
+\newpage
+
+
+
+
+\pagestyle {headings}
+\quad
+\newpage
+% \input{explanation}
+\newpage
+\quad
+\newpage
+%\input{abstract}
+
+
+\tableofcontents
+\newpage
+
+%mainpart
+\mainmatter
+
+
+% \input{tex/test}
+% \input{stateofart}
+% \input{requirementanalysis}
+% \input{concept}
+% \input{implementation}
+% \input{conclusion}
+%\input{future-prospects}
+
+
+\newpage \appendix
+
+%\input{appendix}
+
+\nocite{*}
+%addcontentsline?
+\printbibliography
+
+% \input{abbreviations}
+\listoflistings
+\listoffigures
+\listoftables
+
+
+\end{document}
