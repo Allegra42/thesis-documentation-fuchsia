@@ -22,6 +22,8 @@ https://github.com/Allegra42/zircon/blob/master/docs/editors.md
 
 ### HiKey960
 
+https://fuchsia.googlesource.com/zircon/+/master/docs/targets/hikey960.md
+
 - UART: 
   - GND -> GND (Pin 0) on HiKey
   - TX     -> RX (Pin 11) on HiKey
@@ -43,7 +45,11 @@ https://github.com/Allegra42/zircon/blob/master/docs/editors.md
 
 - binding needs to be implemented in C -> add a `bind.c` file to perform the binding
 
+==TODO==  Binding with MISC Device:
 
+grep -Ril "device_get_protocol(parent(), ZX_PROTOCOL_MISC"
+
+https://fuchsia.googlesource.com/zircon/+/HEAD/system/ulib/ddktl/include/ddktl/protocol/empty-protocol.h ?
 
 ### FIDL Driver Interface
 
