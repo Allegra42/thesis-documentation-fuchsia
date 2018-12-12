@@ -1,2 +1,2 @@
-# Notes and Documentation according to my Master's Thesis 
+# Notes and Documentation according my Master's Thesis 
 
