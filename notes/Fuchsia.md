@@ -36,6 +36,9 @@ Bluetooth Tests/Show
 
 - <https://www.googlewatchblog.de/2018/11/fuchsia-googles-betriebssystem-testern/>
 
+Fuchsia SDK & Fuchsia as a Part of the AOSP
+- <https://www.googlewatchblog.de/2018/12/fuchsia-sdk-entwickler-download/>
+
 
 
 ### Security in Zepyr and Fuchsia
