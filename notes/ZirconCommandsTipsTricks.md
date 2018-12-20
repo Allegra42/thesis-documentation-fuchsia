@@ -9,6 +9,8 @@ Most commands are related to the Zircon source root. Fuchsia commands are marked
 ### Zircon
 
 ```bash
+./scripts/download-prebuilt
+
 make -j32 USE_CLANG=true x64	(arm64)
 ./scripts/buildall -r (-q -c)
 ./scripts/build-zircon
@@ -18,7 +20,24 @@ make -j32 USE_CLANG=true x64	(arm64)
 ```
 
 ### Fuchsia
+
 ```bash
+Usage:
+   bootstrap_jiri <root_dir>
+
+A typical bootstrap workflow looks like this:
+
+$ curl -s https://raw.githubusercontent.com/fuchsia-mirror/jiri/master/scripts/bootstrap_jiri | bash -s myroot
+$ export PATH=myroot/.jiri_root/bin:$PATH
+$ cd myroot
+$ jiri import manifest https://example.com/manifest
+$ jiri update
+
+```
+
+```bash
+curl -s "https://fuchsia.googlesource.com/scripts/+/master/bootstrap?format=TEXT" | base64 --decode | bash -s topaz
+
 fx set x64 --zircon-arg ENABLE_DRIVER_TRACING=true --packages='garnet/packages/products/devtools,topaz/packages/default'
 fx build-zircon
 fx build
@@ -68,6 +87,18 @@ fx mkzedboot /dev/sdb
 
 fx netboot
 ```
+
+
+
+## Interact with Zircon
+(no `cat` available)
+
+```bash
+# cat:
+dd if=<file-to-read> count=1
+```
+
+
 
 ## QEMU
 
