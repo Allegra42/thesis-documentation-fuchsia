@@ -31,6 +31,7 @@
 
 - Concepts - specific
   - Design decisions: http://vger.kernel.org/lkml/#s15-3
+  - Linux Context Switching http://www.maizure.org/projects/evolution_x86_context_switch_linux/index.html
 - Example Implementation
   - Platform Introduction, Development Setup
 
