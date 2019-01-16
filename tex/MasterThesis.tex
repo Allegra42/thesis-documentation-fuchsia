@@ -24,7 +24,7 @@
 \setcounter{biburllcpenalty}{9000}% Kleinbuchstaben
 \setcounter{biburlucpenalty}{9000}% Großbuchstaben
 
-% \addbibresource{bib.bib}
+\addbibresource{tex/Literature.bib}
 
 \newenvironment{code}{\captionsetup{type=listing}}{}
 
@@ -73,11 +73,11 @@
 \pagestyle {headings}
 \quad
 \newpage
-% \input{explanation}
+\input{tex/Declaration}
 \newpage
 \quad
 \newpage
-%\input{abstract}
+\input{tex/Abstract}
 
 
 \tableofcontents
@@ -87,13 +87,13 @@
 \mainmatter
 
 
-% \input{tex/test}
-% \input{stateofart}
-% \input{requirementanalysis}
-% \input{concept}
-% \input{implementation}
-% \input{conclusion}
-%\input{future-prospects}
+\input{tex/Introduction}
+\input{tex/ModernOSConcepts}
+\input{tex/CSLinux}
+\input{tex/CSZircon}
+\input{tex/CSEvaluation}
+\input{tex/Conclusion}
+\input{tex/Outlook}
 
 
 \newpage \appendix
@@ -104,7 +104,7 @@
 %addcontentsline?
 \printbibliography
 
-% \input{abbreviations}
+\input{tex/Abbreviations}
 \listoflistings
 \listoffigures
 \listoftables
