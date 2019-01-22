@@ -48,7 +48,22 @@ Unbrick HiKey https://github.com/96boards-hikey/tools-images-hikey960
 	Ext    (3) -> off	
 
 ####Linux on HiKey
-HiKey built Linux from Source https://github.com/96boards-hikey/tools-images-hikey960/blob/master/build-from-source/README-build-from-source.md
+
+- Use SD Image from http://snapshots.linaro.org/96boards/hikey/linaro/debian/17/
+  - Lastest is not working!
+- Flash EFI, SD is booted with priority `recovery-flash-uefi-prebuilt.sh-r -t /dev/ttyUSB1`
+  - Modify script to use latest version
+- SD is booted via EFI/GRUB, modify grub.cfg to add your own kernel. If you are not able to create an own initram, just instrumentalize the existing one
+  - Add devicetree support `devicetree /boot/devicetree.dtb`
+- Install kernel modules to `/lib/modules/<kernelversion-name>`
+- (Resize rootfs partition of the SD card)
+- `i2cdetect -y -r 0`
+
+#### Android on HiKey
+
+https://source.android.com/setup/build/devices
+
+Kernel is LTS 4.9, but on latest patchlevel (at least by building your own)
 
 
 ####Fuchsia on HiKey

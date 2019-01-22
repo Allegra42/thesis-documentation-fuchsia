@@ -2,6 +2,48 @@
 
 \chapter{Case Study: Driver Development in Linux and Zircon} \label{ch:case-study}
 
+\subsection{Hardware Issues}
+1.8 vs 5V
+
+The RGB LCD has 2 chips with 2 different functionalities. One of it drives the LEDs and the other one drives the text that’s printed.
+
+The text driver is one and only and has an address of 0x3e.
+
+The LED driver has multiple addresses, of which we only need one. As it’s specified on page 8 (annex 7.1.1) in this datasheet (aka PCA9633) 9, there are 3 fixed addresses for our 8-pin chip package (the PCA9633):
+
+address 0x70 - LED all call address - it’s on at startup and cannot be addressed individually
+
+address 0x03 - Software reset address - it’s on at startup and cannot be addressed individually
+
+address 0x62 - Slave address - it’s the one you are communicating with and is addressable
+
+raspi pi@raspberrypi:~\$ i2cdetect -y 1
+    0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          03 -- -- -- -- -- -- -- -- -- -- -- --
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- 3e --
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+60: -- -- 62 -- -- -- -- -- -- -- -- -- -- -- -- --
+70: 70 -- -- -- -- -- -- --
+
+
+root@linaro-developer:~# i2cdetect -y -r 0
+    0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          -- -- -- -- -- -- -- -- -- -- -- -- --
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+60: -- -- 62 -- -- -- -- -- -- -- -- -- -- -- -- --
+70: 70 -- -- -- -- -- -- --
+
+https://www.kernel.org/doc/Documentation/i2c/instantiating-devices
+https://www.kernel.org/doc/Documentation/i2c/writing-clients
+https://raw.githubusercontent.com/torvalds/linux/v4.20/include/linux/i2c.h
+https://i2c.wiki.kernel.org/index.php/OF_Modalias
 
 \section{Linux} \label{sec:cs-linux}
 
