@@ -16,6 +16,10 @@ https://github.com/Allegra42/zircon/blob/master/docs/editors.md
 scripts/clang-fmt <path/to/file>
 ```
 
+```
+clang-tidy
+```
+
 
 
 ## Platforms
@@ -66,7 +70,7 @@ https://source.android.com/setup/build/devices
 Kernel is LTS 4.9, but on latest patchlevel (at least by building your own)
 
 
-####Fuchsia on HiKey
+####Zircon on HiKey
 https://fuchsia.googlesource.com/zircon/+/master/docs/targets/hikey960.md
 
 ####General
@@ -87,8 +91,14 @@ https://fuchsia.googlesource.com/zircon/+/master/docs/targets/hikey960.md
 
  
 
-## Device Driver Development
+## Device Driver Development (Zircon)
 - located within `/system/dev/<subsystem>`
+
+### Tools, Checks, ...
+- `./scripts/clang-fmt <path/to/file>`
+- `./scripts/run-clang-tidy <path/to/file>`
+- Youcompleteme
+- Bear `bear make -j20 USE_CLANG=true arm64`
 
 ### ARM / Platform Dev Development
 
@@ -192,9 +202,25 @@ https://fuchsia.googlesource.com/zircon/+/master/docs/targets/hikey960.md
 
 
 
+## Linux Driver Dev
+
+### Pitfalls
+
+- `file operations` -> how to get device information for file operations?
+  - instrumentalize `open`/`close` and use `container_of` with `i_cdev` and `cdev` in the private struct to get the data and store it in `file->private_data`
+
+
+
+
 ### Questions
 
 - Is Out-of-Tree possible? -> rather no? even deeper nesting is not
 - 
 
+## Optional TODOs
+
+- (not optional) better userapps?
+  - grove-lcd.pdev
+  - grove-lcd
+- Implement powermanagement (is it possible to trigger / show the behaviour in zircon at all?)
 
