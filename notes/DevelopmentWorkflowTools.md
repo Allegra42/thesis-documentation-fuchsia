@@ -204,17 +204,62 @@ https://fuchsia.googlesource.com/zircon/+/master/docs/targets/hikey960.md
 
 ## Linux Driver Dev
 
+### Build
+
+- GCC -> see normal build script
+- Clang: https://fosdem.org/2019/schedule/event/llvm_kernel/attachments/slides/3330/export/events/attachments/llvm_kernel/slides/3330/clang_linux_fosdem_19.pdf
+  - `ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make CC=clang -j20`
+  - `ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make CC=clang modules -j20 `
+  - `ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make CC=clang modules_install INSTALL_MOD_PATH=clang-out`
+  - `ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make CC=clang install INSTALL_PATH=clang-kernel-out`
+
+### Tools
+
+(noticable more bad than zircon tools, rework absolutely needed!)
+
+- `./scripts/checkpatch.pl -f --no-tree drivers/grove/grove.c`
+- `./scripts/checkpatch.pl -f --fix --no-tree drivers/grove/grove.c`
+  - new file with the fixes
+- `./scripts/checkpatch.pl -f --fix-inplace --no-tree drivers/grove/grove.c`
+  - fix in actual file
+- `./scripts/cleanfile drivers/grove/grove.c `
+
 ### Pitfalls
 
 - `file operations` -> how to get device information for file operations?
+
   - instrumentalize `open`/`close` and use `container_of` with `i_cdev` and `cdev` in the private struct to get the data and store it in `file->private_data`
 
+- by using `i2c_new_secondary_device`:
+
+  - ```
+    // use this Device Tree entry 
+    grovei2c: grove-i2c@3e {
+        compatible = "grove,lcd";
+        reg = <0x3e 0x62>;
+        reg-names = "grovelcd", "grovergb";
+    };
+    
+    // instead of
+    grove-rgb@62 {
+    	compatible = "grove,rgb";
+    	reg = <0x62>;
+    };
+    grove-lcd@3e {
+    	compatible = "grove,lcd";
+    	reg = <0x3e>;
+    }; 
+    ```
+
+  - The variant with two independent definitions looks like there is a major bug in i2c
+
+  - HiKey specific: Use LCD as primary device.
 
 
 
-### Questions
+## Questions
 
-- Is Out-of-Tree possible? -> rather no? even deeper nesting is not
+- Is Out-of-Tree possible (Zircon)? -> rather no? even deeper nesting is not
 - 
 
 ## Optional TODOs
