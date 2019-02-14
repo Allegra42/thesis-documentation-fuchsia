@@ -1,37 +1,100 @@
 % !TEX root = MasterThesis.tex
 
 %General Operating System Concepts, not specific to Linux or Zircon at all
-\chapter{Modern Operating System Concepts} \label{ch:modern-os-concepts}
-
-% TODO general concepts, say that specific ones follow in the next chapters
-
-\section{Monolithic and Microkernel in Comparison} \label{sec:monolith-vs-microkernel}
+\chapter{Modern Operating System Concepts}\label{ch:modern-os-concepts}
 
 %https://groups.google.com/forum/#!topic/comp.os.minix/wlhw16QWltI%5B1-25%5D
+ % 2: your job is being a professor and researcher: That's one hell of a
+% good excuse for some of the brain-damages of minix. I can only hope (and
+% assume) that Amoeba doesn't suck like minix does.
+% >1. MICROKERNEL VS MONOLITHIC SYSTEM
+% True, linux is monolithic, and I agree that microkernels are nicer. With
+% a less argumentative subject, I'd probably have agreed with most of what
+% you said. From a theoretical (and aesthetical) standpoint linux looses.
+% If the GNU kernel had been ready last spring, I'd not have bothered to
+% even start my project: the fact is that it wasn't and still isn't. Linux
+% wins heavily on points of being available now.
 
- 2: your job is being a professor and researcher: That's one hell of a
-good excuse for some of the brain-damages of minix. I can only hope (and
-assume) that Amoeba doesn't suck like minix does.
-
->1. MICROKERNEL VS MONOLITHIC SYSTEM
-True, linux is monolithic, and I agree that microkernels are nicer. With
-a less argumentative subject, I'd probably have agreed with most of what
-you said. From a theoretical (and aesthetical) standpoint linux looses.
-If the GNU kernel had been ready last spring, I'd not have bothered to
-even start my project: the fact is that it wasn't and still isn't. Linux
-wins heavily on points of being available now.
+Already this thesis' introductions picks up the topic on which operating system architecture is the superior one by refering to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992.
+Besides the discussion is quite interessting from todays view on different operating systems, the forecasts on their future and the actual development, are both, Tanenbaum and Torvalds underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
+And roughly spoken are exactly such different problems which needs to be solved with on operating system one reason for their diversity. 
+Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in many different ways of working and architectures. 
+As with the debate, it is rather difficult to impossible to find one architectural concept or implementation which is clearly superior to the other ones in every use-case. 
+Nevertheless, it is a reasonable question why a majority of from scratch developed operating system kernels in the last few years are based on a microkernel concept.
+In 2009, the official statement of the kernel developer Richard Gooch was still that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
+So the question remains what changed during the last ten years to promote this change and especially for this work how this affect on device driver development.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Links
+%
+% Some notes to Linux design decisions: \url{http://vger.kernel.org/lkml/#s15-3}
+% Memory management in Linux -> Files from LFD 430
+% 
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO general comparison between both concepts.
-% Why are microkernel interesting and nearly each new developed one is a microkernel?
+
+\section{Operating System Architectures}\label{sec:kernel-arch-concepts}
+% TODO OS design goals see Betriebssysteme Glatz 
+% TODO no extra entry for multicore OS. That's nothing special today, defacto standard SMP?
+% TODO mischformen
+\subsection{Monolithic Architectures}
+\subsection{Microkernel Architectures}
+% TODO Why are microkernel interesting and nearly each new developed one is a microkernel?
+\subsection{Layered Architectures}
+% \subsection{Distributed Architectures}
+\subsection{The Linux Kernel's Monolithic Architecture}
+% TODO actual Linux architecture, mixed form of monolith, module concept
+\subsection{The Zircon Kernel's Microkernel Architecture}
+% TODO actual Zircon architecture, overview
+
 
 \section{Processes and Threads} %TODO label
+\subsection{Processes}
+\subsection{Threads}
+\subsection{Inter Process Communication}
+\subsection{Scheduling}
+\subsection{Processes and Threads in Linux}
+\subsection{Processes and Threads in Zircon}
 
-\section{Memory Management} %TODO label
-    Linux Concept -> LFD430 pic
-
-\section{I/O} %TODO label
 
 \section{System Calls} %TODO label
-    POSIX
+% TODO normally are system calls a part of the section processes and threads,
+% but for the reason zircon is very special there (not fully POSIX compatible),
+% it shall be handled with more respect in this work
+% (If it will work)?
+\subsection{POSIX}
+\subsection{System Calls in Linux}
+\subsection{System Calls in Zircon}
+% FIDL, core libs,.. 
+
+
+\section{Memory Management} %TODO label
+%    Linux Concept -> LFD430 pic
+%TODO find sections
+%TODO how is it done in Linux and Zircon
+\subsection{Address Spaces}
+\subsection{Virtual Memory}
+\subsection{Page Replacement/Paging}
+\subsection{Memory Management in Linux}
+\subsection{Memory Management in Zircon}
+
+
+\section{I/O} %TODO label
+%TODO review sections, how is it done in Linux/Zircon
+\subsection{I/O Hardware}
+\subsection{Memory Mapped IO}
+\subsection{Direct Memory Access}
+\subsection{Interrupts}
+\subsection{Power Management}
+
+   
+\section{Security Concepts} %TODO label
+\subsection{Access Control} %Domains, Capabilities
+%DAC, MAC, ..
+\subsection{Security Concepts in Linux}
+\subsection{Security Concepts in Zircon}
+
+
+\section{Driver Models} %TODO label

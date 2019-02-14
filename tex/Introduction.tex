@@ -1,5 +1,9 @@
 % !TEX root = MasterThesis.tex
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Introduction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \chapter{Introduction}\label{ch:introduction}
 
 % What is Fuchsia and why is it of interest?
@@ -36,7 +40,8 @@ Beside this, one further point making \textit{Zircon} an interesting research to
 
 \textit{Linux} is in many issues very opposite to \textit{Zircon}.
 It was started as a hobby project by \textsc{Linus Torvalds} in 1991 and growed over the years to a widely spread, powerful kernel.
-Today, it is, due to its use in \textit{Android}, the most used operating system kernel at all\footnote{netmarkedshared.com, visited on 13.02.2019~\url{https://bit.ly/2S0s4lM}}. % https://netmarketshare.com/operating-system-market-share.aspx?options=%7B%22filter%22%3A%7B%7D%2C%22dateLabel%22%3A%22Trend%22%2C%22attributes%22%3A%22share%22%2C%22group%22%3A%22platform%22%2C%22sort%22%3A%7B%22share%22%3A-1%7D%2C%22id%22%3A%22platformsDesktop%22%2C%22dateInterval%22%3A%22Monthly%22%2C%22dateStart%22%3A%222018-02%22%2C%22dateEnd%22%3A%222019-01%22%2C%22segments%22%3A%22-1000%22%7D
+Today, it is, due to its use in \textit{Android}, the most used operating system kernel at all\footnote{netmarkedshared.com, visited on 13.02.2019~\url{https://bit.ly/2S0s4lM}}. 
+% https://netmarketshare.com/operating-system-market-share.aspx?options=%7B%22filter%22%3A%7B%7D%2C%22dateLabel%22%3A%22Trend%22%2C%22attributes%22%3A%22share%22%2C%22group%22%3A%22platform%22%2C%22sort%22%3A%7B%22share%22%3A-1%7D%2C%22id%22%3A%22platformsDesktop%22%2C%22dateInterval%22%3A%22Monthly%22%2C%22dateStart%22%3A%222018-02%22%2C%22dateEnd%22%3A%222019-01%22%2C%22segments%22%3A%22-1000%22%7D
 Since Linux was published, it is actively developed by a divers community and is not subject to the interests of a single company. 
 Presumably, that is a powerful factor for its spread besides its licensing.
 Nevertheless, \textit{Linux} is a grown software project.
@@ -49,5 +54,28 @@ Along with the guess \textit{Zircon} will target the same sector as \textit{Linu
 In this process, the date of origin should be concerned as an additional factor.
 It it to be assumed the \textit{Zircon} team is aware to especially historical based, rather poor decisions in \textit{Linux} and other operating systems, and seizes the chance of a completely new product.
 
-%TODO weiter
-% Go over to different kernel types, micro, monolith, something between and from there to linux and zircon
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Research Objectives
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Research Objectives}\label{sec:research-objectives}
+This work's aim is to evaluate the differences between monolithic and microkernel architectures for operating systems and how they influence the development of device drivers.
+For this purpose, this work shall focus only on the operating system's kernels, the \textit{Zircon} kernel and the \textit{Linux} kernel.
+Google's \textit{Fuchsia} in its entirety is neighter a part of this master's thesis nor the \textit{Linux} userland or desktop environments.\\
+\\
+Contrarily, the following topics are to be examined within the scope of this work:
+\begin{itemize}
+    \item Introducing basic concepts of operating system kernels and examine how they are implemented in the specific realizations, \textit{Linux} and \textit{Zircon}.
+    \item Examining the effects of the architectural differences of the two well-known approaces \textit{monolithic} and \textit{microkernel} on device driver development using the example of the non academic, specific implementations, \textit{Linux} and \textit{Zircon}. This includes:  
+        \begin{itemize}
+            \item The analysis of the driver models and how they are integrated to the kernel.
+            \item Examining the driver development itself on both architectures with the aid of a hands-on case study.
+            \item The inspection of the driver development workflow, especially with a view on available tooling. 
+            \item A consideration on the way the drivers are used by the kernel itself, especially by other kernel components, and the actual users.
+        \end{itemize}
+    \item Evaluating the results of this examinations based on the theoretical concepts and its actual realizations with respect to the temporal evoluting of \textit{Linux} and \textit{Zircon}.
+\end{itemize}
+
+%TODO better ending here?
