@@ -1,8 +1,7 @@
 % !TEX root = MasterThesis.tex
 
-%General Operating System Concepts, not specific to Linux or Zircon at all
 \chapter{Modern Operating System Concepts}\label{ch:modern-os-concepts}
-
+%
 %https://groups.google.com/forum/#!topic/comp.os.minix/wlhw16QWltI%5B1-25%5D
  % 2: your job is being a professor and researcher: That's one hell of a
 % good excuse for some of the brain-damages of minix. I can only hope (and
@@ -14,15 +13,16 @@
 % If the GNU kernel had been ready last spring, I'd not have bothered to
 % even start my project: the fact is that it wasn't and still isn't. Linux
 % wins heavily on points of being available now.
-
-Already this thesis' introductions picks up the topic on which operating system architecture is the superior one by refering to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992.
-Besides the discussion is quite interessting from todays view on different operating systems, the forecasts on their future and the actual development, are both, Tanenbaum and Torvalds underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
-And roughly spoken are exactly such different problems which needs to be solved with on operating system one reason for their diversity. 
+%
+This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by refering to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992.
+Besides the discussion is quite interessting from todays view on different operating systems, the forecasts on their future and the actual development, are both, \textsc{Tanenbaum} and \textsc{Torvalds} underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
+And roughly spoken are exactly such different problems which needs to be solved with an operating system one reason for their diversity. 
 Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in many different ways of working and architectures. 
 As with the debate, it is rather difficult to impossible to find one architectural concept or implementation which is clearly superior to the other ones in every use-case. 
-Nevertheless, it is a reasonable question why a majority of from scratch developed operating system kernels in the last few years are based on a microkernel concept.
-In 2009, the official statement of the kernel developer Richard Gooch was still that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
-So the question remains what changed during the last ten years to promote this change and especially for this work how this affect on device driver development.
+Nevertheless, it is a reasonable question why a majority of the operating system kernels which were developed from scratch in the last few years are based on a microkernel concept.
+In 2009, the official statement of the Linux kernel developer \textsc{Richard Gooch} was still that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
+So the question remains what changed during the last ten years to promote this change, and especially for this work, how this affects on device driver development.
+For this reason, this chapter is dedicted to the basic components and functionallities of operating system kernels and how they are implemented in the real world examples \textit{Linux} and \textit{Zircon}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -36,7 +36,31 @@ So the question remains what changed during the last ten years to promote this c
 
 
 \section{Operating System Architectures}\label{sec:kernel-arch-concepts}
+
 % TODO OS design goals see Betriebssysteme Glatz 
+As already pointed out are architectural decisions for operating systems commonly influenced by the issues they are intended to solve.
+By giving priority to some design objectives that are pertinent to the underlying issue, different concepts and architectures are the outcome.
+According to \textsc{Glatz}\cite{glatz2015betriebssysteme} are some of them:
+\begin{itemize}
+    \item Providing a reliable, crash-proof environment.
+    \item Providing a portable operating system.
+    \item Providing a scalable operating system, e.g.\ in terms of processing cores.
+    \item Providing an extensibile operating system, e.g.\ in terms of adding additional functionality to the kernel.
+    \item Providing real-time capabilities.
+    \item Providing an efficient design in terms of ressources and performance.
+    \item Providing a secure environment for user applications.
+    \item Providing a maintainable operating system, e.g.\ by the division of policy and mechanism. 
+\end{itemize}\ \\
+%
+How these design principles fit into the known operating system architectures will be considered in the following sections.
+But before, the terms \textit{kernel mode} and \textit{user mode} will be explained for a better understanding.
+
+%dual mode is supported by hardware in common -> issue if not
+tanenbaum, s 23(54)
+achilles, s 11(25)
+os concepts 8, s 22(36)
+
+% TODO kernel mode Achilles direkt vor 1.3.1!
 % TODO no extra entry for multicore OS. That's nothing special today, defacto standard SMP?
 % TODO mischformen
 \subsection{Monolithic Architectures}
@@ -44,10 +68,25 @@ So the question remains what changed during the last ten years to promote this c
 % TODO Why are microkernel interesting and nearly each new developed one is a microkernel?
 \subsection{Layered Architectures}
 % \subsection{Distributed Architectures}
+\subsection{Hybrid Architectures}
 \subsection{The Linux Kernel's Monolithic Architecture}
 % TODO actual Linux architecture, mixed form of monolith, module concept
 \subsection{The Zircon Kernel's Microkernel Architecture}
 % TODO actual Zircon architecture, overview
+
+
+\section{System Calls} %TODO label
+% TODO normally are system calls a part of the section processes and threads,
+% but for the reason zircon is very special there (not fully POSIX compatible),
+% it shall be handled with more respect in this work
+% (If it will work)? -> it should -> Achilles Betriebssysteme
+% Tanenbaum 1.6
+% Operating system concepts 8.edition 2.3
+% Betriebsysteme Grundlagen und Konzepte 1.3.1
+\subsection{POSIX}
+\subsection{System Calls in Linux}
+\subsection{System Calls in Zircon}
+% FIDL, core libs,.. 
 
 
 \section{Processes and Threads} %TODO label
@@ -57,17 +96,6 @@ So the question remains what changed during the last ten years to promote this c
 \subsection{Scheduling}
 \subsection{Processes and Threads in Linux}
 \subsection{Processes and Threads in Zircon}
-
-
-\section{System Calls} %TODO label
-% TODO normally are system calls a part of the section processes and threads,
-% but for the reason zircon is very special there (not fully POSIX compatible),
-% it shall be handled with more respect in this work
-% (If it will work)?
-\subsection{POSIX}
-\subsection{System Calls in Linux}
-\subsection{System Calls in Zircon}
-% FIDL, core libs,.. 
 
 
 \section{Memory Management} %TODO label
