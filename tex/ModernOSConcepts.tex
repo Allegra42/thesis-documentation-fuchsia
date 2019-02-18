@@ -53,29 +53,71 @@ According to \textsc{Glatz}\cite{glatz2015betriebssysteme} are some of them:
 \end{itemize}\ \\
 %
 How these design principles fit into the known operating system architectures will be considered in the following sections.
-But before, the terms \textit{kernel mode} and \textit{user mode} will be explained for a better understanding.
+But before, the terms \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
 
-%dual mode is supported by hardware in common -> issue if not
-tanenbaum, s 23(54)
-achilles, s 11(25)
-os concepts 8, s 22(36)
+\subsubsection*{Dual-Mode Execution}
+Modern general purpose \acp{cpu} provide a ring based, hardware enabled security model which had it's origin in the Intel x86 processor architecture\cite{tanenbaum-modern-operating-systems}.
+It is usually made of four different security levels, the rings 0 to 3 which are illustrated in Figure~\ref{pic:x86rings}.
+In this model, ring 3 is the least secure level, used for common user applications (even if started with \textit{root} privileges), while ring 2 is used for libraries shared between user applications and ring 1 is for system calls\cite{glatz2015betriebssysteme}.
+System calls provide the transition to ring 0, the ring with the topmost security level, which is used for the operating system kernel.
+As a crucial part of an operating system, they will be discussed in more detail later in this work.
 
-% TODO kernel mode Achilles direkt vor 1.3.1!
-% TODO no extra entry for multicore OS. That's nothing special today, defacto standard SMP?
-% TODO mischformen
+Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
+It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
+Just the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operatings or memory mapping\cite{lfd430}.
+User applications in ring 0, running in the \textit{user mode}, are not allowed to them so directly, they have limited privileges and a limited instruction set.
+As named above, they need to use a mechanism called \textit{system calls} to transfer the execution to the \textit{kernel mode} where the priviledged actions are performed.
+Lastly, the execution is transfered back to the calling user process and with this, the mode changes back to \textit{user mode}.
+Figure~\ref{pic:mode-switches} pictures the operating flow of a system call including the mode switches between \textit{user} and \textit{kernel mode}.
+
+%
+%
+\begin{figure} [ht]
+	\centering
+	\includegraphics[scale=0.6]{x86Rings}
+	\caption{The Rings of the x86's security concept\cite{glatz2015betriebssysteme}}\label{pic:x86rings}
+    %TODO own picture!
+\end{figure}
+%
+\begin{figure} [ht]
+	\centering
+	\includegraphics[scale=0.6]{mode-switch}
+    \caption{A system calls sequence including the mode switches\cite{glatz2015betriebssysteme}}\label{pic:mode-switches}
+    %TODO own picture!
+\end{figure}
+
+The \ac{cpu}'s operating mode is usually controlled by a specific bit in the \ac{psw}\cite{tanenbaum-modern-operating-systems}.
+It influences the state of each \ac{cpu} core itself in a multi-processor system, but not the operating system kernel.
+As a result, different \ac{cpu} cores may be in a different execution mode\cite{lfd430}.
+With this seperation, any priviledged instruction is forbidden in \textit{user mode} and will not be executed.
+
+Based on the dual mode execution on the \ac{cpu}, different architectural concepts for operating systems evolved.
+They differ e.g.\ in the share of the operating system respectively the operating system's kernel actually running within the \ac{cpu}'s \textit{kernel mode}. 
+Thus, they have an influence on the whole system, including device driver development but also on performance and security issues.
+With this basic knowledge about the \ac{cpu}'s operating modes, the next section researches a selection of different operating system architectures.
+Special attention should be paid to the most common ones, the \textit{monolithic} and the \textit{microkernel} architectures and their implementation in Linux and Zircon.
+
+On the contrary, this work will not take a particular look on special purpose operating system architectures such as ones for loosely coupled multi-processor systems known from processing clusters.
+Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} and most of common modern operating systems are designed to provide support for the defacto standard for tightly coupled systems, \ac{smp}.
+
+
 \subsection{Monolithic Architectures}
+
+% \cite{lfd430}, Appendix A
+
 \subsection{Microkernel Architectures}
 % TODO Why are microkernel interesting and nearly each new developed one is a microkernel?
 \subsection{Layered Architectures}
 % \subsection{Distributed Architectures}
 \subsection{Hybrid Architectures}
 \subsection{The Linux Kernel's Monolithic Architecture}
+% TODO mischformen
 % TODO actual Linux architecture, mixed form of monolith, module concept
 \subsection{The Zircon Kernel's Microkernel Architecture}
 % TODO actual Zircon architecture, overview
 
 
-\section{System Calls} %TODO label
+\section{System Calls}\label{sec:system-calls}
 % TODO normally are system calls a part of the section processes and threads,
 % but for the reason zircon is very special there (not fully POSIX compatible),
 % it shall be handled with more respect in this work
