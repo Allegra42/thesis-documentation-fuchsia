@@ -52,20 +52,26 @@ According to \textsc{Glatz}\cite{glatz2015betriebssysteme} are some of them:
     \item Providing a maintainable operating system, e.g.\ by the division of policy and mechanism. 
 \end{itemize}\ \\
 %
+In addition, operating systems should also pay attention to the common software design issue \textit{mechanism vs.\ policy}.
+That means an operating system design should provide a clear distinction between the \textit{mechanism}, that means the capable abilities that can be performed (how is something done) and the \textit{policy}, which controlls how the available capabilities are used (what is done)\cite{lfd430},~\cite{silberschatz2009operating}.
+An example for driver development could be controlling the number of processes that can use a device at once.
+In this case, the driver should provide the mechansim, the \textit{how} such a limitation could be done, but not \textit{what}, the actual number of allowed processes. 
+The idea behind is that requirements may change over some time and such a distinction makes it easy to adjust the \textit{policy} via some parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
+
 How these design principles fit into the known operating system architectures will be considered in the following sections.
 But before, the terms \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
 
 \subsubsection*{Dual-Mode Execution}
 Modern general purpose \acp{cpu} provide a ring based, hardware enabled security model which had it's origin in the Intel x86 processor architecture\cite{tanenbaum-modern-operating-systems}.
 It is usually made of four different security levels, the rings 0 to 3 which are illustrated in Figure~\ref{pic:x86rings}.
-In this model, ring 3 is the least secure level, used for common user applications (even if started with \textit{root} privileges), while ring 2 is used for libraries shared between user applications and ring 1 is for system calls\cite{glatz2015betriebssysteme}.
-System calls provide the transition to ring 0, the ring with the topmost security level, which is used for the operating system kernel.
+In this model, ring 3 is the least secure level, used for common user applications (even if started with extended privileges (\textit{root} for the UNIX-like world)), while ring 2 is used for libraries shared between user applications and ring 1 is for system calls\cite{glatz2015betriebssysteme}.
+System calls provide the transition to ring 0, the one with the topmost security level, which is used for the operating system kernel.
 As a crucial part of an operating system, they will be discussed in more detail later in this work.
 
 Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
 It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
-Just the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operatings or memory mapping\cite{lfd430}.
-User applications in ring 0, running in the \textit{user mode}, are not allowed to them so directly, they have limited privileges and a limited instruction set.
+Just the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operatings or memory mappings\cite{lfd430}.
+User applications in ring 3, running in the \textit{user mode}, are not allowed to them so directly, they have limited privileges and a limited instruction set.
 As named above, they need to use a mechanism called \textit{system calls} to transfer the execution to the \textit{kernel mode} where the priviledged actions are performed.
 Lastly, the execution is transfered back to the calling user process and with this, the mode changes back to \textit{user mode}.
 Figure~\ref{pic:mode-switches} pictures the operating flow of a system call including the mode switches between \textit{user} and \textit{kernel mode}.
@@ -94,9 +100,9 @@ With this seperation, any priviledged instruction is forbidden in \textit{user m
 Based on the dual mode execution on the \ac{cpu}, different architectural concepts for operating systems evolved.
 They differ e.g.\ in the share of the operating system respectively the operating system's kernel actually running within the \ac{cpu}'s \textit{kernel mode}. 
 Thus, they have an influence on the whole system, including device driver development but also on performance and security issues.
+
 With this basic knowledge about the \ac{cpu}'s operating modes, the next section researches a selection of different operating system architectures.
 Special attention should be paid to the most common ones, the \textit{monolithic} and the \textit{microkernel} architectures and their implementation in Linux and Zircon.
-
 On the contrary, this work will not take a particular look on special purpose operating system architectures such as ones for loosely coupled multi-processor systems known from processing clusters.
 Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} and most of common modern operating systems are designed to provide support for the defacto standard for tightly coupled systems, \ac{smp}.
 
