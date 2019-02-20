@@ -108,11 +108,36 @@ Today, even the majority of general purpose computing systems are driven by more
 
 
 \subsection{Monolithic Architectures}
+Some sources, such as \textsc{Glatz}\cite{glatz2015betriebssysteme} or \textsc{Silberschatz}\cite{silberschatz2009operating}, suggest monolithic operating systems do not have a well-defined structure at all. 
+As they are indeed most commonly grown structures, started in a completely different scope (MS-DOS, the original UNIX), it is not an incorrect claim.
+But it does not neccessarily have to be the case.
+Above all, monolithic operating system (kernel) architectures have in common that they form one single binary program which is running entirely in kernel mode.
+User programms, running in user mode, interact with the kernel only through a well defined set of \textit{system calls}\cite{lfd430}. 
+Within the kernel itself, all parts are free to use and access each other but also the hardware, without any limitation, e.g.\ regarging the access of kernel functionalities of another component or hardware acces. 
+That means a function or procedure initial developed for scheduling processes could be used in a completely different context if its functionality is useful to solve another issue.
+In fact, there is no information hiding between kernel functions or procedures.
+Any function in this kernel context has full access to the hardware, such as \ac{io} devices, timers, interrupts and even to the memory. 
+There is no memory protection or validation between different components of a monolithic kernel. 
+Of course, this leads to some serious disadvantages in this architecture, for example could a crash in one single function or procedure crash the entire kernel or the resulting system may become difficult to understand and maintain\cite{tanenbaum-modern-operating-systems},~\cite{silberschatz2009operating}.
+The missing memory protecting within the kernel could also be a source for crashes or attacks.
+But in contrast, this design also enables a very efficient kernel design without any unneeded communication overhead or hardware inefficiencies\cite{lfd430}.
 
-% \cite{lfd430}, Appendix A
+An extension of the monolithic architecture are the so-called \textbf{modular operating systems}.
+They provide additional, defined interfaces for (in common) dynamically loadable and unloadable extentions, e.g.\ for device drivers or filesystems. 
+Sometimes, such extensions or modules are just allowed to use a limited function set of the operating system, but they are still running as a part of the kernel in kernel mode\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}. 
+Just like ordinary kernel functions or procedures, (malicious) programming errors in extentions may lead to a kernel crash or manipulate or damage other components.
+Contrary, the modular concept provides some advantages over regular monolitic kernels.
+It allows to slim down the actual kernel by providing the chance to reload only the actually needed functionality dynamically and e.g.\ security patches within such an extension is possible without restarting the entire system\cite{brause2017betriebssysteme}.
+As the extensions become an part of the operating system running in kernel mode, no additional communication effort between the actual kernel and the modules is required.
+Thus, concept of modules is quite popular for basically monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
+
 
 \subsection{Microkernel Architectures}
+The microkernel architecture has it's origin in the \textit{Mach} kernel which was initially developed in 1985 at the Carnegie Mellon University 
+
+L4 (2. Generation)
 % TODO Why are microkernel interesting and nearly each new developed one is a microkernel?
+
 \subsection{Layered Architectures}
 % \subsection{Distributed Architectures}
 \subsection{Hybrid Architectures}
