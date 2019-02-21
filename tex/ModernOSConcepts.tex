@@ -107,7 +107,7 @@ On the contrary, this work will not take a particular look on special purpose op
 Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} and most of common modern operating systems are designed to provide support for the defacto standard for tightly coupled systems, \ac{smp}.
 
 
-\subsection{Monolithic Architectures}
+\subsection{Monolithic Architectures}\label{sec:monolithic-archs}
 Some sources, such as \textsc{Glatz}\cite{glatz2015betriebssysteme} or \textsc{Silberschatz}\cite{silberschatz2009operating}, suggest monolithic operating systems do not have a well-defined structure at all. 
 As they are indeed most commonly grown structures, started in a completely different scope (MS-DOS, the original UNIX), it is not an incorrect claim.
 But it does not neccessarily have to be the case.
@@ -132,19 +132,60 @@ As the extensions become an part of the operating system running in kernel mode,
 Thus, concept of modules is quite popular for basically monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
 
 
-\subsection{Microkernel Architectures}
-The microkernel architecture has it's origin in the \textit{Mach} kernel which was initially developed in 1985 at the Carnegie Mellon University 
+\subsection{Microkernel Architectures}\label{sec:microkernel-archs}
+The microkernel architecture focuses on very opposite design goals compared to the monolithic architecture. 
+One is to cope the complexity, rather poor maintainablity and susceptibility to errors by a massively modular approach. 
+To archive this, the core idea behind microkernels is to provide only a very small kernel running in kernel mode which only provides the core functionalities while all the other important functions of an operating system are running in user mode.
+Thereby, the microkernel architecture is excellently suited to implement a proper division of mechanism and policy.
+The kernel provides just the most basic mechanisms needed for an operating system, while the userspace modules implement the policy.
+This decoupling makes it easier to change the policy in userspace for altering requirements without touching the actual kernel\cite{tanenbaum-modern-operating-systems}.
 
-L4 (2. Generation)
-% TODO Why are microkernel interesting and nearly each new developed one is a microkernel?
+What is part of this core functionality differs between miscellaneous sources, but all considered ones are in agreement that a simple mechanism for process scheduling is as well a core functionality as providing an \ac{ipc} mechanism\cite{lfd430},~\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.  
+In contrast, the sources disagree as to whether memory management and virtualisation, device drivers or synchronization facilities are a part of the actual kernel.
+The \textit{Mach} microkernel, which formed the first generation of microkernels in 1985, named process and thread administration, an extensible and secure \ac{ipc} mechanism, virtual memory management and scheduling as its core tasks, while everything else needed has to run in usermode\cite{rashidMach}.
+Functional enhancements of the system do not require changes to the kernel itself, too.
+This concerns, depending on the exact relization, device drivers, memory management, system call handlers and even more system components\cite{lfd430},~\cite{silberschatz2009operating}.
+In academic microkernel approaches, all components in user mode run within an own userspace process as small, well-defined modules, while the communication is done through copious message passing via the actual kernel\cite{tanenbaum-modern-operating-systems},~\cite{lfd430}.
+Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernels is it not allowed to device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
+A device driver has to invoke the actual kernel to perform the needed action substitional.
+But thus, the kernel is able to check the action and whether the driver is authorized to executed them.
+As a result, the microkernel design is more reliable and secure as such a division enables the kernel to intercept erroneous actions such as accidental memory writes to important regions\cite{tanenbaum-modern-operating-systems}.
+Equally a crash in a userspace system component like a driver is not able to crash the entire kernel in such an approach. 
+And as an additional advantage facilitate the microkernel architecture porting the operating system kernel to another target architecture as the most hardware dependencies are part of the small kernel\cite{silberschatz2009operating},~\cite{lfd430}.
+
+With all the named advantages microkernels offer, the question remains why microkernels are only spread in real-time, avionics or military but not for desktop operating systems.
+One reason is that all these advantages are bought at the high price of microkernel message costs.
+For the named application areas, especially the reliability that comes with the microkernel architecture is more desirable than the performance costs of the lot more context switches in comparison to monolithic architectures\cite{tanenbaum-modern-operating-systems}.
+Since a lot of the operating system's functionality has been moved to the userspace, microkernel architectures need to perform noticable more context switches to invoke the actual kernel for privileged actions. 
+The performance losses are not only caused by the large amount of context switches themselves, but also by the fact that modern \acp{cpu}, particularly the caches are not designed for them. 
+Every context switch causes cache misses which trigger that the required data has to be loaded from the slower main memory and cached. 
+The data of the previous context (e.g.\ the user mode context) will be displaced from the cache and the \ac{cpu} is largely blocked in the meantime.
+By rapidly switching back to the previous context, as is usual for e.g.\ a short kernel invokation to perform an \ac{io} operation on microkernel architectures, the cache is no longer suitable for the new context and has to be replaced\cite{lfd430}.
+
+First of all, the \textit{L4} kernel, a second generation microkernel was able to get close to the performance of a monolithic kernel as \textit{Linux} it is\cite{Hrtig1997}.   
+Nevertheless are pure microkernels mainly used for systems with high reliability requirements but unusual for desktop application. 
+Some industry examples are \textit{Integrity}, \textit{QNX} and \textit{seL4}, a mathematically verified version of the \textit{L4} kernel\cite{tanenbaum-modern-operating-systems}. 
+
+%TODO ? reincarnation server : check if all modules are up running and work correctly -> if not it replaces them without user interaction \cite{tanenbaum}
+%TODO picture \cite{microkernels}
+
 
 \subsection{Layered Architectures}
+
+
 % \subsection{Distributed Architectures}
+
+
 \subsection{Hybrid Architectures}
+
+
 \subsection{The Linux Kernel's Monolithic Architecture}
 % TODO mischformen
 % TODO actual Linux architecture, mixed form of monolith, module concept
+
+
 \subsection{The Zircon Kernel's Microkernel Architecture}
+
 % TODO actual Zircon architecture, overview
 
 
