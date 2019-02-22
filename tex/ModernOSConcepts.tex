@@ -133,8 +133,8 @@ Thus, concept of modules is quite popular for basically monolithic operating sys
 
 
 \subsection{Microkernel Architectures}\label{sec:microkernel-archs}
-The microkernel architecture focuses on very opposite design goals compared to the monolithic architecture. 
-One is to cope the complexity, rather poor maintainablity and susceptibility to errors by a massively modular approach. 
+The microkernel architecture focuses on very opposite design goals compared to the monolithic one. 
+Some of them are to cope the complexity, rather poor maintainablity and susceptibility to errors by a massively modular approach. 
 To archive this, the core idea behind microkernels is to provide only a very small kernel running in kernel mode which only provides the core functionalities while all the other important functions of an operating system are running in user mode.
 Thereby, the microkernel architecture is excellently suited to implement a proper division of mechanism and policy.
 The kernel provides just the most basic mechanisms needed for an operating system, while the userspace modules implement the policy.
@@ -146,10 +146,10 @@ The \textit{Mach} microkernel, which formed the first generation of microkernels
 Functional enhancements of the system do not require changes to the kernel itself, too.
 This concerns, depending on the exact relization, device drivers, memory management, system call handlers and even more system components\cite{lfd430},~\cite{silberschatz2009operating}.
 In academic microkernel approaches, all components in user mode run within an own userspace process as small, well-defined modules, while the communication is done through copious message passing via the actual kernel\cite{tanenbaum-modern-operating-systems},~\cite{lfd430}.
-Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernels is it not allowed to device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
+Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernel based operating systems is it not allowed to device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
 A device driver has to invoke the actual kernel to perform the needed action substitional.
 But thus, the kernel is able to check the action and whether the driver is authorized to executed them.
-As a result, the microkernel design is more reliable and secure as such a division enables the kernel to intercept erroneous actions such as accidental memory writes to important regions\cite{tanenbaum-modern-operating-systems}.
+Resulting, the microkernel design is more reliable and secure as such a division enables the kernel to intercept erroneous actions such as accidental memory writes to important regions\cite{tanenbaum-modern-operating-systems}.
 Equally a crash in a userspace system component like a driver is not able to crash the entire kernel in such an approach. 
 And as an additional advantage facilitate the microkernel architecture porting the operating system kernel to another target architecture as the most hardware dependencies are part of the small kernel\cite{silberschatz2009operating},~\cite{lfd430}.
 
@@ -171,12 +171,32 @@ Some industry examples are \textit{Integrity}, \textit{QNX} and \textit{seL4}, a
 
 
 \subsection{Layered Architectures}
+Layered operating system architectures are usually organized in hierachical layers, but sometimes the choosen model is described as a series of concentric rings.
+Each layer or ring provides a group of functionality while a it is only allowed to use the functions of the one directly below. 
+The cooperating between the layers or rings is regulated by clearly defined interfaces\cite{brause2017betriebssysteme}.
+This is usually accompanied by the fact that the lower layers or inner rings are more privileged as the outer ones.
+However, there is no uniform and univerally accepted approach for division in layers and their count accoring to this pattern\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+In fact, a meaningful division is not that easy.
+Functionalities may have to be divided artifically and the harmonious arrangement can have its pitfalls caused by the access requirements this architecture is based on.
+Is the layered access model considered properly to get a clean architecture, it that can unfold its advantages.
+These are for example the interchangeability of the layers if they and their interfaces were properly designed or the resulting concept for debugging.
+As the layers are constructed on top of each other, it is possible to debug  and verify each one for its own, starting at the lowest layer up to the top most one\cite{silberschatz2009operating}.
+But also the costs for system calls are comparatively high, because they have to be passed though all layers while each one adds overhead to such a call\cite{silberschatz2009operating}.  
+
+In general, layered operating system architectures are related to monolitic ones, but it is conceivable to adopt the idea for microkernel approaches, e.g.\ is the MINIX userspace divided into layers. 
+Examples for this architecture are \textit{OS/2} or newer \textit{Unix} variants, while \textit{Multics} is one for a concentric rings based model\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 
 
 % \subsection{Distributed Architectures}
 
 
 \subsection{Hybrid Architectures}
+Hybrid operating system architectures based on monolithic, microkernels and may be the layered ones are common approach to combine the advantages of these concepts.
+They try to pair the performance of the monolithic design with the modularity and reliability of microkernels\cite{microkernels},~\cite{silberschatz2009operating}.
+How both worlds interact is very different depending on the exact implementation.
+\textsc{Silberschatz} explains one of them in his book \textit{Operating System Concepts}\cite{silberschatz2009operating} using Apple's \textit{OS X} (today named \textit{macOS}) as an example.
+Depending on the exact implementation and the share of the architectures, most disadvantages of monolithic architectures still apply for the hybrid systems.
+Further examples for hybrid architectures are \textit{Windows NT} and \textit{BeOs}\cite{microkernels}.  
 
 
 \subsection{The Linux Kernel's Monolithic Architecture}
