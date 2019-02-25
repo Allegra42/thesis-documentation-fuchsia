@@ -196,17 +196,42 @@ They try to pair the performance of the monolithic design with the modularity an
 How both worlds interact is very different depending on the exact implementation.
 \textsc{Silberschatz} explains one of them in his book \textit{Operating System Concepts}\cite{silberschatz2009operating} using Apple's \textit{OS X} (today named \textit{macOS}) as an example.
 Depending on the exact implementation and the share of the architectures, most disadvantages of monolithic architectures still apply for the hybrid systems.
-Further examples for hybrid architectures are \textit{Windows NT} and \textit{BeOs}\cite{microkernels}.  
+Further examples for hybrid architectures are \textit{Windows NT} and \textit{BeOS}\cite{microkernels}.  
 
 
 \subsection{The Linux Kernel's Monolithic Architecture}
-% TODO mischformen
-% TODO actual Linux architecture, mixed form of monolith, module concept
+
+Linux is the perfect example for an extremly grown operating system.
+Starting as a pure hobby project to learn about a specific \ac{cpu} and connect to the Unix computers at \textsc{Linus Torvalds}, its initial author's, university, it becomes strongly related to its archetype, \textit{Unix}\cite{DiamondTorvalds2002}. 
+They share fundamental design goals, just like beeing capable of multiple processors and user at the same time, but Linux is not based on the origin Unix source code\cite{tanenbaum-modern-operating-systems}.
+The overall architecture of the Linux kernel is, as already named, monolithic and also inspired by Unix\cite{lfd430},~\cite{DiamondTorvalds2002}.
+It is entirely running in kernel mode and all built-in layers have full access to the internal kernel \ac{api} using common function calls like in C.
+A sophisticated concept of kernel modules which can be dynamically loaded to a running kernel makes a limited number of microkernel advantages available for Linux.
+Modules in Linux are only allowed to use a restricted (exported) set of functions to use, but once loaded to the running kernel, they become a part of the monolith running in kernel mode\cite{lfd430}.
+Linux is largely compatible to the \ac{posix} standard which was initially created for Unix.
+Initally, it was because \textsc{Torvalds} could not get a version of the standard, while today it is rather a conscious decision\cite{DiamondTorvalds2002},~\cite{tanenbaum-modern-operating-systems}. 
+Also the decision for the monolithic architecture is today consciously supported by the kernel community and justified with its performance and efficiency over microkernels due to the \textit{priviledge barrier} between user and kernel mode which has to be passed quite often in microkernel architecture\cite{why-linux-monolith},~\cite{lfd430}.
+The Linux kernel itself is divided in five essential tasks which are also reflected in its source code.
+They are: 
+\begin{itemize}
+    \item Process Management
+    \item Memory Management
+    \item Filesystems
+    \item Device Management and
+    \item Networking\cite{lfd430}.
+\end{itemize}
+A closer look to the most of them in general but also their implementation in Linux is done in the following sections.
+
+The Linux kernel is mainly written in C but some very hardware dependent part are in Assembly. 
+Additionally, especially the Assembly parts were strongly dependent on the \ac{gcc}.
+Today, there are some efforts to reduce the share of Assembly for maintenance and readability since modern compilers do not generate less efficient code as hand-written Assembly is\cite{programming-religion}.
+This also reduces the dependency to \ac{gcc} and enables the use of alternative compilers, especially Clang\cite{linux-clang},~\cite{fosdem-linux-llvm}.
+Nevertheless, the Linux kernel's principal lanugage is C and it only provides support for C drivers. 
 
 
 \subsection{The Zircon Kernel's Microkernel Architecture}
+% design goals, architecture, interface posix, parts, language/compiler
 
-% TODO actual Zircon architecture, overview
 
 
 \section{System Calls}\label{sec:system-calls}
