@@ -214,12 +214,13 @@ Also the decision for the monolithic architecture is today consciously supported
 The Linux kernel itself is divided in five essential tasks which are also reflected in its source code.
 They are: 
 \begin{itemize}
-    \item Process Management
-    \item Memory Management
-    \item Filesystems
+    \item Process Management,
+    \item Memory Management,
+    \item Filesystems,
     \item Device Management and
     \item Networking\cite{lfd430}.
 \end{itemize}
+By structuring this tasks and further components into \textit{subsystems} like \textit{drivers/}, \textit{fs/} (filesystems), \textit{net/} or \textit{kernel/}, the linux kernel remains comprehensible and in some ways modular. 
 A closer look to the most of them in general but also their implementation in Linux is done in the following sections.
 
 The Linux kernel is mainly written in C but some very hardware dependent part are in Assembly. 
@@ -231,10 +232,38 @@ Nevertheless, the Linux kernel's principal lanugage is C and it only provides su
 
 \subsection{The Zircon Kernel's Microkernel Architecture}
 % design goals, architecture, interface posix, parts, language/compiler
+In contrast to the Linux kernel, Zircon is not a grown structure.
+Started in 2015, it was largely developed from scratch by Google for a so far undisclosed field of application\cite{chat-zircon-arch}.
+Nevertheless, Zircon emerged from a branch of \textit{Little Kernel} (LK) by \textsc{Travis Geiselbrecht} which is also a part of the Zircon Team at Google\cite{zircon-vs-lk}. 
+Despite its origin, Zircon is very differnt to Little Kernel.
+It targets powerful devices such as modern computers and phones and provides for this reason only 64-bit support, first class user-mode support and a capability-based security model. 
+In contrast, Little Kernel is designed for embedded applications and amongst others used as bootloader for \textit{Android} and as \textit{Android Trusted Execution Environment (Trusty TEE)}\cite{lk-intro}.
+It has 32-bit support, but none of the more sophisticated features Zircon has\cite{zircon-vs-lk}.
 
+The mirokernel architecture is justified by having security, safety, reliability and modularity as major design goals for Zircon.
+According to \textsc{Travis Geiselbrecht} was the architecture a conscious tradeoff between the named goals and performance\cite{chat-zircon-arch}.
+They try avoid costly context switches as much as possible, speed up the remaining ones and take advantage from \ac{smp}, but it is not the focus of Zircon.
+Alike, Zircon does not focus on performing \ac{io} operatings or process management which are the key tasks \ac{posix} was designed for\cite{chat-zircon-arch}.
+As a result, Zircon does not claim to be or to become \ac{posix} compatible, they just support a very basic subset of the standard\cite{zircon-libc-posix}.
+% For \ac{ipc} Zircon provides a mechansim based on an \ac{idl} which is widly used within the Zircon kernel but also in Fuchsia as the whole operating system.
+The Zircon kernel itself is splitted up into the actual microkernel running in kernel mode (\textit{kernel/}) and services, drivers and core libraries running in user mode (\textit{system/})\cite{zircon-intro}.
+The kernel part provides the basic operating system mechanisms: 
+\begin{itemize}
+    \item Process Management,
+    \item (virtual) Memory Management,
+    \item \acl{ipc} and
+    \item Synchronization Mechanisms\cite{zircon-intro}.
+\end{itemize}
+The part running in user mode contains core services for, amongst others, booting, device management and networking, device drivers respectively hardware related code and user libraries.
+
+Zircon is for the most parts written in C++ and less in C.
+It provides native support for device drivers in both languages but due to the fact Zircon provides an \ac{idl} which defines a contract for in-process drivers, other languages are conceivable as well.
+In fact, support for Rust drivers is currently beeing worked on\cite{chat-zircon-arch}.
+Unlike Linux, Zircon provided support for both, the \ac{gcc} and the Clang compiler, from the beginning caused by the sophisticated tools aroung Clang and LLVM.
 
 
 \section{System Calls}\label{sec:system-calls}
+TODO
 % TODO normally are system calls a part of the section processes and threads,
 % but for the reason zircon is very special there (not fully POSIX compatible),
 % it shall be handled with more respect in this work
