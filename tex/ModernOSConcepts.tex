@@ -263,16 +263,49 @@ Unlike Linux, Zircon provided support for both, the \ac{gcc} and the Clang compi
 
 
 \section{System Calls}\label{sec:system-calls}
-TODO
-% TODO normally are system calls a part of the section processes and threads,
-% but for the reason zircon is very special there (not fully POSIX compatible),
-% it shall be handled with more respect in this work
-% (If it will work)? -> it should -> Achilles Betriebssysteme
-% Tanenbaum 1.6
-% Operating system concepts 8.edition 2.3
-% Betriebsysteme Grundlagen und Konzepte 1.3.1
-\subsection{POSIX}
+System calls were already marginally mentioned in this work as the mechanism to switch the program execution between user and kernel mode, because  applications running in user mode have only restricted rights.
+Thus, this special calls are needed for the interaction with basic hardware devices like the \ac{cpu}, the memory, peripherals or filesystems and for invoke the actual operating system's kernel for management operations like process management\cite{lfd430}. 
+System calls are to a high degree hardware dependent and differ between various operating system implementations.
+% Even operating systems which comply the \acf{posix} standard may differ in the typ and number of available system calls.
+% The wide-spread \ac{posix} standard is only an \ac{api} definition but not one for system calls.
+% An operating system may implement the \ac{posix} standard functions within a library which often involve system calls, but it has not to do so\cite{lfd430},~\cite{glatz2015betriebssysteme}.
+% Equally, a system is not constrained to a single \ac{api} and may implement different ones using its existing set of system calls\cite{glatz2015betriebssysteme}.
+% \ac{posix} is implemented is a very common standard which is for example implemented in UNIX, macOS, MACH and partly in Linux\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
+% Another example for an \ac{api} is Win32 used by Windows to abstract their system calls.
+% As a result system calls are rarely used directly by user applications without an abstraction layer such as libraries. An example is the \textit{libc}\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}.
+%
+
+A system call has its origin in an application running in user mode.
+If the application has to invoke the operating system kernel, e.g. to perform an action on memory in substition, it has to use one for switching the operating mode\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+As switching the \ac{cpu}'s execution mode also means a new context, a system call to the kernel differs from a common procedure call.
+In user mode, the so-called entry code stores the system call's parameters in a defined way.
+One is to store the parameters and the call's number in defined registers, another one is to store them on stack, according the C/C++ calling in reverse order\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.
+The exact one depends on the actual \ac{cpu} architecture.
+The following instruction triggers a specical software interrupt containing the order to switch the context.
+It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch. 
+But right before switching it is needed to save the \acf{psw}, which contains the actual processors state includes the mode bit, to the stack.
+The same number is used in kernel mode as an index within the interrupt vector table (or interrupt discriptor table, IDT) which contains the start address of the system service dispatcher routine.
+This tables content, the system serice dispatcher routine, is loaded as next instruction to the new \ac{psw}\cite{brause2017betriebssysteme}.
+Jumping to this routine, the system call's parameters and its number are restored to examine the actual call and invoke the matching service routine from the system service dispatching table which finally fulfils the requested action\cite{glatz2015betriebssysteme}.
+Conclusively, the control flow jumped back to the system service dispatcher which hands the controll back to user space inclunding switching back to user mode in the common way to return\cite{glatz2015betriebssysteme}.
+The previous \ac{psw} is restored from stack containing the bit for \ac{cpu}'s user mode execution.
+The user application has to clean up the stack like for each procedure call at the very end\cite{tanenbaum-modern-operating-systems}.
+
+\subsubsection{POSIX}
+The basic idea behind the \acf{posix} standard is to define a stable interface between the user-space and the operating system kernel to archieve portability for applications on systems meeting this standard.
+But even if an operating system comply the them, it may differ in the typ and number of available system calls.
+\ac{posix} is only an \ac{api} definition but not one for system calls.
+An operating system may implement the \ac{posix} standard functions within a library which often involve system calls, but it has not to do so\cite{lfd430},~\cite{glatz2015betriebssysteme}.
+System calls are rarely used directly by user applications without an abstraction layer such as libraries. An example is the \textit{libc} on Unix-like systems\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}.
+Equally, a system is not constrained to a single \ac{api} and may implement different ones using its existing set of system calls\cite{glatz2015betriebssysteme}.
+
+\ac{posix} is a very common standard which is for example implemented in UNIX, macOS, MACH and partly in Linux\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}. 
+Another example for an \ac{api} is Win32 used by Windows to abstract their system calls, but as a result, applications targeting the Windows Win32 \ac{api} are not portable to systems implementing the \ac{posix} standard.
+% As a result system calls are rarely used directly by user applications without an abstraction layer such as libraries. An example is the \textit{libc}\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}.
+
 \subsection{System Calls in Linux}
+%TODO 
 \subsection{System Calls in Zircon}
 % FIDL, core libs,.. 
 
