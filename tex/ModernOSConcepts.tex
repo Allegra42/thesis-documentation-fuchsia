@@ -259,7 +259,7 @@ The part running in user mode contains core services for, amongst others, bootin
 Zircon is for the most parts written in C++ and less in C.
 It provides native support for device drivers in both languages but due to the fact Zircon provides an \ac{idl} which defines a contract for in-process drivers, other languages are conceivable as well.
 In fact, support for Rust drivers is currently beeing worked on\cite{chat-zircon-arch}.
-Unlike Linux, Zircon provided support for both, the \ac{gcc} and the Clang compiler, from the beginning caused by the sophisticated tools aroung Clang and LLVM.
+Unlike Linux, Zircon provided support for both, the \ac{gcc} and the Clang compiler, from the beginning caused by the sophisticated tools aroung Clang and LLVM\@.
 
 
 \section{System Calls}\label{sec:system-calls}
@@ -276,21 +276,34 @@ System calls are to a high degree hardware dependent and differ between various 
 %
 
 A system call has its origin in an application running in user mode.
-If the application has to invoke the operating system kernel, e.g. to perform an action on memory in substition, it has to use one for switching the operating mode\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+If the application has to invoke the operating system kernel, e.g.\ to perform an action on memory in substition, it has to use one for switching the operating mode\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 As switching the \ac{cpu}'s execution mode also means a new context, a system call to the kernel differs from a common procedure call.
 In user mode, the so-called entry code stores the system call's parameters in a defined way.
-One is to store the parameters and the call's number in defined registers, another one is to store them on stack, according the C/C++ calling in reverse order\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.
+One is to store the parameters and the call's number in defined registers (see~\ref{pic:syscalls}), another one is to store them on stack, according the C/C++ calling in reverse order\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.
 The exact one depends on the actual \ac{cpu} architecture.
 The following instruction triggers a specical software interrupt containing the order to switch the context.
 It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
-To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch. 
+To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch.
+They are \texttt{0\x80} on Linux as pictured in~\ref{pic:syscalls} and \texttt{0\x2e} on Windows systems\cite{glatz2015betriebssysteme}.
 But right before switching it is needed to save the \acf{psw}, which contains the actual processors state includes the mode bit, to the stack.
-The same number is used in kernel mode as an index within the interrupt vector table (or interrupt discriptor table, IDT) which contains the start address of the system service dispatcher routine.
+The same number is used in kernel mode as an index within the interrupt vector table (or interrupt discriptor table, IDT) which contains the start address of the system service dispatcher routine (compare to~\ref{pic:syscalls}).
 This tables content, the system serice dispatcher routine, is loaded as next instruction to the new \ac{psw}\cite{brause2017betriebssysteme}.
-Jumping to this routine, the system call's parameters and its number are restored to examine the actual call and invoke the matching service routine from the system service dispatching table which finally fulfils the requested action\cite{glatz2015betriebssysteme}.
+Jumping to this routine, the system call's parameters and its number are restored to examine the actual call and invoke the matching service routine from the system service dispatching table which finally fulfils the requested action as simplified pictured in~\ref{pic:syscalls}\cite{glatz2015betriebssysteme}.
 Conclusively, the control flow jumped back to the system service dispatcher which hands the controll back to user space inclunding switching back to user mode in the common way to return\cite{glatz2015betriebssysteme}.
 The previous \ac{psw} is restored from stack containing the bit for \ac{cpu}'s user mode execution.
 The user application has to clean up the stack like for each procedure call at the very end\cite{tanenbaum-modern-operating-systems}.
+
+Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86 for Linux kernel before 2.5\cite{decade-linux-syscalls}.
+More modern versions use the special instructions \texttt{SYSENTER} and \texttt{SYSEXIT} (Intel) or \texttt{SYSCALL} and \texttt{SYSRET} (AMD) instead of the slower trap interrupts\cite{decade-linux-syscalls}.
+
+\begin{figure} [ht]
+	\centering
+	\includegraphics[scale=0.4]{syscall-lfd}
+    \caption{System Call Implementation\label{pic:syscalls}\cite{lfd430}}
+    %TODO own picture!
+    %TODO add numbers and a kind of flow sequence with numbers. Add numbers to text.
+\end{figure}
+
 
 \subsubsection{POSIX}
 The basic idea behind the \acf{posix} standard is to define a stable interface between the user-space and the operating system kernel to archieve portability for applications on systems meeting this standard.
@@ -304,11 +317,42 @@ Equally, a system is not constrained to a single \ac{api} and may implement diff
 Another example for an \ac{api} is Win32 used by Windows to abstract their system calls, but as a result, applications targeting the Windows Win32 \ac{api} are not portable to systems implementing the \ac{posix} standard.
 % As a result system calls are rarely used directly by user applications without an abstraction layer such as libraries. An example is the \textit{libc}\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}.
 
+
 \subsection{System Calls in Linux}
-%TODO 
+In fact, the way system calls are working in Linux was already described as part of the general section. 
+The exact mechanism, the calling convention but also the number of system calls is highly depending on the \ac{cpu}'s architecture.
+While a 32-bit Linux kernel in version 4.8 for the x86 architecture offered 379 calls, the 64-bit version for x86\_64 just offered 328\cite{lfd430}.
+The \textit{man-pages} project documents gives an overview (\texttt{man 2 syscall}) about architectural differences and the calling conventions.
+How far Linux is acutally compatible to the \ac{posix} standard is not only related to the kernel and the number of system calls itself, but for the most part to its abstraction layer, the used \ac{posix}/C standard library.
+One of the most spread ones, the \textit{glibc} (GNU C Library) aims to follow POSIX.1\-2008 amoungst other standards\footnote{\url{https://www.gnu.org/software/libc/}} while the \textit{musl} library does not implement it in complete\footnote{\url{https://repo.or.cz/w/musl-tools.git/blob_plain/HEAD:/tab_posix.html}}.
+
+
+
 \subsection{System Calls in Zircon}
 % FIDL, core libs,.. 
+% http://research.cs.queensu.ca/~cordy/Papers/BKBHDC_ESE_Linux.pdf
+% for vdso
+In Zircon, system calls are bounded to the concept of \textit{handles}, a construct allowing applications running in user mode to reference a object in kernel mode\cite{zircon-handle}.
+Interactions between user applications and kernel objects are still done using system calls but the most of them are using a handle which describes the kernel object to work on\cite{zircon-concepts}. 
+Handles are checked by the kernel each time a system call is triggered.
+For additional security, the kernel checks wether
+\begin{itemize}
+    \item a handle has the correct type for the system call, 
+    \item a kernel handles parameters refer to one existing within the calling process's handle table and
+    \item a handle has the necessary rights for the triggered action\cite{zircon-concepts}.
+\end{itemize}
 
+In contrast to Linux, Zircon provides just one libary for system calls and the standard C implementation, the \textit{libzircon.so}.
+It is a \acf{vdso} directly provided by the kernel and not stored as a physical ELF file on disk.
+For the reason that \acp{vdso} are accessable from both, kernel and user mode, without switching the context, they are a perfect concept to implement system calls in a very performant way\cite{vdso-linuxjournal}.
+Thus, the Zircon \ac{vdso} is the only way to perform system calls\cite{zircon-vdso}, which is a very elegant solution to cope with performance issues in a microkernel architecture.
+
+The system calls are defined by using a abstract definition syntax and the matching tool \textit{abigen} which generates header files and code for the libzircon and the kernels system call implementation\cite{zircon-concepts}.
+Also in contrast to Linux does Zircon respectively Fuchsia not aim for \ac{posix} compatibility.
+It implements only a very limited subset of \ac{posix} consisting of basix \ac{io} operations and pthreads.
+Zircon does not support Unix-like signals, symbolic links and much more\cite{zircon-libc-posix}.
+The libzircon.so does not support directly \ac{io} operations. 
+They are performed by the \textit{fdio.so} library which overwrites weak symbols of the libzircon\cite{zircon-libc-posix}.
 
 \section{Processes and Threads} %TODO label
 \subsection{Processes}
