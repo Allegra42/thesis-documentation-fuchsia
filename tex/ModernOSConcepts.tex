@@ -321,7 +321,7 @@ Another example for an \ac{api} is Win32 used by Windows to abstract their syste
 \subsection{System Calls in Linux}
 In fact, the way system calls are working in Linux was already described as part of the general section. 
 The exact mechanism, the calling convention but also the number of system calls is highly depending on the \ac{cpu}'s architecture.
-While a 32-bit Linux kernel in version 4.8 for the x86 architecture offered 379 calls, the 64-bit version for x86\_64 just offered 328\cite{lfd430}.
+While a 32-bit Linux kernel in version 4.8 for the x86 architecture offered 379 calls, the 64-bit version for x86\_64 offered only 328\cite{lfd430}.
 The \textit{man-pages} project documents gives an overview (\texttt{man 2 syscall}) about architectural differences and the calling conventions.
 How far Linux is acutally compatible to the \ac{posix} standard is not only related to the kernel and the number of system calls itself, but for the most part to its abstraction layer, the used \ac{posix}/C standard library.
 One of the most spread ones, the \textit{glibc} (GNU C Library) aims to follow POSIX.1\-2008 amoungst other standards\footnote{\url{https://www.gnu.org/software/libc/}} while the \textit{musl} library does not implement it in complete\footnote{\url{https://repo.or.cz/w/musl-tools.git/blob_plain/HEAD:/tab_posix.html}}.
@@ -332,18 +332,18 @@ One of the most spread ones, the \textit{glibc} (GNU C Library) aims to follow P
 % FIDL, core libs,.. 
 % http://research.cs.queensu.ca/~cordy/Papers/BKBHDC_ESE_Linux.pdf
 % for vdso
-In Zircon, system calls are bounded to the concept of \textit{handles}, a construct allowing applications running in user mode to reference a object in kernel mode\cite{zircon-handle}.
+In Zircon, system calls are bounded to the concept of \textit{handles}, a construct which allows applications running in user mode to reference a object in kernel mode\cite{zircon-handle}.
 Interactions between user applications and kernel objects are still done using system calls but the most of them are using a handle which describes the kernel object to work on\cite{zircon-concepts}. 
 Handles are checked by the kernel each time a system call is triggered.
 For additional security, the kernel checks wether
 \begin{itemize}
     \item a handle has the correct type for the system call, 
-    \item a kernel handles parameters refer to one existing within the calling process's handle table and
+    \item a kernel handles parameters refers to one existing within the calling process's handle table and
     \item a handle has the necessary rights for the triggered action\cite{zircon-concepts}.
 \end{itemize}
-
+% 
 In contrast to Linux, Zircon provides just one libary for system calls and the standard C implementation, the \textit{libzircon.so}.
-It is a \acf{vdso} directly provided by the kernel and not stored as a physical ELF file on disk.
+It is a \acf{vdso} directly provided by the kernel and not stored as a physical \ac{elf} file on disk.
 For the reason that \acp{vdso} are accessable from both, kernel and user mode, without switching the context, they are a perfect concept to implement system calls in a very performant way\cite{vdso-linuxjournal}.
 Thus, the Zircon \ac{vdso} is the only way to perform system calls\cite{zircon-vdso}, which is a very elegant solution to cope with performance issues in a microkernel architecture.
 
@@ -354,9 +354,51 @@ Zircon does not support Unix-like signals, symbolic links and much more\cite{zir
 The libzircon.so does not support directly \ac{io} operations. 
 They are performed by the \textit{fdio.so} library which overwrites weak symbols of the libzircon\cite{zircon-libc-posix}.
 
-\section{Processes and Threads} %TODO label
+
+
+\section{Processes and Threads}\label{sec:processes-threads}
+
+Modern operating systems are characterized by their ability to perform various tasks at the same time.
+In general, parallelism can take place on different levels, e.g.\ as hardware or software paralellism.
+While the physical resources for the first case are actually available to execute the tasks really simultanesouly, it only seems to be so for software parallelism\cite{glatz2015betriebssysteme}.
+Hardware parallelism is realized by independent, may specialized execution units such as multiple processing cores or controllers which are able to perform particular parallel to the main \ac{cpu}.
+This could be USB, network or graphics controller, for example\cite{glatz2015betriebssysteme}.
+In order to create the impression of parallelism on a single \ac{cpu} and to use their available computing power as best as possible, an abstraction to provide pseudo concurrency for the execution of several tasks is required.
+According to \textsc{Tanenbaum}, this concept called \textit{process model}, is the most central one of operating systems\cite{tanenbaum-modern-operating-systems}.
+The term \textit{process} is often defined as a program in execution\cite{achilles2006betriebssysteme}.
+The process model is complemented by the thread model which provides a simplified version for paralellism within a process or an application\cite{glatz2015betriebssysteme}.
+The following sections take a closer look at these concepts, related topics and their implementation in Linux and Zircon.
+
+
+% \cite{glatz2015betriebssysteme}
+% different actions at the same time -> parallel tasks
+% parallel task execution -> process model, central concept of modern os
+% thread model -> parallel within applications
+%
+% hardware paralellism (multiprocessor, specialized controller (usb, network, graphics), are able to perform (specialized) tasks parallel to main cpu
+% (independent cpus and / or specialized controller working at the same time)
+%
+% software paralellism: execution seems to be at the same time (e.g. more than one process on a single core cpu) -> process modell -> multiprogramming -> computing time scheduling, time multiplexing
+% -> illusion of paralellism (nebenläufige programmausführung) -> scheduling strategies
+%
+% one process with more than one  actions using the same ressources -> thread model (simplified version of processes)
+%
+% \cite{achilles2006betriebssysteme}
+% 'a process ia a program in execution'
+%
+% process: memory segements (program code, data segment, stack, heap), resources (may exclusive use(dvd writer, cpu)) -> process controll block (pcb)
+%
+% \cite{tanenbaum-modern-operating-systems}
+% process is the most central concept
+% abstraction to provide (pseudo) concurrency
+%
+% \cite{silberschatz2009operating}
+% process resources: cpu time, memory, files, io devices, \ldots
+
 \subsection{Processes}
+model, creation, termination
 \subsection{Threads}
+\subsection{Synchronization}
 \subsection{Inter Process Communication}
 \subsection{Scheduling}
 \subsection{Processes and Threads in Linux}
