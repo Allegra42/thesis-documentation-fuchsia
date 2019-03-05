@@ -359,7 +359,8 @@ They are performed by the \textit{fdio.so} library which overwrites weak symbols
 \section{Processes and Threads}\label{sec:processes-threads}
 
 Modern operating systems are characterized by their ability to perform various tasks at the same time.
-In general, parallelism can take place on different levels, e.g.\ as hardware or software paralellism.
+So far, this fact has simply been accepted within this work, but it was not questioned what is special about it and how this multitasking is achieved by an operating system.
+In general, parallelisation of tasks can take place on different levels, e.g.\ as hardware or software paralellism.
 While the physical resources for the first case are actually available to execute the tasks really simultanesouly, it only seems to be so for software parallelism\cite{glatz2015betriebssysteme}.
 Hardware parallelism is realized by independent, may specialized execution units such as multiple processing cores or controllers which are able to perform particular parallel to the main \ac{cpu}.
 This could be USB, network or graphics controller, for example\cite{glatz2015betriebssysteme}.
@@ -367,42 +368,218 @@ In order to create the impression of parallelism on a single \ac{cpu} and to use
 According to \textsc{Tanenbaum}, this concept called \textit{process model}, is the most central one of operating systems\cite{tanenbaum-modern-operating-systems}.
 The term \textit{process} is often defined as a program in execution\cite{achilles2006betriebssysteme}.
 The process model is complemented by the thread model which provides a simplified version for paralellism within a process or an application\cite{glatz2015betriebssysteme}.
-The following sections take a closer look at these concepts, related topics and their implementation in Linux and Zircon.
+The following sections take a closer look at these concepts and answer the remaining questions, in particular about the process and thread model, synchronization mechanisms, inter process communication and their implementation in Linux and Zircon.
 
-
-% \cite{glatz2015betriebssysteme}
-% different actions at the same time -> parallel tasks
-% parallel task execution -> process model, central concept of modern os
-% thread model -> parallel within applications
-%
-% hardware paralellism (multiprocessor, specialized controller (usb, network, graphics), are able to perform (specialized) tasks parallel to main cpu
-% (independent cpus and / or specialized controller working at the same time)
-%
-% software paralellism: execution seems to be at the same time (e.g. more than one process on a single core cpu) -> process modell -> multiprogramming -> computing time scheduling, time multiplexing
-% -> illusion of paralellism (nebenläufige programmausführung) -> scheduling strategies
-%
-% one process with more than one  actions using the same ressources -> thread model (simplified version of processes)
-%
-% \cite{achilles2006betriebssysteme}
-% 'a process ia a program in execution'
-%
-% process: memory segements (program code, data segment, stack, heap), resources (may exclusive use(dvd writer, cpu)) -> process controll block (pcb)
-%
-% \cite{tanenbaum-modern-operating-systems}
-% process is the most central concept
-% abstraction to provide (pseudo) concurrency
-%
-% \cite{silberschatz2009operating}
-% process resources: cpu time, memory, files, io devices, \ldots
 
 \subsection{Processes}
-model, creation, termination
+% model, what is a process
+% \cite{glatz2015betriebssysteme}:
+% each process has virtually the whole cpu and corresponding resources for itself (cpu, register, address space)
+% process model realizes/coordinates the parallel execution of more than one process -> time multiplexing
+% reality: num processes > num cpu cores -> pseudo parallel execution
+%
+% \cite{tanenbaum-modern-operating-systems}: process model
+% runnable software is organized as a number of sequential processes, process is an instance of an executing program including its current values (pc, registers, variables) -> each one has its own virtual cpu -> real cpu switches different processes -> called multiprogramming
+%
+% programm needs to be in a defined format (object file format)
+% \cite{silberschatz} program is a passive entity -> executable file, process is an active entity (pc, ...)
+%
+% -> vordergrund/hintergrundprozesse (ui, deamon processes)
+% foreground(background) background -> not associated with users but with specific function -> deamon (accept incomming mail, ..) \cite{tanenbaum-modern-operating-systems}
+
+% process implementation
+
+% process is different in different systems -> needs something like a processor control block (pcb) (containing all relevant data, an id (pid), process state, process context,...)
+% -> for a parallel execution we need to switch between them -> context switches
+% process needs to be paused and resumed -> relevant information needs to be stored and restored -> cpu register contents (pc, sp, psw), process relevant memory contents (stack), register contents are copied to pcb and restored from there, memory content stays -> each process gets a private part of the memory
+%
+% \cite{achilles2006betriebssysteme}  process contains memory segments -> programm code, data segement(s), stack, heap + exclusive resouces and if cpu is active -> cpu register -> saved in pcb if process is interrupted (contains id, priority, process rights, maximum resources (max cpu time, max files open, ..), actual resources (actual cpu time, ...)
+%
+% \cite{tanenbaum-modern-operating-systems}
+% process table -> one entry per process (process control block) -> contains information about the process's state (pc, stack pointer, memory allocation, status of open files, accounting and scheduling information, priority, pid, parent process, ...)
+%
+% \cite{silberschatz}
+% pcb: process state (running, waiting,...), program counter, cpu registers, cpu scheduling information, memory management information, accounting information (maximum and actual cpu time used, time limits, account numbers, ..), io status information (io devices, open files, ... allocated by this process)
+%
+% process states
+% \cite{tanenbaum-modern-operating-systems} process states
+% running actually using cpu
+% ready runnable, temporary stopped to run other process
+% blocked unable to run until sth external happens, e.g. a resource is freed
+%
+% \cite{silberschatz}
+% new -> process is being created
+% running ->
+% waiting -> (blocked)
+% ready
+% terminated
+%
+% % lifecycle
+% \cite{mandl2014Grungkurs}
+% pic mandl
+% pic silberschatz
+% 1 os activates process
+% 2 os interrupts other process/ preemption
+% 3 process is blocked (waits for input, resources)
+% 4 reason for blocking is not longer available -> resources are available
+% 5 process is terminated (in(voluntary))
+% -> pic tanenbaum
+
+% multiprogramming model
+
+% programm needs to be in a defined format (object file format)
+%
+% \cite{tanenbaum-modern-operating-systems}
+% improves cpu utilization
+% - hardware stacks pc, ...
+% - hardware loads new pc from interrupt vector
+% - registers are saved
+% - new stack is setuped
+% - interrupt service runs (reads and buffers input)
+% - scheduler decides which process is to run next
+% - new process is started
+% process start
+% \cite{glatz2015betriebssysteme}, \cite{tanenbaum-modern-operating-systems}
+% process start:
+% -system start (initialisation)
+% -system service call for process creation (through a running process)
+% -application start (via user)
+% - init batch job
+%
+% -> vordergrund/hintergrundprozesse (ui, deamon processes)
+% foreground(background) background -> not associated with users but with specific function -> deamon (accept incomming mail, ..) \cite{tanenbaum-modern-operating-systems}
+% types of new processes
+% process chaining -> unix exec
+% process forking -> unix fork
+% process creation -> (threads pthread create, win thread create), win process create
+
+
+
+
+The term \textit{process} describes an instance of a program in execution, including all its required resources to enable a model for the pseudoparallel execution of multiple programs based thereon\cite{silberschatz2009operating},~\cite{tanenbaum-modern-operating-systems}.
+Each program in execution is modeled as a seperate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, especially the program counter (PC) and a private address space\cite{tanenbaum-modern-operating-systems}.~\cite{glatz2015betriebssysteme}.
+But since in reality more processes, respectively programs, have to be executed than \acp{cpu} exits, a mechanism is needed to switch between processes and allow the execution of all them.
+This mechanism behind, the \textit{multiprogramming model}, and the policies called \textit{process scheduling} will be considered hereafter.
+
+However, for a change between the execution of programs to succeed, a process must contain information about its state at the moment it is interrupted to run another one.
+Which information need to be stored and the way it is done is slightly depending on an effective system's design and its implementation.
+In general, these information are stored in a structure called \textit{process control block} in literature\cite{tanenbaum-modern-operating-systems}.
+Depending on the implementation, it contains for example
+\begin{itemize}
+    \item an process id, 
+    \item the process's state,
+    \item the \ac{cpu}'s register contents, especially the program counter (PC), the stack pointer (SP) and the processor status word (PSW),
+    \item the process's address space including the program code, its stack and heap and data segments, 
+    \item information about resources allocated by the process like open files, or \ac{io} devices,
+    \item \ac{cpu} scheduling and accounting information like a priority, the maximum and actual computing time for this process,
+    \item the parent process and
+    \item the process's rights\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme},~\cite{achilles2006betriebssysteme},~\cite{silberschatz2009operating}.
+\end{itemize}
+
+The state in this list refers to a process's lifecycle.
+It is quite easy and in most cases described as a state chart such as figure~\ref{pic:process-lifecycle}.
+Once a process was created, it is managed by the operating system and changes its state to \textit{ready}.
+The process is ready to run, but has to wait until the system allocates a \ac{cpu} to it.
+Is that the case, the process changes its state to \textit{running} and performs its calculations.
+If a process is interrupted (preempted) by the operating system without having fulfilled its task completely, there can be two reasons for this which result in different subsequent states.
+Was the process interrupted just to run another one, the process's state changes back to \textit{ready}. 
+It only lacks on \ac{cpu} time to run the process again.
+If the reason was instead that resources like the process is waiting for an external event or required \ac{io} devices are used by another process, so it changes its state to \textit{waiting} or \textit{blocked}. 
+Only when the blocking resource needed by the process is available again, the operating system changes the status of the process to \textit{ready} again.
+The process is prepared to get reassigned to a \ac{cpu}.
+A running process finishing its task during its computing time has reached the end of its life, its state changes to \textit{terminated}.
+The operating system destroys the process and free related resources\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
+
+\begin{figure} [ht]
+	\centering
+	\includegraphics[scale=0.4]{process-states-silberschatz}
+    \caption{Lifecycle of a process\label{pic:process-lifecycle}\cite{silberschatz2009operating}}
+    %TODO own picture!
+\end{figure}
+
+The model described applies to each individual process.
+For the coordination of the entirety of processes, a operating system kernel's component is responsible, the scheduler.
+It is a good example for the seperation of mechanism and policy.
+The mechanism behind is based on the \textit{multiprogramming} model as the switching of the \ac{cpu} between programs is called.
+It not only allows the impression of parallelism on a single processing core, but also increases its utilization, as many processes spend a lot time waiting for external events such as keyboard inputs\cite{tanenbaum-modern-operating-systems}.
+
+Principally, the mechanism behind scheduling does not differ fundamentally from the treatment of an ordinary interrupt.
+First, the programm counter (PC) is saved prior to the new PC is loaded from the interrupt vector and the \ac{cpu}'s registers are saved.
+After a new stack was setup, the actual interrupt service runs before the scheduling policy decides which process is to run next and the selected one is started\cite{tanenbaum-modern-operating-systems}.
+
+There are several reasons why a new process should be started and scheduled at all.
+The most basic one is the systems start-up.
+To initialise an operating system are numerous processes created to execute parts of the system itself.
+The user perceives very few of them directly, since the most of them are \textit{background processes} performing specific tasks like accepting incoming mails.
+Often, long running processes without user interaction are refered as \textit{deamon processes}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+They are mostly generated from the \textit{init process}, the first one running and bringing up the system.
+Foreground processes, the ones an user interacts with, are more often started on behalf of the user.
+Besides, a process can also be started by a system service call from an existing process.
+The last option, that a process is started to execute a batch job is rare today apart from scientifc high performance computers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
+
+Also for the way how a new process can be started there are several options.
+Using \textit{process chaining}, a running process starts an independent new one and destroys itself.
+An example is the Unix implementation of \texttt{exec()}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+By \textit{forking a process}, a second one that is, at least in the beginning, a copy of the original one.
+Both remains exiting and share the same environment such as program code and address space\cite{tanenbaum-modern-operating-systems}.
+The Unix implementation of \texttt{fork()} is an example for this way of process creation.
+Process \textit{forking} and \textit{chaining} are usually used combined in Unix-like systems to create a new, independent process which is running in parallel to the first one\cite{tanenbaum-modern-operating-systems}.
+In contrast, Windows offers a third way the \textit{process creation} which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
+
+
+
+% data for new processes
+data for new process -> inherit of all data (need to share same programm code), data buffer which is init via old process (via ipc), new process with initial values e.g. via sys call params
+
+inherit -> fork, win createprocess (\cite{achilles2006betriebssysteme}: both processes running at the same time, or parent waits for child to be ended, both share all resources/ a part of them /none, address space: child is a duplicate of parent/ child runs a new programming)
+ipc -> unix popen
+initial params -> posix pthread create, win create thread
+
+
+% process termination
+\cite{glatz2015betriebssysteme}, \cite{tanenbaum-modern-operating-systems}
+termination:
+- normal exit (voluntary)
+- ahead of time , error exit (self detected error, voluntary)
+- ahead of time (fatal error, detected by system) (not voluntary)
+- terminated/killed by other process (not voluntary involuntary)
+
+
+
+
+
+
+(synchronization)
+wait for other process:
+join -> follows to forking waiting is compulsory
+
+join -> unix process (wait, waitpid), posix thread (pthread join)
+wait -> windows process/thread  wait for single object
+
+? \cite{tanenbaum-modern-operating-systems}: process hierarchy
+
+
+
 \subsection{Threads}
+
+
 \subsection{Synchronization}
+
+
 \subsection{Inter Process Communication}
-\subsection{Scheduling}
+
+
+
 \subsection{Processes and Threads in Linux}
+
+
 \subsection{Processes and Threads in Zircon}
+
+
+\section{Scheduling}\label{sec:scheduling}
+
+\subsection{Scheduling in Linux}
+\subsection{Scheduling in Zircon}
 
 
 \section{Memory Management} %TODO label
