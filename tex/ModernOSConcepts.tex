@@ -452,12 +452,24 @@ The following sections take a closer look at these concepts and answer the remai
 % process chaining -> unix exec
 % process forking -> unix fork
 % process creation -> (threads pthread create, win thread create), win process create
-
-
+% % data for new processes
+% data for new process -> inherit of all data (need to share same programm code), data buffer which is init via old process (via ipc), new process with initial values e.g. via sys call params
+%
+% inherit -> fork, win createprocess (\cite{achilles2006betriebssysteme}: both processes running at the same time, or parent waits for child to be ended, both share all resources/ a part of them /none, address space: child is a duplicate of parent/ child runs a new programming)
+% ipc -> unix popen
+% initial params -> posix pthread create, win create thread
+% % process termination
+% \cite{glatz2015betriebssysteme}, \cite{tanenbaum-modern-operating-systems}
+% termination:
+% - normal exit (voluntary)
+% - ahead of time , error exit (self detected error, voluntary)
+% - ahead of time (fatal error, detected by system) (not voluntary)
+% - terminated/killed by other process (not voluntary involuntary)
 
 
 The term \textit{process} describes an instance of a program in execution, including all its required resources to enable a model for the pseudoparallel execution of multiple programs based thereon\cite{silberschatz2009operating},~\cite{tanenbaum-modern-operating-systems}.
-Each program in execution is modeled as a seperate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, especially the program counter (PC) and a private address space\cite{tanenbaum-modern-operating-systems}.~\cite{glatz2015betriebssysteme}.
+Each program in execution is modeled as a seperate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, especially the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems}.~\cite{glatz2015betriebssysteme}.
+Especially by using virtual private memory, processes are not only modeled individually, but are also isolated from each other in reality in order to prevent errors or deliberate attacks between programs\cite{brause2017betriebssysteme}.
 But since in reality more processes, respectively programs, have to be executed than \acp{cpu} exits, a mechanism is needed to switch between processes and allow the execution of all them.
 This mechanism behind, the \textit{multiprogramming model}, and the policies called \textit{process scheduling} will be considered hereafter.
 
@@ -476,6 +488,7 @@ Depending on the implementation, it contains for example
     \item the process's rights\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme},~\cite{achilles2006betriebssysteme},~\cite{silberschatz2009operating}.
 \end{itemize}
 
+\subsubsection*{Process Lifecycle}
 The state in this list refers to a process's lifecycle.
 It is quite easy and in most cases described as a state chart such as figure~\ref{pic:process-lifecycle}.
 Once a process was created, it is managed by the operating system and changes its state to \textit{ready}.
@@ -507,6 +520,7 @@ Principally, the mechanism behind scheduling does not differ fundamentally from 
 First, the programm counter (PC) is saved prior to the new PC is loaded from the interrupt vector and the \ac{cpu}'s registers are saved.
 After a new stack was setup, the actual interrupt service runs before the scheduling policy decides which process is to run next and the selected one is started\cite{tanenbaum-modern-operating-systems}.
 
+\subsubsection*{Process Creation}
 There are several reasons why a new process should be started and scheduled at all.
 The most basic one is the systems start-up.
 To initialise an operating system are numerous processes created to execute parts of the system itself.
@@ -518,37 +532,35 @@ Besides, a process can also be started by a system service call from an existing
 The last option, that a process is started to execute a batch job is rare today apart from scientifc high performance computers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 
 Also for the way how a new process can be started there are several options.
-Using \textit{process chaining}, a running process starts an independent new one and destroys itself.
+Using \textit{process chaining}, a running process starts an independent new one, a new \ac{pcb}, and destroys itself\cite{achilles2006betriebssysteme}.
 An example is the Unix implementation of \texttt{exec()}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 By \textit{forking a process}, a second one that is, at least in the beginning, a copy of the original one.
-Both remains exiting and share the same environment such as program code and address space\cite{tanenbaum-modern-operating-systems}.
+Both remains exiting and share the same environment such as program code, address space and resources\cite{tanenbaum-modern-operating-systems}.
+As a result, both processes have access to the exactly same resources like opened files or \ac{io} devices\cite{achilles2006betriebssysteme}.
 The Unix implementation of \texttt{fork()} is an example for this way of process creation.
 Process \textit{forking} and \textit{chaining} are usually used combined in Unix-like systems to create a new, independent process which is running in parallel to the first one\cite{tanenbaum-modern-operating-systems}.
 In contrast, Windows offers a third way the \textit{process creation} which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
 
+Are the newly created process and its parent share the same program code, the new one can simply inherit all needed data from its parent like it is done by \textit{process forking}\cite{achilles2006betriebssysteme}.
+Since each process has its own virtual address space if not shared through inheritance, so the data cannot be copied there without further ado.
+This is not only necessary for the multiprogramming model, but also a security mechanism that encapsulates and protects applications in execution against each other, called \textit{process isolation}.
+Is is the case, e.g.\ for the once created via \textit{process creation}, an operating system needs a mechanism to pass data to the created process.
+As a solution, a mechanism for the communication between processes with which the parent process communicated the new data to the child one via a buffer is just as conceivable as the use of inital parameters which are transmitted during the process creation, e.g.\ via a system call\cite{glatz2015betriebssysteme}.
+The first option is used by the \texttt{popen()} call of Unix-like systems while the mechanism behind the \textit{\ac{ipc}} takes a major role in modern operating systems and therefore is treated in a seperate section.
+The second one is more often used for \textit{threads} which are the topic of the following section.
+
+\subsubsection*{Process Termination}
+Reaching the end of its lifecycle (see figure~\ref{pic:process-lifecycle}), a process terminates itself regulary and voluntary (\textit{normal exit})\cite{tanenbaum-modern-operating-systems}.
+In addition, a process can terminate itself prematurely for various scenarious or be terminated by the operating system or other processes.
+For example, a process may detect an internal error and voluntary terminates itself ahead of time or the operating system detects such an error and terminates the process involuntary to avoid major damage\cite{tanenbaum-modern-operating-systems}.
+Besides, a process may gets involuntary terminated or killed by another process. 
+Killing another process is in common a privileged task which require an authorization or extended rights\cite{tanenbaum-modern-operating-systems}.
 
 
-% data for new processes
-data for new process -> inherit of all data (need to share same programm code), data buffer which is init via old process (via ipc), new process with initial values e.g. via sys call params
-
-inherit -> fork, win createprocess (\cite{achilles2006betriebssysteme}: both processes running at the same time, or parent waits for child to be ended, both share all resources/ a part of them /none, address space: child is a duplicate of parent/ child runs a new programming)
-ipc -> unix popen
-initial params -> posix pthread create, win create thread
+\subsection{Threads}
 
 
-% process termination
-\cite{glatz2015betriebssysteme}, \cite{tanenbaum-modern-operating-systems}
-termination:
-- normal exit (voluntary)
-- ahead of time , error exit (self detected error, voluntary)
-- ahead of time (fatal error, detected by system) (not voluntary)
-- terminated/killed by other process (not voluntary involuntary)
-
-
-
-
-
-
+\subsection{Synchronization}
 (synchronization)
 wait for other process:
 join -> follows to forking waiting is compulsory
@@ -558,12 +570,6 @@ wait -> windows process/thread  wait for single object
 
 ? \cite{tanenbaum-modern-operating-systems}: process hierarchy
 
-
-
-\subsection{Threads}
-
-
-\subsection{Synchronization}
 
 
 \subsection{Inter Process Communication}
