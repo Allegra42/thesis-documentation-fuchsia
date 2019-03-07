@@ -559,37 +559,72 @@ Killing another process is in common a privileged task which require an authoriz
 
 \subsection{Threads}
 
-\cite{mandl2014Grundkurs}: processes are expensive, threads are resource-saving -> a concurrent execution unit within a process, also named light-weight process (LWP), all threads within a process share the same addres space, the one of the process -> same process data, program code, global variables, resources -> light-weight because they share the resources
-besides the inherit context of the process (containing open files, ...) they have an own stack for local vars, own register and pc
+% whats a thread why threads
 
-threads may be implemented in both, kernel(os coordinates scheduling, better multiprocessor support, not blocking if a single thread blocks, but needs context switches, system dependent) and userspace(in this case, an userlib schedules threads within a process, no context switch to kernel needed, but all threads are blocked if a single one waits for resources), own data structure -> thread control block tcb, all tcb are collected in a thread table, have an own state, pc, registers and stack but now an own address space -> no seperate unit -> always exist in process context
+% \cite{mandl2014Grundkurs}: processes are expensive, threads are resource-saving -> a concurrent execution unit within a process, also named light-weight process (LWP), all threads within a process share the same addres space, the one of the process -> same process data, program code, global variables, resources -> light-weight because they share the resources
+% besides the inherit context of the process (containing open files, ...) they have an own stack for local vars, own register and pc
+%
+% \cite{brause2017betriebssysteme}: processes needs much memory (not the address space alone but also the pcb entry) -> for a number of processes it is more than can be cached in ram -> switching processes is a heavy operating and takes a long time
+% much applications do not need a completely new contest, but threads for execution within one process -> app waits for keyboard input and checks text for errors at the same time
+% -> threads as solution (lwp)
+%
+% \cite{glatz2015betriebssysteme}: basic idea: parallel actions based on the same resources (address space, files, io devices) -> parallel actions within a process, process manages the resources and threads -> no isolation or saftely between threads -> data may get corrupted/seen by another thread in the same process
+% process manages resources, thread executes the code -> each process contains at least one thread to execute code
+%
+%
+% processes are used to group resources together, threads are the entities scheduled for the execution on the cpu
+% threads: allow multiple executions to take place in the same environment. (multithreading)
+%
+% \cite{silberschatz2009operating}: benefits: responsiveness, resource sharing, economy (allocation memory and resources for process creation is costly), scalability (multiprocessor arch)
 
-one process contains a number of threads
+The current process concept, as previously introduced, provides a only a single thread of execution.
+However, this is problematic as soon as a resource needs to be edited in parallel.
+If an user edits a file for example, the process has to wait for the user's input. 
+It is nearly impossible to check this input for errors at the same time, since a second process is not allowed to access resources allocated by another process without an explicit action of programmers, such as the opened file is\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}.
 
-no context switch needed as threads share the same memory region/address space -> reduces system overhead, threads support parallelism -> good for mulitcore cpus, fine grained mechanism for parallelism
+The \textit{thread model} should solve this issue.
+Its basic idea is to equip a process with several execution threads that work on the same resources running in quasi-parallel\cite{tanenbaum-modern-operating-systems}.
+This means processes only group the resources together while \textit{threads} represent the actual execution units on the \ac{cpu}\cite{tanenbaum-modern-operating-systems}.
+A program is still abstracted as a proccess while (parallel) sequences within the program correspond to threads.
+As a result, \textit{threads} are nothing else than slimmed down processes sharing the same address space and physical resources.
+Each thread has its own \acp{pc}, register set, stack and state, but the address space, global variables, open files and accounting information are shared\cite{tanenbaum-modern-operating-systems}.
+A thread's lifecycle is equivalent to process's ones, but in contrast to them are threads not isolated and protected against each other\cite{glatz2015betriebssysteme}.
+As they share the same address space, one thread can read, write or even destroy another thread's private stack\cite{tanenbaum-modern-operating-systems}.
+Another issue are competing threads that try to write the same global data.
+They cause a \textit{race condition} which possibly result in inconsistent or wrong data\cite{brause2017betriebssysteme}.
 
-threads are not secured against each other -> no isolation between threads in a process -> may they overwrite global variables
+Nevertheless, the advantages of using \textit{threads} (multithreaded programming) predominate.
+The most important one is resource sharing. 
+The fact multiple threads using the same resources by default, e.g.\ files, in pseudoparallel are the biggest advantage but at the same time the biggest problem of this concept.
+Threads enable responsive interactive applications and increase the performance especially on multiprocessor architectures they can run truely parallel\cite{silberschatz2009operating}.
+Another reason is an economic one.
+While allocating an address space and physical resources to create a process is an expensive operation, creating a thread is not as they inherit exactly these components from their corresponding process\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
+Threads only need to setup their own \ac{pc}, registers, stack and a state within a process. 
+That's why they are also known as \acf{lwp}\cite{mandl2014Grundkurs}.
 
-example: ui applications -> ui waits for input, background tasks still running
+How \textit{light-weight} they actually are depends a lot to their implementation in an operating system.
+Conceivable options are thread implementions in userspace or kernel space, but also hybrid ones. 
+Implementing them as user library requires an own mechanism to schedule threads within a process which is often realized as a kind of runtime environment including a \ac{tcb} (according to \ac{pcb}) for each single process\cite{mandl2014Grundkurs},~\cite{tanenbaum-modern-operating-systems}.
+There is no need to invoke the operating system to switch a thread, but as a result become all threads within a process block if a single one waits for a resource\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}. 
+The implementation in kernel space is not that light-weight, but multicore architectures benefits more from this variant.
+If the operating system's kernel has the control over threads, these are managed just like processes.
+Instead of a \ac{tcb} within each process, the kernel collects the \acp{tcb} for all threads in the entire system in a thread table according to the process table\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
+But this also allows the kernel to recognize a blocked thread and schedule another one of the same process instead of blocking the whole process\cite{tanenbaum-modern-operating-systems}.
 
 
-\cite{brause2017betriebssysteme}: processes needs much memory (not the address space alone but also the pcb entry) -> for a number of processes it is more than can be cached in ram -> switching processes is a heavy operating and takes a long time
-much applications do not need a completely new contest, but threads for execution within one process -> app waits for keyboard input and checks text for errors at the same time
--> threads as solution (lwp)
--> race conditions -> threads share data and may are try to access resources in a conflicting way
+% % how are threads implemented
+% \cite{mandl2014Grundkurs} threads may be implemented in both, kernel(os coordinates scheduling, better multiprocessor support, not blocking if a single thread blocks, but needs context switches, system dependent) and userspace(in this case, an userlib schedules threads within a process, no context switch to kernel needed, but all threads are blocked if a single one waits for resources), own data structure -> thread control block tcb, all tcb are collected in a thread table, have an own state, pc, registers and stack but now an own address space -> no seperate unit -> always exist in process context
+%
+% no context switch needed as threads share the same memory region/address space -> reduces system overhead, threads support parallelism -> good for mulitcore cpus, fine grained mechanism for parallelism
+%
+% \cite{brause2017betriebssysteme} mostly implemented as user library -> fast thread switches -> no os needed, a waiting thread blocks the whole process
+% os impl: better for mulitcore ps, with real parallel threads, just blocking one thread but not the whole process
+%
+% \cite{tanenbaum-modern-operating-systems} userspace threads, kernel space threads , hybrids
+% userspace: each process needs its own private thread table to keep track (analog to process table)
+% kernel: no runtime system needed, no thread table in each process -> kernel has a thread table that keeps track of all threads in system (table holds registers, state and other information, subset of information tracked about processes), one blocking thread does not block the whole process, (e.g. one thread causes a page fault, other thread can be runned until the page is loaded) (more expensive than user threads)
+% hybrids:
 
-mostly implemented as user library -> fast thread switches -> no os needed, a waiting thread blocks the whole process
-os impl: better for mulitcore ps, with real parallel threads, just blocking one thread but not the whole process
-
-\cite{glatz2015betriebssysteme}: basic idea: parallel actions based on the same resources (address space, files, io devices) -> parallel actions within a process, process manages the resources and threads -> no isolation or saftely between threads -> data may get corrupted/seen by another thread in the same process
-process manages resources, thread executes the code -> each process contains at least one thread to execute code
-
-process: for one application
-thread: for parallel executed parts within an applications
-
-user /kernel threads
-
-\cite{tanenbaum-modern-operating-systems}: 
 
 \subsection{Synchronization}
 (synchronization)
@@ -601,14 +636,14 @@ wait -> windows process/thread  wait for single object
 
 ? \cite{tanenbaum-modern-operating-systems}: process hierarchy
 
-
+\cite{silberschatz2009operating}
 
 \subsection{Inter Process Communication}
 
 
 
-\subsection{Processes and Threads in Linux}
-
+\subsection{Processes and Threads in Linux} 
+\cite{silberschatz2009operating}
 
 \subsection{Processes and Threads in Zircon}
 
