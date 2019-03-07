@@ -559,6 +559,37 @@ Killing another process is in common a privileged task which require an authoriz
 
 \subsection{Threads}
 
+\cite{mandl2014Grundkurs}: processes are expensive, threads are resource-saving -> a concurrent execution unit within a process, also named light-weight process (LWP), all threads within a process share the same addres space, the one of the process -> same process data, program code, global variables, resources -> light-weight because they share the resources
+besides the inherit context of the process (containing open files, ...) they have an own stack for local vars, own register and pc
+
+threads may be implemented in both, kernel(os coordinates scheduling, better multiprocessor support, not blocking if a single thread blocks, but needs context switches, system dependent) and userspace(in this case, an userlib schedules threads within a process, no context switch to kernel needed, but all threads are blocked if a single one waits for resources), own data structure -> thread control block tcb, all tcb are collected in a thread table, have an own state, pc, registers and stack but now an own address space -> no seperate unit -> always exist in process context
+
+one process contains a number of threads
+
+no context switch needed as threads share the same memory region/address space -> reduces system overhead, threads support parallelism -> good for mulitcore cpus, fine grained mechanism for parallelism
+
+threads are not secured against each other -> no isolation between threads in a process -> may they overwrite global variables
+
+example: ui applications -> ui waits for input, background tasks still running
+
+
+\cite{brause2017betriebssysteme}: processes needs much memory (not the address space alone but also the pcb entry) -> for a number of processes it is more than can be cached in ram -> switching processes is a heavy operating and takes a long time
+much applications do not need a completely new contest, but threads for execution within one process -> app waits for keyboard input and checks text for errors at the same time
+-> threads as solution (lwp)
+-> race conditions -> threads share data and may are try to access resources in a conflicting way
+
+mostly implemented as user library -> fast thread switches -> no os needed, a waiting thread blocks the whole process
+os impl: better for mulitcore ps, with real parallel threads, just blocking one thread but not the whole process
+
+\cite{glatz2015betriebssysteme}: basic idea: parallel actions based on the same resources (address space, files, io devices) -> parallel actions within a process, process manages the resources and threads -> no isolation or saftely between threads -> data may get corrupted/seen by another thread in the same process
+process manages resources, thread executes the code -> each process contains at least one thread to execute code
+
+process: for one application
+thread: for parallel executed parts within an applications
+
+user /kernel threads
+
+\cite{tanenbaum-modern-operating-systems}: 
 
 \subsection{Synchronization}
 (synchronization)
