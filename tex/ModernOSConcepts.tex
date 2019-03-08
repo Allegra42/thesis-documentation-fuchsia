@@ -64,9 +64,13 @@ But before, the terms \textit{kernel mode} and \textit{user mode} will be explai
 \subsubsection*{Dual-Mode Execution}
 Modern general purpose \acp{cpu} provide a ring based, hardware enabled security model which had it's origin in the Intel x86 processor architecture\cite{tanenbaum-modern-operating-systems}.
 It is usually made of four different security levels, the rings 0 to 3 which are illustrated in Figure~\ref{pic:x86rings}.
-In this model, ring 3 is the least secure level, used for common user applications (even if started with extended privileges (\textit{root} for the UNIX-like world)), while ring 2 is used for libraries shared between user applications and ring 1 is for system calls\cite{glatz2015betriebssysteme}.
+In this theoretical model, ring 3 is the least secure level, used for common user applications (even if started with extended privileges (\textit{root} for the UNIX-like world)), while ring 2 is used for libraries shared between user applications and ring 1 is for system calls\cite{glatz2015betriebssysteme}.
+Actual operating system implementations may not use all of them.
+Linux for example utilize ring 3 for user-space applications, shared libraries and ring 0 for system calls and the kernel.
 System calls provide the transition to ring 0, the one with the topmost security level, which is used for the operating system kernel.
-As a crucial part of an operating system, they will be discussed in more detail later in this work.
+Actual operating system implementations may not use all of them.
+Linux for example utilize ring 3 for user-space applications, shared libraries and ring 0 for system calls and the kernel.
+As a crucial part of an operating system, system calls will be discussed in more detail later in this work.
 
 Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
 It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
@@ -93,6 +97,9 @@ Figure~\ref{pic:mode-switches} pictures the operating flow of a system call incl
 \end{figure}
 
 The \ac{cpu}'s operating mode is usually controlled by a specific bit in the \ac{psw}\cite{tanenbaum-modern-operating-systems}.
+\ac{psw} is term on x86 \ac{cpu} architectures. 
+It is corresponding to the \ac{cpsr} on ARM architectures\footnote{http://infocenter.arm.com, visited on 08.03.2019 \url{http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473f/CHDFAEID.html}}.
+But since in literature is always spoken of the \ac{psw} regardless of the concrete \ac{cpu}'s architecture, this should also be done in this work.
 It influences the state of each \ac{cpu} core itself in a multi-processor system, but not the operating system kernel.
 As a result, different \ac{cpu} cores may be in a different execution mode\cite{lfd430}.
 With this seperation, any priviledged instruction is forbidden in \textit{user mode} and will not be executed.
@@ -104,7 +111,7 @@ Thus, they have an influence on the whole system, including device driver develo
 With this basic knowledge about the \ac{cpu}'s operating modes, the next section researches a selection of different operating system architectures.
 Special attention should be paid to the most common ones, the \textit{monolithic} and the \textit{microkernel} architectures and their implementation in Linux and Zircon.
 On the contrary, this work will not take a particular look on special purpose operating system architectures such as ones for loosely coupled multi-processor systems known from processing clusters.
-Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} and most of common modern operating systems are designed to provide support for the defacto standard for tightly coupled systems, \ac{smp}.
+Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} cores and most of common modern operating systems are designed to provide support for the defacto standard for tightly coupled systems, \ac{smp}.
 
 
 \subsection{Monolithic Architectures}\label{sec:monolithic-archs}
@@ -163,6 +170,8 @@ The data of the previous context (e.g.\ the user mode context) will be displaced
 By rapidly switching back to the previous context, as is usual for e.g.\ a short kernel invokation to perform an \ac{io} operation on microkernel architectures, the cache is no longer suitable for the new context and has to be replaced\cite{lfd430}.
 
 First of all, the \textit{L4} kernel, a second generation microkernel was able to get close to the performance of a monolithic kernel as \textit{Linux} it is\cite{Hrtig1997}.   
+This has been achieved by improving the \acf{ipc} mechanism, a fundamental component of microkernel architectures on which other communication mechanisms are based.
+% by improving ipc performance, only synchronous ipc
 Nevertheless are pure microkernels mainly used for systems with high reliability requirements but unusual for desktop application. 
 Some industry examples are \textit{Integrity}, \textit{QNX} and \textit{seL4}, a mathematically verified version of the \textit{L4} kernel\cite{tanenbaum-modern-operating-systems}. 
 
