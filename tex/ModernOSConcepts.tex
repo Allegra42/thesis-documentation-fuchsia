@@ -332,7 +332,7 @@ One of the most spread ones, the \textit{glibc} (GNU C Library) aims to follow P
 % FIDL, core libs,.. 
 % http://research.cs.queensu.ca/~cordy/Papers/BKBHDC_ESE_Linux.pdf
 % for vdso
-In Zircon, system calls are bounded to the concept of \textit{handles}, a construct which allows applications running in user mode to reference a object in kernel mode\cite{zircon-handle}.
+In Zircon, system calls are bounded to the concept of \textit{handles}, a construct which allows applications running in user mode to reference an object in kernel mode\cite{zircon-handle}.
 Interactions between user applications and kernel objects are still done using system calls but the most of them are using a handle which describes the kernel object to work on\cite{zircon-concepts}. 
 Handles are checked by the kernel each time a system call is triggered.
 For additional security, the kernel checks wether
@@ -468,9 +468,9 @@ The following sections take a closer look at these concepts and answer the remai
 
 
 The term \textit{process} describes an instance of a program in execution, including all its required resources to enable a model for the pseudoparallel execution of multiple programs based thereon\cite{silberschatz2009operating},~\cite{tanenbaum-modern-operating-systems}.
-Each program in execution is modeled as a seperate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, especially the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems}.~\cite{glatz2015betriebssysteme}.
+Each program in execution is modeled as a seperate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, above all the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems}.~\cite{glatz2015betriebssysteme}.
 Especially by using virtual private memory, processes are not only modeled individually, but are also isolated from each other in reality in order to prevent errors or deliberate attacks between programs\cite{brause2017betriebssysteme}.
-But since in reality more processes, respectively programs, have to be executed than \acp{cpu} exits, a mechanism is needed to switch between processes and allow the execution of all them.
+But since in reality more processes, respectively programs, have to be executed than \acp{cpu} exists, a mechanism is needed to switch between processes and allow the execution of all them.
 This mechanism behind, the \textit{multiprogramming model}, and the policies called \textit{process scheduling} will be considered hereafter.
 
 However, for a change between the execution of programs to succeed, a process must contain information about its state at the moment it is interrupted to run another one.
@@ -489,8 +489,8 @@ Depending on the implementation, it contains for example
 \end{itemize}
 
 \subsubsection*{Process Lifecycle}
-The state in this list refers to a process's lifecycle.
-It is quite easy and in most cases described as a state chart such as figure~\ref{pic:process-lifecycle}.
+The state in the list above refers to a process's lifecycle.
+It is quite easy and in most cases described as a state chart like pictured in figure~\ref{pic:process-lifecycle}.
 Once a process was created, it is managed by the operating system and changes its state to \textit{ready}.
 The process is ready to run, but has to wait until the system allocates a \ac{cpu} to it.
 Is that the case, the process changes its state to \textit{running} and performs its calculations.
@@ -501,7 +501,7 @@ If the reason was instead that resources like the process is waiting for an exte
 Only when the blocking resource needed by the process is available again, the operating system changes the status of the process to \textit{ready} again.
 The process is prepared to get reassigned to a \ac{cpu}.
 A running process finishing its task during its computing time has reached the end of its life, its state changes to \textit{terminated}.
-The operating system destroys the process and free related resources\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
+The operating system destroys the process and frees related resources\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
 
 \begin{figure} [ht]
 	\centering
@@ -511,7 +511,7 @@ The operating system destroys the process and free related resources\cite{silber
 \end{figure}
 
 The model described applies to each individual process.
-For the coordination of the entirety of processes, a operating system kernel's component is responsible, the scheduler.
+For the coordination of the entirety of processes, the schedule, an operating system kernel's component is responsible.
 It is a good example for the seperation of mechanism and policy.
 The mechanism behind is based on the \textit{multiprogramming} model as the switching of the \ac{cpu} between programs is called.
 It not only allows the impression of parallelism on a single processing core, but also increases its utilization, as many processes spend a lot time waiting for external events such as keyboard inputs\cite{tanenbaum-modern-operating-systems}.
@@ -530,6 +530,7 @@ They are mostly generated from the \textit{init process}, the first one running 
 Foreground processes, the ones an user interacts with, are more often started on behalf of the user.
 Besides, a process can also be started by a system service call from an existing process.
 The last option, that a process is started to execute a batch job is rare today apart from scientifc high performance computers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
+%TODO graphic
 
 Also for the way how a new process can be started there are several options.
 Using \textit{process chaining}, a running process starts an independent new one, a new \ac{pcb}, and destroys itself\cite{achilles2006betriebssysteme}.
@@ -577,16 +578,16 @@ Killing another process is in common a privileged task which require an authoriz
 %
 % \cite{silberschatz2009operating}: benefits: responsiveness, resource sharing, economy (allocation memory and resources for process creation is costly), scalability (multiprocessor arch)
 
-The current process concept, as previously introduced, provides a only a single thread of execution.
-However, this is problematic as soon as a resource needs to be edited in parallel.
-If an user edits a file for example, the process has to wait for the user's input. 
-It is nearly impossible to check this input for errors at the same time, since a second process is not allowed to access resources allocated by another process without an explicit action of programmers, such as the opened file is\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}.
+The current process concept, as previously introduced, provides only a single thread of execution.
+However, this an issue as soon as a resource needs to be edited in parallel.
+If an user edits a file for example, the process has to wait for the user's input repeatedly. 
+It is nearly impossible to check this input for errors at the same time, since a second process is not allowed to access resources allocated by another process without an explicit action of programmers (like explicit \acl{ipc})\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}.
 
 The \textit{thread model} should solve this issue.
 Its basic idea is to equip a process with several execution threads that work on the same resources running in quasi-parallel\cite{tanenbaum-modern-operating-systems}.
 This means processes only group the resources together while \textit{threads} represent the actual execution units on the \ac{cpu}\cite{tanenbaum-modern-operating-systems}.
-A program is still abstracted as a proccess while (parallel) sequences within the program correspond to threads.
-As a result, \textit{threads} are nothing else than slimmed down processes sharing the same address space and physical resources.
+A program is still abstracted as a process while (parallel) sequences within the program correspond to threads.
+As a result, \textit{threads} can be considered as slimmed down processes sharing the same address space and physical resources.
 Each thread has its own \acp{pc}, register set, stack and state, but the address space, global variables, open files and accounting information are shared\cite{tanenbaum-modern-operating-systems}.
 A thread's lifecycle is equivalent to process's ones, but in contrast to them are threads not isolated and protected against each other\cite{glatz2015betriebssysteme}.
 As they share the same address space, one thread can read, write or even destroy another thread's private stack\cite{tanenbaum-modern-operating-systems}.
@@ -596,7 +597,7 @@ They cause a \textit{race condition} which possibly result in inconsistent or wr
 Nevertheless, the advantages of using \textit{threads} (multithreaded programming) predominate.
 The most important one is resource sharing. 
 The fact multiple threads using the same resources by default, e.g.\ files, in pseudoparallel are the biggest advantage but at the same time the biggest problem of this concept.
-Threads enable responsive interactive applications and increase the performance especially on multiprocessor architectures they can run truely parallel\cite{silberschatz2009operating}.
+Threads enable responsive, interactive applications and increase the performance especially on multiprocessor architectures they can run truely parallel\cite{silberschatz2009operating}.
 Another reason is an economic one.
 While allocating an address space and physical resources to create a process is an expensive operation, creating a thread is not as they inherit exactly these components from their corresponding process\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
 Threads only need to setup their own \ac{pc}, registers, stack and a state within a process. 
@@ -605,10 +606,11 @@ That's why they are also known as \acf{lwp}\cite{mandl2014Grundkurs}.
 How \textit{light-weight} they actually are depends a lot to their implementation in an operating system.
 Conceivable options are thread implementions in userspace or kernel space, but also hybrid ones. 
 Implementing them as user library requires an own mechanism to schedule threads within a process which is often realized as a kind of runtime environment including a \ac{tcb} (according to \ac{pcb}) for each single process\cite{mandl2014Grundkurs},~\cite{tanenbaum-modern-operating-systems}.
-There is no need to invoke the operating system to switch a thread, but as a result become all threads within a process block if a single one waits for a resource\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}. 
+There is no need to invoke the operating system to switch a thread, but as a result all threads within a process block become blocked if a single one waits for a resource\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}. 
+The operating system's schedule just do not know about the runtime environment and possible other runnable threads within a process.
 The implementation in kernel space is not that light-weight, but multicore architectures benefits more from this variant.
 If the operating system's kernel has the control over threads, these are managed just like processes.
-Instead of a \ac{tcb} within each process, the kernel collects the \acp{tcb} for all threads in the entire system in a thread table according to the process table\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
+Instead of one \ac{tcb} within each process, the kernel collects the \acp{tcb} for all threads in the entire system in a thread table according to the process table\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
 But this also allows the kernel to recognize a blocked thread and schedule another one of the same process instead of blocking the whole process\cite{tanenbaum-modern-operating-systems}.
 
 
@@ -627,19 +629,176 @@ But this also allows the kernel to recognize a blocked thread and schedule anoth
 
 
 \subsection{Synchronization}
-(synchronization)
-wait for other process:
-join -> follows to forking waiting is compulsory
+% (synchronization)
+% wait for other process:
+% join -> follows to forking waiting is compulsory
+%
+% join -> unix process (wait, waitpid), posix thread (pthread join)
+% wait -> windows process/thread  wait for single object
 
-join -> unix process (wait, waitpid), posix thread (pthread join)
-wait -> windows process/thread  wait for single object
 
-? \cite{tanenbaum-modern-operating-systems}: process hierarchy
+% race conditions
+    % \cite{tanenbaum-modern-operating-systems} : threads share storage that one can read and write (e.g. main memory) -> thread a reads a value, thread b reads a value. thread b writes a new value, thread a will also write a new value but startig from the value read before. -> inconsistent
+    % -> race condition : two or more processes (via ipc) or threads try to read and write shared data -> the final result depends on who runs in which order
+    % \cite{glatz2015betriebssysteme} lost update problem -> race conditions, inconsistent read
+%
+    % \cite{silberschatz2009operating} for operating systems: just an issue on preemptive kernels (allows a process to be preempted while it is running in kernel mode), a nonpreemptive kernel does not allow a process running in kernel mode to be preempted -> kernel mode process will run until it exits kernel mode, blocks or voluntary yields control of the cpu -> a nonpreemptive kernel is essentially free grom race conditions on kernel data structures as only one process is active in the kernel at a time -> preemptive kernel is more suitable for realtime tasks -> more responsive
+%
+% critical regions
+    % \cite{tanenbaum-modern-operating-systems}: avoid race conditions -> allow only one process to read/write shared data at the same time -> mutual exclusion -> if one process/thread use a shared date, all other processes are excluded from doing the same -> race conditions are only caused by access shared memory, files or resources -> critial section/region, other actions do not harm
+    % mutal exclusion can be achieved via busy waiting
+        % - disabling interrupts (single processor system, disable all interrupts after entering a critical region, reenable just before leavin) -> no clock interrupt, process no process intervene, but a userprocess is able to disable interrupts -> dangerous, may stopps everything but the running process (never re-enable interrupts) -> not suitable for multicore processors, ok for os itself
+        % - lock variables: same issue as race conditions itself
+        % - peterson's solution/ dekker -> software realization not further interesting \cite{glatz2015betriebssysteme} bakery algorithm (lamport) \cite{silberschatz2009operating}
+%
+%
+        % - hardware support via tsl instruction (test and set lock) -> cpu locks the memory bus to prohibit other cpus from accessing memory until done -> cpu still runs, scheduler still work, just memory bus is locked (used in enter region, removed in leave region) (alternative instruction: XCHG -> exchanges the contents of two locations atomically -> used at intel cpus) -> one atomar operation
+        % \cite{silberschatz2009operating}
+%
+        % \cite{glatz2015betriebssysteme} tsl is sometimes called TAS (test and set) -> makes platform dependet code
+%
+        % peterson and tsl/xchg do busy waiting
+            % -> spinlock: lock that is busy waiting (for a reasonable expectation the wait will be short, if not avoid -> wastes CPU time)
+            % -> waist cpu time
+%
+    % \cite{achilles2006betriebssysteme}
+    % - combine operations to one uninterruptable atomar operation -> intel test and set instruction
+    % - lock interrupts -> they will be collected and done later (after the interrupts are unlocked again) -> just for short sections, just for single core
+%
 
-\cite{silberschatz2009operating}
+Already the previous section mentioned that the ability of threads to access shared data not only has advantages.
+As they share storage, e.g.\ main memory, two threads can read and write the same value.
+But what happens if both of them try to access the same, shared value?
+Two threads try to read and modify a shared value are given.
+Both read the value and calculate based on the read a new one to store. 
+There is no problem as long as they just read the same value, but it occures on updating the value.
+May the first thread is scheduled first and updates the value, directly following the second one is scheduled and updates the value based on the value read before the first thread was executed.
+In this case, the update of the first thread is lost. 
+The data becomes inconsitent.
+Such a situation is called \textit{lost update problem}\cite{glatz2015betriebssysteme}.
+Unless the scheduling of the threads is predictable in each situation, it remains impossible to predict the exact outcome of it.
+Therefore, one speaks of a \textit{race condition}\cite{tanenbaum-modern-operating-systems}.
+
+Race conditions are each time a topic where several processes or threads work on the same data in any way.
+This also applies to an operating system's kernel.
+Except for non-preemtive kernels which can guarantee that only one thread is active at a time\cite{silberschatz2009operating}.
+In contrast to preemptive kernels, non-preemptive ones do not allow a thread running in kernel mode to be interrupted. 
+The thread runs until it exits kernel mode, blocks or yields the control of the \ac{cpu} voluntary\cite{silberschatz2009operating}.
+Only in such a case can be guaranteed that a kernel and its data structures are free of race conditions.
+However, preemptive kernels are more common because they are more responsive and better suited for real-time tasks due to their interruptibility\cite{silberschatz2009operating}.
+Furthermore, with today's multicore systems is it rather unlikely to fulfil the requirement of only one active thread in kernel space.
+
+For this reason, a mechanism to prevent race conditions on both, user and kernelspace, is needed.
+The basic idea to achieved this is to exclude chance that a thread that wants to change a shared resource cannot be interrupted by another one that wants to work on the same resource\cite{tanenbaum-modern-operating-systems}.
+But only certain areas in the program code are critical. 
+The ones a shared resource is processed.
+They are called \textit{critical regions} or \texit{critical section}\cite{tanenbaum-modern-operating-systems}.
+Other regions do not harm if they are interrupted.
+If only one thread at a time is allowed in critical sections and another one is only allowed to enter the region as soon as the competing access is completed, this is called \textit{mutual exclusion}\cite{tanenbaum-modern-operating-systems}, \cite{glatz2015betriebssysteme}.
+
+The easiest way to achieve \textit{mutual exclusion} is to completely disable the system's interrupts immediately after entering a critical region and reenable them just before leaving the region.
+In the meantime, all incoming interrupts are collected and processed as soon as they become reenabled\cite{achilles2006betriebssysteme}.
+However, this method is not suitable for modern multicore systems since the interrupts can only be locked for the current \ac{cpu} core.
+The competing thread can still modify the resource if executed on a different core.
+This solution is not ideal for single core systems, too, because even the clock interrupt is disabled and with this the process scheduling.
+Does the currently running not reenable the interrupts, the whole system is blocked\cite{tanenbaum-modern-operating-systems}.
+
+While there are some approaches to pure software solutions such as the algorithms of \textsc{Peterson} or \textsc{Dekker} (see \cite{tanenbaum-modern-operating-systems} or \cite{silberschatz2009operating} for further information) are hardware enabled solutions common today\cite{tanenbaum-modern-operating-systems}.
+Modern multicore \acp{cpu} usually offer an instruction which is referred as \ac{tsl} or \ac{tas} in literature.
+It is an atomar, not interruptible operation, usually used to modify a shared variable which controlls the access to a shared memory region\cite{tanenbaum-modern-operating-systems}.
+This is in common achieved by locking the memory bus to prevent other \acp{cpu} from accessing the memory until the operation is done.
+As a big advantage of this solution, the \ac{cpu} cores are not obstructed.
+Common calculations are not impeded but memory accesses are prevented\cite{tanenbaum-modern-operating-systems}.
+A variant is the \ac{xchg} instruction which exchanges the content of two memory locations in one atomic operation\cite{silberschatz2009operating}.
+
+All mechanisms mentioned so far have one problem: they require busy waiting.
+The thread waiting is still active and waists \ac{cpu} time.
+For short waits, this is perfectly fine.  
+Switching to another thread and back would be more expensive in such a situation\cite{glatz2015betriebssysteme}. 
+Thus there are locking mechanisms that implement busy waiting very efficiently, called \textit{spinlocks}\cite{tanenbaum-modern-operating-systems}.
+But longer active waits are very inefficient.
+In this case, it is better to use blocking waits and bring another thread in execution until the reason for the blocking is removed, e.g.\ the desired resource is freed again.
+
+\subsubsection*{Semaphores and Mutexes}
+\textsc{Dijkstra} suggested in 1965 a possibly blocking lock mechanism called \textit{semaphores} based on a \ac{cpu}'s \ac{tsl} instuction and easier to use for application developers.
+A \textit{semaphore} is a new integer typ with two related operations called \textit{P} and \textit{V} in the original paper or \textit{down} and \textit{up} in some literature and implementations\cite{glatz2015betriebssysteme}.
+% The semaphore is initally initialized with a value greater 0, the exact one depends on a system's implementation or can be defined by a programmer.
+If the \textit{P} or \textit{down} operation is executed on a semaphore, it is checked whether the value is greater than 0, decrements the counter if it is the case and continues. 
+If not, the thread is put to sleep.
+The operation remains unfinished until a \textit{V} or \textit{up} operation was executed and incremented the semaphores value.
+One of the possibly multiple threads sleeping on a semaphore is randomly or by a certain rule choosen by the operating system and gets the clearance to complete the \textit{P} or \textit{down} operation\cite{tanenbaum-modern-operating-systems}.
+For a semaphore, the fact updates on its value must be performed in an atomic operation is essential\cite{silberschatz2009operating}.
+Neighter the decrementing of the value performed in the \textit{P} operation nor the incrementing in \textit{V} may be interrupted.
+
+If semaphores are actually blocking depends on the implementation.
+As mentioned earlier is a blocking mechanism not always advantageous, e.g.\ for very short waits or multicore systems with real parallelism.
+In this cases, its is potentially more efficient to use busy waiting with spinlocks\cite{glatz2015betriebssysteme}.
+
+%TODO variant mutexes
+\ \\
+\ \\
+
+        % blocking /rescheduling solutions
+% mutexes semaphores
+            -> semaphores : integer variable with two operations: down and up -> down checks if the value is greater than 0 (initial value depends), if so it decrements the value and continues, if 0 the process is put to sleep without completing  the down for the moment -> checking the value, changing it and possiby go to sleep is a a indivisible atomic action on a semaphore (guaranteed) 
+                up operation : increments the value of the semaphore -> if one or more processes were sleeping on that semaphore, one of them is (randomly) choosen by the system and allowed to complete down -> no process ever blocks doing an up 
+                original paper down = P, up = V \cite{glatz2015betriebssysteme}
+                \cite{glatz2015betriebssysteme} P and V are not divideable -> atomic operations
+                if the waiting time is very short or a we have a multicore system with real paralellism, blocking becomes very unattractive (needs two process changes) -> active waiting with spinlocks
+
+                -> binary semaphores -> mutex (initialized to 1) -> guarantees mutal exclusion by using them for critical regions,  two states (locked/unlocked) (can be implemented with tsl/xchg) -> schedule another thread instead busy waiting, try again in next schedule cycle (as long as mutex is locked)
+
+ 
+                -> spinlock: lock that is busy waiting (for a reasonable expectation the wait will be short, if not avoid -> wastes CPU time)
+            -> waist cpu time
+
+        
+                -> futex: fast userspace mutex, spinlocks are fast if waiting is short, waste cpu time if not -> blocking - and let the kernel unblock but switching to kernel is expensive -> futex as solution -> avoids dropping into the kernel unless it really has to -> consists of two parts : kernel service provides a wait queue that allows multiple processes to wait on a lock, kernel explicitly unblocks them, put a process on the wait queue requires an expensive syscall -> should be avoided -> user lib is completely in userspace (atomic function (decrement and test/ increment and test)) -> needs a syscall but does not spin  -> kernel is only invoked if there is a contention  
+
+% monitors
+programming language construct to simplify ipc communication -> refer to tanenbaum-modern-operating-systems or \cite{mandl2014Grundkurs}
+\cite{silberschatz2009operating} monitors e.g. implemented with semaphores
+
+ % barriers
+\cite{glatz2015betriebssysteme} two or more threads needs to be synchronized in a way they wait for each other in their program flow. -> barriers -> both threads must reach a synchronization point (barrier) before both are allowed to continue -> one thread needs to wait for the other one -> can be realized with semaphores
+
+
+% priority inversion
+            -> priorit inversion (two processes, H & L, (H runs whenever becomes ready) low runs, get in a critical section. H becomes ready and is scheduled -> but L is in a crit section and can never leave, while H is busy waiting
+            \cite{glatz2015betriebssysteme}: pathfinder (marssonde) -> solution: priority inheritance -> means that when a thread waits on a mutex ownd by a lower priority thread, the priority of the owner is increased to that of the waiter. -> operating system mechanism
+
+% synchronisation issues
+                \cite{mandl2014Grundkurs} other synchronization problems: blocking (a process is blocked because a second one holds a needed resource, until the second one frees the resource), starvation (process is ready but does not get cpu time because higher prior processes are preferred) , deadlock (process 1 holds resource A and needs resource b, process 2 holds resource b and needs resource a -> non of them frees its resource -> cyclic dependencies -> both are blocked forever)
+
+
+                \cite{silberschatz2009operating} \cite{glatz2015betriebssysteme} further synchronization problems: producer-consumer, readers and writers, dining philosophers (tanenbaum-modern-operating-systems, \cite{mandl2014Grundkurs})
+
+
 
 \subsection{Inter Process Communication}
 
+% message based communication
+
+    (synchron / asynchron) \cite{glatz2015betriebssysteme}: 
+    synchron: receiver has to be ready to receive data (one have to wait for the other to become ready)
+    asynchron: sender sends even if receiver is not available to receive (needs a buffer to store data temporarily, decoupled, helps to compensate speed diverences in data processing, sender only resumes to send if the previous data is fully stored in the buffer) buffer is called mailbox or message queue, message size depends on impl -> messages need an identification (name, descriptor, handle)
+
+    \cite{glatz2015betriebssysteme}: communication via system functions
+    via messages (message passing), data streams (streaming), packets (packeting)
+    message: delimited amount of data
+    stream: theoretical unlimited, for sender/receiver not visible
+    packet: standardized formats (communication protocols), not visible for applications, fragmentated transfer, deframentation at receiver -> hidden by networking impl
+
+    \cite{tanenbaum-modern-operating-systems} 
+    message passing: two primitives: send/receive (rather system calls than language constructs), if no message available, receiver can block until one arrives (or return immediately with an error code)
+    issue: lost messages -> receiver send back an acknowledgement message, if sender does not receive it within a certain time, it retransmits the message -> message was received, but ack is lost -> message got retransmitted -> receiver get it twice -> need to distinct between both, e.g. via sequence numbers (same number for a resent message) 
+    example: MPI (message passing interface)
+
+% memory based communication
+
+% socket
+
+% rpc
 
 
 \subsection{Processes and Threads in Linux} 
