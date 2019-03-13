@@ -669,19 +669,23 @@ But this also allows the kernel to recognize a blocked thread and schedule anoth
 Already the previous section mentioned that the ability of threads to access shared data not only has advantages.
 As they share storage, e.g.\ main memory, two threads can read and write the same value.
 But what happens if both of them try to access the same, shared value?
-Two threads try to read and modify a shared value are given.
+Two threads try to read and modify a shared value are given for example.
 Both read the value and calculate based on the read a new one to store. 
 There is no problem as long as they just read the same value, but it occures on updating the value.
 May the first thread is scheduled first and updates the value, directly following the second one is scheduled and updates the value based on the value read before the first thread was executed.
 In this case, the update of the first thread is lost. 
 The data becomes inconsitent.
 Such a situation is called \textit{lost update problem}\cite{glatz2015betriebssysteme}.
-Unless the scheduling of the threads is predictable in each situation, it remains impossible to predict the exact outcome of it.
+Unless the scheduling of the threads is predictable in each situation, it remains impossible to predict the exact outcome.
 Therefore, one speaks of a \textit{race condition}\cite{tanenbaum-modern-operating-systems}.
 
-Race conditions are each time a topic where several processes or threads work on the same data in any way.
-This also applies to an operating system's kernel.
-Except for non-preemtive kernels which can guarantee that only one thread is active at a time\cite{silberschatz2009operating}.
+In the context of this section, it should be assumed that \textit{threads} are implemented as a part of the operating system's kernel rather than based on a runtime system.
+According the definition, the term \textit{thread} refers in this section both, execution threads within a single process and the ones within independent processes.
+A competitive situation can occur for both variants. 
+The threads of one process rather rivale regarding a shared variable while the threads of different processes rather compete for resources such as a printer.
+
+Race conditions are a topic each time several processes or threads work on the same data in any way.
+This also applies to an operating system's kernel, except for non-preemtive kernels which can guarantee that only one thread is active at a time\cite{silberschatz2009operating}.
 In contrast to preemptive kernels, non-preemptive ones do not allow a thread running in kernel mode to be interrupted. 
 The thread runs until it exits kernel mode, blocks or yields the control of the \ac{cpu} voluntary\cite{silberschatz2009operating}.
 Only in such a case can be guaranteed that a kernel and its data structures are free of race conditions.
@@ -689,24 +693,23 @@ However, preemptive kernels are more common because they are more responsive and
 Furthermore, with today's multicore systems is it rather unlikely to fulfil the requirement of only one active thread in kernel space.
 
 For this reason, a mechanism to prevent race conditions on both, user and kernelspace, is needed.
-The basic idea to achieved this is to exclude chance that a thread that wants to change a shared resource cannot be interrupted by another one that wants to work on the same resource\cite{tanenbaum-modern-operating-systems}.
-But only certain areas in the program code are critical. 
-The ones a shared resource is processed.
-They are called \textit{critical regions} or \texit{critical section}\cite{tanenbaum-modern-operating-systems}.
+The basic idea behind is to exclude the chance that a thread trying to change a shared resource is interrupted by another one trying to work on the same resource\cite{tanenbaum-modern-operating-systems}.
+But only certain areas in the program code are critical, the ones a shared resource is processed.
+They are called \textit{critical regions} or \textit{critical section}\cite{tanenbaum-modern-operating-systems}.
 Other regions do not harm if they are interrupted.
-If only one thread at a time is allowed in critical sections and another one is only allowed to enter the region as soon as the competing access is completed, this is called \textit{mutual exclusion}\cite{tanenbaum-modern-operating-systems}, \cite{glatz2015betriebssysteme}.
+If only one thread at a time is allowed in critical sections and another one is not allowed to enter the region until the competing access is completed, this is called \textit{mutual exclusion}\cite{tanenbaum-modern-operating-systems}, \cite{glatz2015betriebssysteme}.
 
-The easiest way to achieve \textit{mutual exclusion} is to completely disable the system's interrupts immediately after entering a critical region and reenable them just before leaving the region.
+The easiest way to achieve \textit{mutual exclusion} is to completely disable the system's interrupts immediately after entering a critical region and reenable them just before leaving it.
 In the meantime, all incoming interrupts are collected and processed as soon as they become reenabled\cite{achilles2006betriebssysteme}.
 However, this method is not suitable for modern multicore systems since the interrupts can only be locked for the current \ac{cpu} core.
 The competing thread can still modify the resource if executed on a different core.
 This solution is not ideal for single core systems, too, because even the clock interrupt is disabled and with this the process scheduling.
-Does the currently running not reenable the interrupts, the whole system is blocked\cite{tanenbaum-modern-operating-systems}.
+Does the currently running thread not reenable the interrupts, the whole system is blocked\cite{tanenbaum-modern-operating-systems}.
 
 While there are some approaches to pure software solutions such as the algorithms of \textsc{Peterson} or \textsc{Dekker} (see \cite{tanenbaum-modern-operating-systems} or \cite{silberschatz2009operating} for further information) are hardware enabled solutions common today\cite{tanenbaum-modern-operating-systems}.
 Modern multicore \acp{cpu} usually offer an instruction which is referred as \ac{tsl} or \ac{tas} in literature.
 It is an atomar, not interruptible operation, usually used to modify a shared variable which controlls the access to a shared memory region\cite{tanenbaum-modern-operating-systems}.
-This is in common achieved by locking the memory bus to prevent other \acp{cpu} from accessing the memory until the operation is done.
+The atomicity of a \ac{tsl} instruction is in common achieved by locking the memory bus to prevent other \acp{cpu} from accessing the memory until the operation is done.
 As a big advantage of this solution, the \ac{cpu} cores are not obstructed.
 Common calculations are not impeded but memory accesses are prevented\cite{tanenbaum-modern-operating-systems}.
 A variant is the \ac{xchg} instruction which exchanges the content of two memory locations in one atomic operation\cite{silberschatz2009operating}.
@@ -722,7 +725,7 @@ In this case, it is better to use blocking waits and bring another thread in exe
 \subsubsection*{Semaphores and Mutexes}
 \textsc{Dijkstra} suggested in 1965 a possibly blocking lock mechanism called \textit{semaphores} based on a \ac{cpu}'s \ac{tsl} instuction and easier to use for application developers.
 A \textit{semaphore} is a new integer typ with two related operations called \textit{P} and \textit{V} in the original paper or \textit{down} and \textit{up} in some literature and implementations\cite{glatz2015betriebssysteme}.
-% The semaphore is initally initialized with a value greater 0, the exact one depends on a system's implementation or can be defined by a programmer.
+The semaphore is initally initialized with a value greater 0, the exact one depends on a system's implementation or can be defined by a programmer.
 If the \textit{P} or \textit{down} operation is executed on a semaphore, it is checked whether the value is greater than 0, decrements the counter if it is the case and continues. 
 If not, the thread is put to sleep.
 The operation remains unfinished until a \textit{V} or \textit{up} operation was executed and incremented the semaphores value.
@@ -730,48 +733,39 @@ One of the possibly multiple threads sleeping on a semaphore is randomly or by a
 For a semaphore, the fact updates on its value must be performed in an atomic operation is essential\cite{silberschatz2009operating}.
 Neighter the decrementing of the value performed in the \textit{P} operation nor the incrementing in \textit{V} may be interrupted.
 
-If semaphores are actually blocking depends on the implementation.
+Semaphores are a generic approach to control access to a \textit{critical section} for a number of threads, but the often required mutual exclusion is only given if the semaphore is initialized with the value 1.
+These particular case of a binary semaphore is also referred as \textit{mutex}.
+A \textit{mutex} guarantees mutual exclusion for a critical section protected with its related operations as \textit{lock} (\textit{P, down}) and \textit{unlock} (\textit{V, up})\cite{tanenbaum-modern-operating-systems}.
+Except for the initial value and the operation's names, mutexes do not differ from semaphores.
+Just like semaphores, they can be implemented using the \ac{tsl} or \ac{xchg} instruction.
+
+But if semaphores are actually blocking depends on the implementation.
 As mentioned earlier is a blocking mechanism not always advantageous, e.g.\ for very short waits or multicore systems with real parallelism.
 In this cases, its is potentially more efficient to use busy waiting with spinlocks\cite{glatz2015betriebssysteme}.
 
-%TODO variant mutexes
-\ \\
-\ \\
+\subsubsection*{Futexes}
+Another variant of semaphores is the \ac{futex}. 
+It targets the issue that neighter busy waiting nor block and reschedule another thread is very efficient on modern multicore \acp{cpu}.
+On a very parallel system, there are many contentions for resources which would require frequent switching of the active threads, but scheduling another thread respectively process requires as well expensive switches to the kernel\cite{tanenbaum-modern-operating-systems}.
+\acp{futex} are not a pure userspace construct even if the name suggests. 
+They still need a wait queue in kernel to manage the contenting threads waiting on a lock, schedule another thread (futexes are blocking by design) and putting a thread into the queue requires a system call as well.
+An user library tests a lock variable using a \ac{tsl} instruction.
+If the lock is already held by another thread, the library has to put the thread to the queue.
+But if there is no contention is there also no need to involve the kernel\cite{tanenbaum-modern-operating-systems}.
+The less actual competitive situations occur, the more efficient are futexes compared to common mutexes.
+Mutexes are for example used as part of the Linux kernel. 
+In this context, \textsc{Ingo Molnar} published an article\footnote{\url{https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/robust-futexes.txt}} as part of the Linux kernel documentation covering the implementation of robust futexes and and its impact on the system performance.
 
-        % blocking /rescheduling solutions
-% mutexes semaphores
-            -> semaphores : integer variable with two operations: down and up -> down checks if the value is greater than 0 (initial value depends), if so it decrements the value and continues, if 0 the process is put to sleep without completing  the down for the moment -> checking the value, changing it and possiby go to sleep is a a indivisible atomic action on a semaphore (guaranteed) 
-                up operation : increments the value of the semaphore -> if one or more processes were sleeping on that semaphore, one of them is (randomly) choosen by the system and allowed to complete down -> no process ever blocks doing an up 
-                original paper down = P, up = V \cite{glatz2015betriebssysteme}
-                \cite{glatz2015betriebssysteme} P and V are not divideable -> atomic operations
-                if the waiting time is very short or a we have a multicore system with real paralellism, blocking becomes very unattractive (needs two process changes) -> active waiting with spinlocks
-
-                -> binary semaphores -> mutex (initialized to 1) -> guarantees mutal exclusion by using them for critical regions,  two states (locked/unlocked) (can be implemented with tsl/xchg) -> schedule another thread instead busy waiting, try again in next schedule cycle (as long as mutex is locked)
-
- 
-                -> spinlock: lock that is busy waiting (for a reasonable expectation the wait will be short, if not avoid -> wastes CPU time)
-            -> waist cpu time
-
-        
-                -> futex: fast userspace mutex, spinlocks are fast if waiting is short, waste cpu time if not -> blocking - and let the kernel unblock but switching to kernel is expensive -> futex as solution -> avoids dropping into the kernel unless it really has to -> consists of two parts : kernel service provides a wait queue that allows multiple processes to wait on a lock, kernel explicitly unblocks them, put a process on the wait queue requires an expensive syscall -> should be avoided -> user lib is completely in userspace (atomic function (decrement and test/ increment and test)) -> needs a syscall but does not spin  -> kernel is only invoked if there is a contention  
-
-% monitors
-programming language construct to simplify ipc communication -> refer to tanenbaum-modern-operating-systems or \cite{mandl2014Grundkurs}
-\cite{silberschatz2009operating} monitors e.g. implemented with semaphores
+\subsubsection*{Barriers}
 
  % barriers
 \cite{glatz2015betriebssysteme} two or more threads needs to be synchronized in a way they wait for each other in their program flow. -> barriers -> both threads must reach a synchronization point (barrier) before both are allowed to continue -> one thread needs to wait for the other one -> can be realized with semaphores
 
+\subsubsection*{Priority Inversion}
 
 % priority inversion
             -> priorit inversion (two processes, H & L, (H runs whenever becomes ready) low runs, get in a critical section. H becomes ready and is scheduled -> but L is in a crit section and can never leave, while H is busy waiting
             \cite{glatz2015betriebssysteme}: pathfinder (marssonde) -> solution: priority inheritance -> means that when a thread waits on a mutex ownd by a lower priority thread, the priority of the owner is increased to that of the waiter. -> operating system mechanism
-
-% synchronisation issues
-                \cite{mandl2014Grundkurs} other synchronization problems: blocking (a process is blocked because a second one holds a needed resource, until the second one frees the resource), starvation (process is ready but does not get cpu time because higher prior processes are preferred) , deadlock (process 1 holds resource A and needs resource b, process 2 holds resource b and needs resource a -> non of them frees its resource -> cyclic dependencies -> both are blocked forever)
-
-
-                \cite{silberschatz2009operating} \cite{glatz2015betriebssysteme} further synchronization problems: producer-consumer, readers and writers, dining philosophers (tanenbaum-modern-operating-systems, \cite{mandl2014Grundkurs})
 
 
 
