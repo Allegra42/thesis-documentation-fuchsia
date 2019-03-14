@@ -766,15 +766,16 @@ Mutexes are for example used as part of the Linux kernel.
 In this context, \textsc{Ingo Molnar} published an article\footnote{\url{https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/robust-futexes.txt}} as part of the Linux kernel documentation covering the implementation of robust futexes and and its impact on the system performance.
 
 \subsubsection*{Barriers}
-
- % barriers
-\cite{glatz2015betriebssysteme} two or more threads needs to be synchronized in a way they wait for each other in their program flow. -> barriers -> both threads must reach a synchronization point (barrier) before both are allowed to continue -> one thread needs to wait for the other one -> can be realized with semaphores
-
-\subsubsection*{Priority Inversion}
-
-% priority inversion
-            -> priorit inversion (two processes, H & L, (H runs whenever becomes ready) low runs, get in a critical section. H becomes ready and is scheduled -> but L is in a crit section and can never leave, while H is busy waiting
-            \cite{glatz2015betriebssysteme}: pathfinder (marssonde) -> solution: priority inheritance -> means that when a thread waits on a mutex ownd by a lower priority thread, the priority of the owner is increased to that of the waiter. -> operating system mechanism
+So far, the synchronization of resource accesses has been discussed.
+Sometimes, this is not an issue but coordinate and synchronize the sequence flow of two or more threads.
+If threads within an application are divided into self-contained phases, it must be ensured that the next phase is not started until the current one has been completed by all threads involved\cite{tanenbaum-modern-operating-systems}.
+The synchronization points where the threads have to wait for each other to enter the next phase are called \textit{barriers}.
+An example for such a situation could be cooking.
+The stoven must not be switched on until all ingredients have been purchased.
+In contrast to the general implementation of barriers, a common real world stove does not block itself should this not be the case.
+In most instances, barriers are alternating implemented on the basis of blocking semaphores\cite{glatz2015betriebssysteme}.
+%TODO more? example for two threads (A locks B, B locks A, A unlocks B, B unlocks A)?
+% glatz page 203
 
 
 
@@ -811,6 +812,37 @@ In this context, \textsc{Ingo Molnar} published an article\footnote{\url{https:/
 
 
 \section{Scheduling}\label{sec:scheduling}
+
+
+\subsubsection*{Priority Inversion}
+Using locking mechanisms like semaphores respectively mutexes may lead to dangerous behaviour in context of priority based scheduling.
+For a basic example are two processes, H (high priority) and L (low priority) are given.
+Both processes want to use the same resource.
+The H process is scheduled as soon as it enters the \textit{ready} state.
+The problem arises if the L process starts first while H is waiting for e.g.\ another resource.
+L enters the critical section and occupies the contested resource.
+Just in this situation, the H process becomes ready and is scheduled according to the priority based policy.
+If H is busy waiting for the resouce, L is never rescheduled, can not end its critical section and free the resource\cite{tanenbaum-modern-operating-systems}.
+Both processes are blocking each other, they are in a \textit{deadlock}\cite{glatz2015betriebssysteme}.
+If H blocks and hands over to L again, the priorities got inverted.
+A lower priorized process runned before one with a high priority.
+Such a situation is referred as \textit{priority inversion}\cite{tanenbaum-modern-operating-systems}.
+The situation described here is not that dangerous but the very similar real world example of the mars spacecraft \textit{Pathfinder}.
+There was also priority based scheduling and three processes, H (high priority), M (medium priority, long runtime) and L (low priority).
+Just as explained above, the H process becomes waiting for a resource held by the L process. 
+When the H process blocked, the M process was scheduled and had to finished until the L process had the chance to free the resource needed by H.
+But high priorized task of H was to reset a watchdog to prevent a system reset accompanied with the loss of data\cite{glatz2015betriebssysteme},~\cite{silberschatz2009operating}.
+A more detailed description of the situation is given by \textsc{Silberschatz} in \cite{silberschatz2009operating}.
+
+The most common technique to prevent dangerous \textit{priority inversion} is \textit{priority inheritance}, a special propery of semaphores which needs to be implemented within the operating system.
+If a higher priorized process or thread is waiting for a resource occupied by a less priorized, the prioity of the second process will be raised to the one of the higher priorized.
+This ensures that the actual low prior process frees the resource as soon as possible and the truly high priorized task can run next.
+The original priority becomes restored, once the resource has been freed\cite{glatz2015betriebssysteme}.
+
+An alternative mechanism that can act without operating system support is \textit{priority ceiling}.
+Whenever a process locks a semaphore or mutex, its priority is raised to a higher level than any other process may waiting for the resource.
+As soon as the semaphore respectively mutex is unlocked, the former priority is restored\cite{glatz2015betriebssysteme}.
+
 
 \subsection{Scheduling in Linux}
 \subsection{Scheduling in Zircon}
