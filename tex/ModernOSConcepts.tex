@@ -780,30 +780,129 @@ In most instances, barriers are alternating implemented on the basis of blocking
 
 
 \subsection{Inter Process Communication}
+ipc as oberbegriff for synchronization and communication\cite{glatz2015betriebssysteme} -> we handled synchronization as an extra section and focus on communication between processes and threads for now.
 
-% message based communication
-
-    (synchron / asynchron) \cite{glatz2015betriebssysteme}: 
-    synchron: receiver has to be ready to receive data (one have to wait for the other to become ready)
-    asynchron: sender sends even if receiver is not available to receive (needs a buffer to store data temporarily, decoupled, helps to compensate speed diverences in data processing, sender only resumes to send if the previous data is fully stored in the buffer) buffer is called mailbox or message queue, message size depends on impl -> messages need an identification (name, descriptor, handle)
-
-    \cite{glatz2015betriebssysteme}: communication via system functions
-    via messages (message passing), data streams (streaming), packets (packeting)
-    message: delimited amount of data
-    stream: theoretical unlimited, for sender/receiver not visible
-    packet: standardized formats (communication protocols), not visible for applications, fragmentated transfer, deframentation at receiver -> hidden by networking impl
-
-    \cite{tanenbaum-modern-operating-systems} 
-    message passing: two primitives: send/receive (rather system calls than language constructs), if no message available, receiver can block until one arrives (or return immediately with an error code)
-    issue: lost messages -> receiver send back an acknowledgement message, if sender does not receive it within a certain time, it retransmits the message -> message was received, but ack is lost -> message got retransmitted -> receiver get it twice -> need to distinct between both, e.g. via sequence numbers (same number for a resent message) 
-    example: MPI (message passing interface)
 
 % memory based communication
 
+\cite{glatz2015betriebssysteme}
+self-administrated communication using a shared memory region. -> synchronization via semaphores needed
+    pro: speed, transparency (self-administrated)
+    con: additional (manual) synchronisation needed to obtain consistent data, breaks isolation, software can not be correctly encapsulated
+
+\cite{brause}
+process intern (between threads)
+process independent (on same system) via extra shared mem region
+process independent (on same system) via files/resources
+
+threads of different processes can use the same memory region in ram -> os allocates the memory and show it within the address spaces of both processes/threads
+-> synchronisation mechanisms needed 
+
+files: also needs explicit synchronisation 
+
+% message based communication
+
+    % data types (message, stream, packet)
+    \cite{glatz2015betriebssysteme}: communication via system functions
+    via messages (message passing), data streams (streaming), packets (packeting)
+    message: delimited amount of data
+    stream: theoretical unlimited, limitation for sender/receiver not visible
+    packet: standardized formats (communication protocols), packets not visible for applications, fragmentated transfer, deframentation at receiver -> hidden by networking impl
+
+
+% synchron / asynchron
+    \cite{glatz2015betriebssysteme}: 
+    % general aspects
+    basic operations: send and receive
+
+    system supported communication / data exchange 
+        pro: works across system boundaries, synchronization is realized in system
+        con: not that efficient as memory based mechansims
+ 
+    % synchron \cite{glatz} \cite{brause}
+    synchron: receiver has to be ready to receive data (one have to wait/block for the other to become ready)
+        pro: automatic synchronization, no buffer needed
+        con: no independent programm flow possible -> parallelism is limited
+
+    % asynchron
+    asynchron: sender sends even if receiver is not available to receive (needs a buffer to store data temporarily, decoupled, helps to compensate speed diverences in data processing, sender only resumes to send if the previous data is fully stored in the buffer) buffer is called mailbox (also cite \cite{brause}) or message queue, message size depends on impl -> messages need an identification (name, descriptor, handle) -> message buffer is limitated in size -> buffer empty -> receiver needs to be blocked, buffer full -> sender needs to be blocked (blocking operation mode)
+    non blocking operation -> call returns immediately, reports full/empty buffer -> application has to handle the situation
+
+        pro: independent programm flow
+        con: issues if buffer is filled and receiver not ready to work, transfer time is not known
+    
+    asynchron communication:
+    % contection-oriented e.g. telephone also \cite{brause}
+        receiver needs to be known, after creating a (logical) connection /channel a receiver handle is not longer needed. after transaction is finished, connection is closed -> communication may be unidirectional (just one directio-> simplex) (altering sender -> half duplex), bidirectional (full duplex)
+
+        pro: message order is guaranteed, reliable end-to-end connection, timeout monitoring and resend
+        con: connection has to be created and destroyed -> overhead for a few messages
+        
+        % conectionless mail or radio also \cite{brause}
+        sender uses receiver handle for each transfer, no need to create a connection -> used for few datatransfers to a lot different receivers
+
+        pro: no need to create a connection
+        con: message order not guaranteed, message loss possible, receiver needs to be addressed per message
+    
+        % receiver addressing \cite{glatz} \cite{brause}
+    - unicast -> 1:1 relationship -> a certain receiver is addressed
+    - multicast -> 1:m -> a defined group of receivers is addressed
+    - anycast -> 1:1..n -> send a message to a group, at least 1 receiver
+    - broadcast -> 1:n -> send to all detectable receivers
+
+    % priority
+    -> same prio -> buffer with fifo
+    -> else queues for each priority
+
+
+    % message passing tanenbaum
+    % \cite{tanenbaum-modern-operating-systems}
+    % message passing: two primitives: send/receive (rather system calls than language constructs), if no message available, receiver can block until one arrives (or return immediately with an error code)
+    % issue: lost messages -> receiver send back an acknowledgement message, if sender does not receive it within a certain time, it retransmits the message -> message was received, but ack is lost -> message got retransmitted -> receiver get it twice -> need to distinct between both, e.g. via sequence numbers (same number for a resent message)
+    % example: MPI (message passing interface)
+
+    % pipes pipelines
+    -> special buffered channel, unix concept
+    -> transports datastreams, delimite messages is not needed
+    -> redirect output from processes to input for another, data is buffered within the pipe (fifo)
+    -> synchronizes involved processes, a reading process is blocked by an empty pipe, a writing process by a full pipe
+    -> unix instruction chaining (who | sort | more)
+
+    -> named/ unnamed pipes -> unidirectional, simplex operating mode
+    -> for duplex communication, 2 pipes are needed
+    -> size is system dependent
+    -> unix concept
+
+    \cite{brause}
+    unidirectional , via operating system 
+    fifos are named pipes, live even if the system restarts  
+
+% network communication    
 % socket
+-> enable a cross-computer data exchange via data streams, takes the idea of pipelines for distributed computer systems
+-> applications use tcp/udp
+-> socket is a communication end-point, where application and transport layer matches 
+    -> stream socket -> connection oriented, reliable transport e.g. tcp
+    -> datagram socket -> connectionless, unreliable transport, e.g. udp
+    -> seqpacket socket -> data set oriented, reliable transport
+    -> raw socket, unreliable transport, e.g. ip
+
+reliable means the data is faultless transported, if not, the application is informed
+unreliable -> no information
+
+connections needs the same socket type on both sides
 
 % rpc
+-> call distributed/remote procedures
+-> calling process : client
+-> called procedure : server procedure
+both systems implement a notification service which implements the call including parameters into a calling and a return message
 
+sequenz: -> client stub (does not fulfil action itself, just connects to rpc server, calling procedure is blocked until the call is done)
+- wrap calling parameters in rpc message (marshaling)
+- send rpc message to server
+- wait for answer
+- get answer (rpc message) -> unmarshaling -> send results to application
 
 \subsection{Processes and Threads in Linux} 
 \cite{silberschatz2009operating}
