@@ -780,27 +780,40 @@ In most instances, barriers are alternating implemented on the basis of blocking
 
 
 \subsection{Inter Process Communication}
-ipc as oberbegriff for synchronization and communication\cite{glatz2015betriebssysteme} -> we handled synchronization as an extra section and focus on communication between processes and threads for now.
+The term \ac{ipc} is not only used for pure communication between different processes but also for their synchronization\cite{glatz2015betriebssysteme}.
+The latter has already been dealt with in the previous section.
+In this section, especially the communication between different processes is to be considered.
+The one between threads of the same process has previously been discussed.
+
+\subsubsection*{Memory Based Communication}
+Since the communication of threads of one process via its shared address space is already known, it is obvious to use a comparable technique between processes as well.
+But in contrast to threads within a process, the concept of process isolation must be considered here.
+As a security feature, it is not possible for processes to share their address space. 
+There are two basic ways independent processes can communicate with each other.
+
+The first one is using an \textit{external shared memory region} which is requested from the operating system.
+It allocated the memory in RAM and show it in the address space of both processes\cite{brause2017betriebssysteme}.
+The shared memory region is the responsibility of the processes, must be managed and secured against incorrect access by themselves\cite{brause2017betriebssysteme},~\cite{glatz2015betriebssysteme}.
+As known from thread communication, the advantages from this solution are the performance and transparency of raw memory access, but it also needs additional (manual) synchronization to obtain and maintain consistent data\cite{glatz2015betriebssysteme}.
+Nevertheless breaks this solution the isolation between processes. 
 
 
-% memory based communication
+The second one is a variant, using files or similar resources as a communication medium.
+In this case, the process isolation remains, but manual synchronization, as described in the previous section, is still necessary\cite{brause2017betriebssysteme}.
 
-\cite{glatz2015betriebssysteme}
-self-administrated communication using a shared memory region. -> synchronization via semaphores needed
-    pro: speed, transparency (self-administrated)
-    con: additional (manual) synchronisation needed to obtain consistent data, breaks isolation, software can not be correctly encapsulated
-
-\cite{brause}
-process intern (between threads)
-process independent (on same system) via extra shared mem region
-process independent (on same system) via files/resources
-
-threads of different processes can use the same memory region in ram -> os allocates the memory and show it within the address spaces of both processes/threads
--> synchronisation mechanisms needed 
-
-files: also needs explicit synchronisation 
 
 % message based communication
+\subsubsection*{Message based communication}
+Message based communication methods are more wide-spread.
+In contrast to the memory based ones, the synchronization usually does not have to be done manually.
+The message exchange and with it the synchronization are provides by the operating system respectively its kernel via two primitives: \textit{send()} and \textit{receive()}\cite{tanenbaum-modern-operating-systems}.
+
+Basically, there are three types of messages:
+\begin{itemize}
+    \item A \textit{Message} is characterized by a delimited amount of data within a single communication.
+    \item \textit{Stream} can theoretically transport an unlimited amount of data. In practice, there is a limitation not visible for the sender and the receiver.
+    \item \textit{Packets} organizes the data to transport in standardized formats, the communication protocols. They allow fragmentated transfer of a large quantify of data which is defragmentated on receiver side. The system implementation hides this fact, so the packets itself are not visible for an application\cite{glatz2015betriebssysteme}. 
+\end{itemize}
 
     % data types (message, stream, packet)
     \cite{glatz2015betriebssysteme}: communication via system functions
@@ -809,7 +822,13 @@ files: also needs explicit synchronisation
     stream: theoretical unlimited, limitation for sender/receiver not visible
     packet: standardized formats (communication protocols), packets not visible for applications, fragmentated transfer, deframentation at receiver -> hidden by networking impl
 
+    % message passing tanenbaum
+    % \cite{tanenbaum-modern-operating-systems}
+    % message passing: two primitives: send/receive (rather system calls than language constructs), if no message available, receiver can block until one arrives (or return immediately with an error code)
+    % issue: lost messages -> receiver send back an acknowledgement message, if sender does not receive it within a certain time, it retransmits the message -> message was received, but ack is lost -> message got retransmitted -> receiver get it twice -> need to distinct between both, e.g. via sequence numbers (same number for a resent message)
+    % example: MPI (message passing interface)
 
+%TODO
 % synchron / asynchron
     \cite{glatz2015betriebssysteme}: 
     % general aspects
@@ -854,12 +873,6 @@ files: also needs explicit synchronisation
     -> same prio -> buffer with fifo
     -> else queues for each priority
 
-
-    % message passing tanenbaum
-    % \cite{tanenbaum-modern-operating-systems}
-    % message passing: two primitives: send/receive (rather system calls than language constructs), if no message available, receiver can block until one arrives (or return immediately with an error code)
-    % issue: lost messages -> receiver send back an acknowledgement message, if sender does not receive it within a certain time, it retransmits the message -> message was received, but ack is lost -> message got retransmitted -> receiver get it twice -> need to distinct between both, e.g. via sequence numbers (same number for a resent message)
-    % example: MPI (message passing interface)
 
     % pipes pipelines
     -> special buffered channel, unix concept
