@@ -567,7 +567,7 @@ Besides, a process may gets involuntary terminated or killed by another process.
 Killing another process is in common a privileged task which require an authorization or extended rights\cite{tanenbaum-modern-operating-systems}.
 
 
-\subsection{Threads}
+\subsection{Threads}\label{sec:threads}
 
 % whats a thread why threads
 
@@ -623,59 +623,19 @@ Instead of one \ac{tcb} within each process, the kernel collects the \acp{tcb} f
 But this also allows the kernel to recognize a blocked thread and schedule another one of the same process instead of blocking the whole process\cite{tanenbaum-modern-operating-systems}.
 
 
-% % how are threads implemented
-% \cite{mandl2014Grundkurs} threads may be implemented in both, kernel(os coordinates scheduling, better multiprocessor support, not blocking if a single thread blocks, but needs context switches, system dependent) and userspace(in this case, an userlib schedules threads within a process, no context switch to kernel needed, but all threads are blocked if a single one waits for resources), own data structure -> thread control block tcb, all tcb are collected in a thread table, have an own state, pc, registers and stack but now an own address space -> no seperate unit -> always exist in process context
-%
-% no context switch needed as threads share the same memory region/address space -> reduces system overhead, threads support parallelism -> good for mulitcore cpus, fine grained mechanism for parallelism
-%
-% \cite{brause2017betriebssysteme} mostly implemented as user library -> fast thread switches -> no os needed, a waiting thread blocks the whole process
-% os impl: better for mulitcore ps, with real parallel threads, just blocking one thread but not the whole process
-%
-% \cite{tanenbaum-modern-operating-systems} userspace threads, kernel space threads , hybrids
-% userspace: each process needs its own private thread table to keep track (analog to process table)
-% kernel: no runtime system needed, no thread table in each process -> kernel has a thread table that keeps track of all threads in system (table holds registers, state and other information, subset of information tracked about processes), one blocking thread does not block the whole process, (e.g. one thread causes a page fault, other thread can be runned until the page is loaded) (more expensive than user threads)
-% hybrids:
+\subsection{Processes and Threads in Linux} 
+\cite{silberschatz2009operating}
+
+\subsection{Processes and Threads in Zircon}
 
 
-\subsection{Synchronization}
-% (synchronization)
-% wait for other process:
-% join -> follows to forking waiting is compulsory
-%
-% join -> unix process (wait, waitpid), posix thread (pthread join)
-% wait -> windows process/thread  wait for single object
-
-
-% race conditions
-    % \cite{tanenbaum-modern-operating-systems} : threads share storage that one can read and write (e.g. main memory) -> thread a reads a value, thread b reads a value. thread b writes a new value, thread a will also write a new value but startig from the value read before. -> inconsistent
-    % -> race condition : two or more processes (via ipc) or threads try to read and write shared data -> the final result depends on who runs in which order
-    % \cite{glatz2015betriebssysteme} lost update problem -> race conditions, inconsistent read
-%
-    % \cite{silberschatz2009operating} for operating systems: just an issue on preemptive kernels (allows a process to be preempted while it is running in kernel mode), a nonpreemptive kernel does not allow a process running in kernel mode to be preempted -> kernel mode process will run until it exits kernel mode, blocks or voluntary yields control of the cpu -> a nonpreemptive kernel is essentially free grom race conditions on kernel data structures as only one process is active in the kernel at a time -> preemptive kernel is more suitable for realtime tasks -> more responsive
-%
-% critical regions
-    % \cite{tanenbaum-modern-operating-systems}: avoid race conditions -> allow only one process to read/write shared data at the same time -> mutual exclusion -> if one process/thread use a shared date, all other processes are excluded from doing the same -> race conditions are only caused by access shared memory, files or resources -> critial section/region, other actions do not harm
-    % mutal exclusion can be achieved via busy waiting
-        % - disabling interrupts (single processor system, disable all interrupts after entering a critical region, reenable just before leavin) -> no clock interrupt, process no process intervene, but a userprocess is able to disable interrupts -> dangerous, may stopps everything but the running process (never re-enable interrupts) -> not suitable for multicore processors, ok for os itself
-        % - lock variables: same issue as race conditions itself
-        % - peterson's solution/ dekker -> software realization not further interesting \cite{glatz2015betriebssysteme} bakery algorithm (lamport) \cite{silberschatz2009operating}
-%
-%
-        % - hardware support via tsl instruction (test and set lock) -> cpu locks the memory bus to prohibit other cpus from accessing memory until done -> cpu still runs, scheduler still work, just memory bus is locked (used in enter region, removed in leave region) (alternative instruction: XCHG -> exchanges the contents of two locations atomically -> used at intel cpus) -> one atomar operation
-        % \cite{silberschatz2009operating}
-%
-        % \cite{glatz2015betriebssysteme} tsl is sometimes called TAS (test and set) -> makes platform dependet code
-%
-        % peterson and tsl/xchg do busy waiting
-            % -> spinlock: lock that is busy waiting (for a reasonable expectation the wait will be short, if not avoid -> wastes CPU time)
-            % -> waist cpu time
-%
-    % \cite{achilles2006betriebssysteme}
-    % - combine operations to one uninterruptable atomar operation -> intel test and set instruction
-    % - lock interrupts -> they will be collected and done later (after the interrupts are unlocked again) -> just for short sections, just for single core
-%
-
-Already the previous section mentioned that the ability of threads to access shared data not only has advantages.
+\section{Synchronization and Inter Process Communication}\label{sec:ipc-and-synchro}
+% The term \ac{ipc} is not only used for pure communication between different processes but also for their synchronization\cite{glatz2015betriebssysteme}.
+% The latter has already been dealt with in the previous section.
+% In this one, especially the communication between different processes is to be considered.
+% The one between threads of the same process has previously been discussed.
+The term \ac{ipc} is not only used for the pure communication between different processes but also for the synchronization between processes, threads and data shared between them.
+In this context mentioned already the previous section~\ref{sec:threads} that the ability of threads to access shared data not only has advantages.
 As they share storage, e.g.\ main memory, two threads can read and write the same value.
 But what happens if both of them try to access the same, shared value?
 Two threads try to read and modify a shared value are given for example.
@@ -687,6 +647,22 @@ The data becomes inconsitent.
 Such a situation is called \textit{lost update problem}\cite{glatz2015betriebssysteme}.
 Unless the scheduling of the threads is predictable in each situation, it remains impossible to predict the exact outcome.
 Therefore, one speaks of a \textit{race condition}\cite{tanenbaum-modern-operating-systems}.
+The section~\ref{sec:synchro} deals with corresponding problems, especially for threads, and indicates ways to deal with them.
+Since it is not sufficient to allow only the exchange of data respectively communication between threads of a single process, section~\ref{sec:ipc} shows mechanisms that overcome the process isolation and enable the communication between multiple ones.
+
+\subsection{Synchronization}\label{sec:synchro}
+% Already the previous section mentioned that the ability of threads to access shared data not only has advantages.
+% As they share storage, e.g.\ main memory, two threads can read and write the same value.
+% But what happens if both of them try to access the same, shared value?
+% Two threads try to read and modify a shared value are given for example.
+% Both read the value and calculate based on the read a new one to store.
+% There is no problem as long as they just read the same value, but it occures on updating the value.
+% May the first thread is scheduled first and updates the value, directly following the second one is scheduled and updates the value based on the value read before the first thread was executed.
+% In this case, the update of the first thread is lost.
+% The data becomes inconsitent.
+% Such a situation is called \textit{lost update problem}\cite{glatz2015betriebssysteme}.
+% Unless the scheduling of the threads is predictable in each situation, it remains impossible to predict the exact outcome.
+% Therefore, one speaks of a \textit{race condition}\cite{tanenbaum-modern-operating-systems}.
 
 In the context of this section, it should be assumed that \textit{threads} are implemented as a part of the operating system's kernel rather than based on a runtime system.
 According the definition, the term \textit{thread} refers in this section both, execution threads within a single process and the ones within independent processes.
@@ -779,31 +755,25 @@ In most instances, barriers are alternating implemented on the basis of blocking
 
 
 
-\subsection{Inter Process Communication}
-The term \ac{ipc} is not only used for pure communication between different processes but also for their synchronization\cite{glatz2015betriebssysteme}.
-The latter has already been dealt with in the previous section.
-In this section, especially the communication between different processes is to be considered.
-The one between threads of the same process has previously been discussed.
+\subsection{Inter Process Communication}\label{sec:ipc}
+While the previous section~\ref{sec:synchro} focuses on threads, the actual one explicitly deals with the communication between different processes and their synchronization.
+As \ac{ipc} is a central element in operating systems, especially in microkernel architectures, which significantly influences the system's behaviour and performance are design aspects and their effects an essential component to be considered.
 
-\subsubsection*{Memory Based Communication}
-Since the communication of threads of one process via its shared address space is already known, it is obvious to use a comparable technique between processes as well.
+\subsubsection{Memory Based Communication}
+Since the communication of threads of one process via its shared address space is already known, it is obvious to think about a comparable technique between processes as well.
 But in contrast to threads within a process, the concept of process isolation must be considered here.
 As a security feature, it is not possible for processes to share their address space. 
-There are two basic ways independent processes can communicate with each other.
-
-The first one is using an \textit{external shared memory region} which is requested from the operating system.
-It allocated the memory in RAM and show it in the address space of both processes\cite{brause2017betriebssysteme}.
+% There are two basic ways independent processes can communicate with each other.
+The basic idea to implement a corresponding idea nevertheless involves the idea of using an \textit{external shared memory region} which is requested from the operating system.
+It allocated the memory and show it in the address space of both processes\cite{brause2017betriebssysteme}.
 The shared memory region is the responsibility of the processes, must be managed and secured against incorrect access by themselves\cite{brause2017betriebssysteme},~\cite{glatz2015betriebssysteme}.
 As known from thread communication, the advantages from this solution are the performance and transparency of raw memory access, but it also needs additional (manual) synchronization to obtain and maintain consistent data\cite{glatz2015betriebssysteme}.
 Nevertheless breaks this solution the isolation between processes. 
-
-
-The second one is a variant, using files or similar resources as a communication medium.
+A variant of this idea is using \textit{files} or similar resources as a communication medium.
 In this case, the process isolation remains, but manual synchronization, as described in the previous section, is still necessary\cite{brause2017betriebssysteme}.
 
 
-% message based communication
-\subsubsection*{Message based communication}
+\subsubsection{Message based communication}
 Message based communication methods are more wide-spread.
 In contrast to the memory based ones, the synchronization usually does not have to be done manually.
 The message exchange and with it the synchronization are provides by the operating system respectively its kernel via two primitives: \textit{send()} and \textit{receive()}\cite{tanenbaum-modern-operating-systems}.
@@ -811,16 +781,9 @@ The message exchange and with it the synchronization are provides by the operati
 Basically, there are three types of messages:
 \begin{itemize}
     \item A \textit{Message} is characterized by a delimited amount of data within a single communication.
-    \item \textit{Stream} can theoretically transport an unlimited amount of data. In practice, there is a limitation not visible for the sender and the receiver.
+    \item \textit{Streams} can theoretically transport an unlimited amount of data. In practice, there is a limitation not visible for the sender and the receiver.
     \item \textit{Packets} organizes the data to transport in standardized formats, the communication protocols. They allow fragmentated transfer of a large quantify of data which is defragmentated on receiver side. The system implementation hides this fact, so the packets itself are not visible for an application\cite{glatz2015betriebssysteme}. 
 \end{itemize}
-
-    % data types (message, stream, packet)
-    \cite{glatz2015betriebssysteme}: communication via system functions
-    via messages (message passing), data streams (streaming), packets (packeting)
-    message: delimited amount of data
-    stream: theoretical unlimited, limitation for sender/receiver not visible
-    packet: standardized formats (communication protocols), packets not visible for applications, fragmentated transfer, deframentation at receiver -> hidden by networking impl
 
     % message passing tanenbaum
     % \cite{tanenbaum-modern-operating-systems}
@@ -828,52 +791,81 @@ Basically, there are three types of messages:
     % issue: lost messages -> receiver send back an acknowledgement message, if sender does not receive it within a certain time, it retransmits the message -> message was received, but ack is lost -> message got retransmitted -> receiver get it twice -> need to distinct between both, e.g. via sequence numbers (same number for a resent message)
     % example: MPI (message passing interface)
 
-%TODO
-% synchron / asynchron
-    \cite{glatz2015betriebssysteme}: 
-    % general aspects
-    basic operations: send and receive
+Regardless of the type of message, there are 2 basic operations available for message-based communication: \textit{send()} and \textit{receive()}.
+These operations are commonly supported by the operating system and enable not only the system-wide but also the cross-system exchange of messages and data\cite{glatz2015betriebssysteme}.
+Especially the opportunity of cross-system communication offers a significant advantage over memory-based communication, as this is the foundation for network communication.
+But also the synchronization between the involved processes is simplified. 
+The concept of messages avoids race conditions and maked the manual use of semaphores for application developers obsolete.
+The operating system realizes the transmission of the messages and their synchronization.
+However, this concept is not as efficient as memory-based \ac{ipc} concepts in terms of resources consumption and performance\cite{glatz2015betriebssysteme}.
 
-    system supported communication / data exchange 
-        pro: works across system boundaries, synchronization is realized in system
-        con: not that efficient as memory based mechansims
+
+\paragraph{Synchronous and Asynchronous Communication}
+One of the most basic design decisions within message-based communication is whether to send or receive messages synchronously or asynchronously.
+When transmitting messages \textit{synchronously}, both sender and receiver must be ready for the exchange at the same time\cite{glatz2015betriebssysteme}.
+Is this not the case for one instance of them, e.g.\ the receiver, the other one (the sender) must block until the first one, the receiver, becomes ready.
+An additional, manual synchronization is not necessary.
+Even if the literature does not describe a general way to transfer messages between processes, race conditions cannot occur as long as a date is only sent from a writing process to the address space of an initially reading process and can onl be modified there\cite{brause2017betriebssysteme},~\cite{glatz2015betriebssysteme}.
+However, within the individual processes, the synchronization corresponds to the one known from threads (see~\ref{sec:synchro}).
+But the close coupling of the processes within the synchronous communication leads to the fact that the program flow of both is no longer possible independently of each other.
+Accordingly, the parallelism for processes in such a relationship is also limited\cite{brause2017betriebssysteme}.
+
+The \textit{asynchronous} approach tries to decouple this by inserting a buffer between which is also known as \textit{mailbox} or \textit{message queue}.
+So sending is possible even if the receiver is not available at a moment, as long as the buffer is not completely filled.
+The receiver can read equally if the sender is not read, but the buffer still contains messages.
+Different processing speeds between the processes involved can also be compensated in this way\cite{glatz2015betriebssysteme},~\cite{brause2017betriebssysteme}.
+Only if the buffer is completely filled, the sender has to be blocked and vice versa the receiver if the buffer is emptied.
+But an operation only blocks when running in a \textit{blocking operation mode}.
+In a \textit{non blocking operation mode}, a call returns immediately but reports a full respectively empty buffer in such a situation which has to be handled on application level\cite{glatz2015betriebssysteme}.
+\textit{Asynchronous} communication allows a independent program flow and simplifies paralellism thereby.
+Nevertheless, an additional buffer with limited size is needed.
+The exact one depends on the implementation.
+If this buffer is filled and the receiver is blocked, the situation is the same as before with synchronous communication.
+But the main problem with this approach is that it is not possible to predict how long a message transfer takes and when a response can be expected\cite{glatz2015betriebssysteme}.
+The issue is to decide if a message is lost, the communication only takes a long time or the receiving process has crashed\cite{tanenbaum-modern-operating-systems}.
+
+\paragraph{Connection-Oriented and Connectionless Communication}
+Especially when the reliability of data transmission has a special part, a \textit{connection-oriented} approach for message-based \ac{ipc} is choosen.
+This allows to guarantee the message sequence, monitor the transmission time of a message and to intervene if neccessary\cite{glatz2015betriebssysteme}.
+Until a (logical) connection or \textit{channel} has been established, the receiver of a message must be unambiguously known.
+After this is the case, the identification of the receiver is not longer of relevance.
+The established channel provides a reliable end-to-end transmission which may have the following properties:
+%
+\begin{itemize}
+    \item An \textit{unidirectional} connection allows message transfers only in one direction. 
+        \begin{itemize}
+            \item If the roles of sender and receiver never change, one says the transmission is \textit{simplex}.
+            \item If the participants alternate act as sender or receiver, the transmission is also called \textit{half duplex}.
+        \end{itemize}
+    \item An \textit{bidirectional} connection allows message transfers in both directions. Both participants can act as sender and receiver at the same time. The transmission is \textit{full duplex}\cite{brause2017betriebssysteme},~\cite{glatz2015betriebssysteme}.
+\end{itemize}
+%
+If a connection is no longer needed, it must be disconnected and destroyed.
+This means an additional and noticable overhead for small amount of data to transmit which is only worthwhile if the reliable transmission is more important\cite{glatz2015betriebssysteme}.
+One example for connection-oriented communication is a telephone call.
+
+But there are also good reasons for \textit{connectionless} communication.
+For example if the overhead of the connection setup is too costly for little data to be transferred or rather few data is send to a large amount of receivers.
+A real world example for \textit{connectionless} communication is radio.
+The order of messages cannot be guaranteed for this connection type and also the loss of them is possible, but this has no further impact on the application\cite{glatz2015betriebssysteme},~\cite{brause2017betriebssysteme}.
+Nevertheless, the recipient must be addressed anew in every single message.
+
+\paragraph{Receiver Addressing}
  
-    % synchron \cite{glatz} \cite{brause}
-    synchron: receiver has to be ready to receive data (one have to wait/block for the other to become ready)
-        pro: automatic synchronization, no buffer needed
-        con: no independent programm flow possible -> parallelism is limited
-
-    % asynchron
-    asynchron: sender sends even if receiver is not available to receive (needs a buffer to store data temporarily, decoupled, helps to compensate speed diverences in data processing, sender only resumes to send if the previous data is fully stored in the buffer) buffer is called mailbox (also cite \cite{brause}) or message queue, message size depends on impl -> messages need an identification (name, descriptor, handle) -> message buffer is limitated in size -> buffer empty -> receiver needs to be blocked, buffer full -> sender needs to be blocked (blocking operation mode)
-    non blocking operation -> call returns immediately, reports full/empty buffer -> application has to handle the situation
-
-        pro: independent programm flow
-        con: issues if buffer is filled and receiver not ready to work, transfer time is not known
-    
-    asynchron communication:
-    % contection-oriented e.g. telephone also \cite{brause}
-        receiver needs to be known, after creating a (logical) connection /channel a receiver handle is not longer needed. after transaction is finished, connection is closed -> communication may be unidirectional (just one directio-> simplex) (altering sender -> half duplex), bidirectional (full duplex)
-
-        pro: message order is guaranteed, reliable end-to-end connection, timeout monitoring and resend
-        con: connection has to be created and destroyed -> overhead for a few messages
-        
-        % conectionless mail or radio also \cite{brause}
-        sender uses receiver handle for each transfer, no need to create a connection -> used for few datatransfers to a lot different receivers
-
-        pro: no need to create a connection
-        con: message order not guaranteed, message loss possible, receiver needs to be addressed per message
-    
         % receiver addressing \cite{glatz} \cite{brause}
     - unicast -> 1:1 relationship -> a certain receiver is addressed
     - multicast -> 1:m -> a defined group of receivers is addressed
     - anycast -> 1:1..n -> send a message to a group, at least 1 receiver
     - broadcast -> 1:n -> send to all detectable receivers
 
+
+\paragraph{Priority}
     % priority
     -> same prio -> buffer with fifo
     -> else queues for each priority
 
 
+\paragraph{Pipelines}
     % pipes pipelines
     -> special buffered channel, unix concept
     -> transports datastreams, delimite messages is not needed
@@ -890,7 +882,11 @@ Basically, there are three types of messages:
     unidirectional , via operating system 
     fifos are named pipes, live even if the system restarts  
 
-% network communication    
+
+
+\subsubsection{Network Communication}
+
+\paragraph{Sockets}
 % socket
 -> enable a cross-computer data exchange via data streams, takes the idea of pipelines for distributed computer systems
 -> applications use tcp/udp
@@ -905,6 +901,8 @@ unreliable -> no information
 
 connections needs the same socket type on both sides
 
+
+\paragraph{RPC}
 % rpc
 -> call distributed/remote procedures
 -> calling process : client
@@ -917,11 +915,9 @@ sequenz: -> client stub (does not fulfil action itself, just connects to rpc ser
 - wait for answer
 - get answer (rpc message) -> unmarshaling -> send results to application
 
-\subsection{Processes and Threads in Linux} 
-\cite{silberschatz2009operating}
 
-\subsection{Processes and Threads in Zircon}
-
+\subsection{IPC and Synchronization in Linux}
+\subsection{IPC and Synchronization in Zircon}
 
 \section{Scheduling}\label{sec:scheduling}
 
