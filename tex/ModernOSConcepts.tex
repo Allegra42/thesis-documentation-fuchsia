@@ -624,7 +624,62 @@ But this also allows the kernel to recognize a blocked thread and schedule anoth
 
 
 \subsection{Processes and Threads in Linux} 
-\cite{silberschatz2009operating}
+
+\cite{tanenbaum-modern-operating-systems}
+- each process runs a single program - initially one thread of control -> allows to create additional threads
+- dozens of background processes -> deamons
+
+- process creation via fork -> child inherit environment but changes are not visible to parent and vice versa
+- differ between parent and child via pid  -> fork returns 0 to child and a nun-null pid to parent process -> split program flow up based on this number
+
+- to avoid costly memory copies, modern linux systems use a copy on write strategy for processes. on forking, childs get own page tables pointing to the parents one. if the child tries to write sth, it gets a protection fault and the needed page is r/w copied to the child process. 
+
+
+- threads
+- kernel threads in linux : 
+    - clone syscall -> blurred the distinction between process and thread -> is a linux only call, not a unix one
+        - created eighter a new thread in the current process or a whole new process -> adress space is may shared or not depending on a flag (process/thread), in each case it executes directly a given funktion and a new private stack 
+        - options
+            - clone vm -> new thread -> if not set -> new process
+            - clone fs -> share umask, root and woprking dirs -> if not set -> dont share
+            - clone files -> share file descriptors -> if not set -> copy file descriptors
+            - clone parent -> new thread has same parent as the caller -> if not set -> new threads parent is the caller
+
+-> using clone based threads leads to programs not portable to other unix like systems
+
+
+\cite{mandl2014Grundkurs}
+- processes are organized in a tree-like structure
+- init is the origin of all following processes
+- process creation -> fork -> gets a pid -> init has pid 1 (differs depending on the unix derivate)
+- child process inherit whole environment (environment vars, opened files, network connections..) and gets a copie of its parents address space including data and code section -> may run the same program or a new one by overwriting the actual one with execve
+- two processes share resources -> need synchronisation -> see next chapter
+
+- vfork -> fast process creation -> process data is not copied -> used if an execve follows
+- clone -> it is selectable which data is to be shared or copied between parent and child
+
+- unix systems use the posix thread api standard -> implemented in kernel or userspace 
+
+- unix like systems do very much process creation and destruction
+
+- process lifecycle -> extra state: zombie -> a process is in this state if it is to be terminated until its parent is informed about
+
+- each process (task) has a pcb in kernel -> task\_struct -> process status, prio, pointer to program code, stack, and associated data
+
+
+
+
+\cite{lfd430}
+- in linux each thread of execution is considered individually. the difference between heavy and light-weight processes having only to do with sharing of resources and faster context switches between threads of execution. 
+- linux respects posix and other standards for multithreaded processes, e.g. thread returns the same process id but distinct thread id
+- internally, processes are ususally called tasks in linux -> for heavy weight processes
+
+- linux kernels before 2.6 were not preemtible (but usespace code). was only interrupted on explicit or implicit sleep requests (e.g. resource not available) or on interrupts (if enabled-> runned isr (handler))
+- today, there are 3 preemption options 
+    - no forced preemption -> server
+    - voluntary kernel preemption -> desktop
+    - preemtible kernel -> low latency desktop
+
 
 \subsection{Processes and Threads in Zircon}
 
@@ -634,8 +689,8 @@ But this also allows the kernel to recognize a blocked thread and schedule anoth
 % The latter has already been dealt with in the previous section.
 % In this one, especially the communication between different processes is to be considered.
 % The one between threads of the same process has previously been discussed.
-The term \ac{ipc} is not only used for the pure communication between different processes but also for the synchronization between processes, threads and data shared between them.
-In this context mentioned already the previous section~\ref{sec:threads} that the ability of threads to access shared data not only has advantages.
+The term \acf{ipc} is not only used for the pure communication between different processes but also for the synchronization between processes, threads and data shared between them.
+In this context mentioned already the previous~section~\ref{sec:threads} that the ability of threads to access shared data not only has advantages.
 As they share storage, e.g.\ main memory, two threads can read and write the same value.
 But what happens if both of them try to access the same, shared value?
 Two threads try to read and modify a shared value are given for example.
@@ -791,12 +846,11 @@ Basically, there are three types of messages:
     % issue: lost messages -> receiver send back an acknowledgement message, if sender does not receive it within a certain time, it retransmits the message -> message was received, but ack is lost -> message got retransmitted -> receiver get it twice -> need to distinct between both, e.g. via sequence numbers (same number for a resent message)
     % example: MPI (message passing interface)
 
-Regardless of the type of message, there are 2 basic operations available for message-based communication: \textit{send()} and \textit{receive()}.
+Regardless of the type of message, there are two basic operations available for message-based communication: \textit{send()} and \textit{receive()}.
 These operations are commonly supported by the operating system and enable not only the system-wide but also the cross-system exchange of messages and data\cite{glatz2015betriebssysteme}.
 Especially the opportunity of cross-system communication offers a significant advantage over memory-based communication, as this is the foundation for network communication.
 But also the synchronization between the involved processes is simplified. 
-The concept of messages avoids race conditions and maked the manual use of semaphores for application developers obsolete.
-The operating system realizes the transmission of the messages and their synchronization.
+The concept of messages avoids race conditions and maked the manual use of semaphores for application developers obsolete, as the operating system realizes the transmission of the messages and their synchronization.
 However, this concept is not as efficient as memory-based \ac{ipc} concepts in terms of resources consumption and performance\cite{glatz2015betriebssysteme}.
 
 
@@ -805,34 +859,34 @@ One of the most basic design decisions within message-based communication is whe
 When transmitting messages \textit{synchronously}, both sender and receiver must be ready for the exchange at the same time\cite{glatz2015betriebssysteme}.
 Is this not the case for one instance of them, e.g.\ the receiver, the other one (the sender) must block until the first one, the receiver, becomes ready.
 An additional, manual synchronization is not necessary.
-Even if the literature does not describe a general way to transfer messages between processes, race conditions cannot occur as long as a date is only sent from a writing process to the address space of an initially reading process and can onl be modified there\cite{brause2017betriebssysteme},~\cite{glatz2015betriebssysteme}.
+Even if the literature does not describe a general way to transfer messages between processes, race conditions cannot occur as long as a date is only sent from a writing process to the address space of an initially reading process and can only be modified there\cite{brause2017betriebssysteme},~\cite{glatz2015betriebssysteme}.
 However, within the individual processes, the synchronization corresponds to the one known from threads (see~\ref{sec:synchro}).
 But the close coupling of the processes within the synchronous communication leads to the fact that the program flow of both is no longer possible independently of each other.
 Accordingly, the parallelism for processes in such a relationship is also limited\cite{brause2017betriebssysteme}.
 
 The \textit{asynchronous} approach tries to decouple this by inserting a buffer between which is also known as \textit{mailbox} or \textit{message queue}.
-So sending is possible even if the receiver is not available at a moment, as long as the buffer is not completely filled.
-The receiver can read equally if the sender is not read, but the buffer still contains messages.
-Different processing speeds between the processes involved can also be compensated in this way\cite{glatz2015betriebssysteme},~\cite{brause2017betriebssysteme}.
+So sending is possible even if the receiver is not available at one moment, as long as the buffer is not completely filled.
+The receiver can read equally if the sender is not ready, but the buffer still contains messages.
+Even different processing speeds between the processes involved can also be compensated in this way\cite{glatz2015betriebssysteme},~\cite{brause2017betriebssysteme}.
 Only if the buffer is completely filled, the sender has to be blocked and vice versa the receiver if the buffer is emptied.
 But an operation only blocks when running in a \textit{blocking operation mode}.
-In a \textit{non blocking operation mode}, a call returns immediately but reports a full respectively empty buffer in such a situation which has to be handled on application level\cite{glatz2015betriebssysteme}.
+In a \textit{non blocking operation mode}, a call returns immediately in such a situation but reports a full respectively empty buffer which has to be handled on application level\cite{glatz2015betriebssysteme}.
 \textit{Asynchronous} communication allows a independent program flow and simplifies paralellism thereby.
 Nevertheless, an additional buffer with limited size is needed.
 The exact one depends on the implementation.
 If this buffer is filled and the receiver is blocked, the situation is the same as before with synchronous communication.
 But the main problem with this approach is that it is not possible to predict how long a message transfer takes and when a response can be expected\cite{glatz2015betriebssysteme}.
-The issue is to decide if a message is lost, the communication only takes a long time or the receiving process has crashed\cite{tanenbaum-modern-operating-systems}.
+The issue is to decide whether a message is lost, the communication only takes a long time or the receiving process has crashed\cite{tanenbaum-modern-operating-systems}.
 
 \paragraph{Connection-Oriented and Connectionless Communication}
-Especially when the reliability of data transmission has a special part, a \textit{connection-oriented} approach for message-based \ac{ipc} is choosen.
-This allows to guarantee the message sequence, monitor the transmission time of a message and to intervene if neccessary\cite{glatz2015betriebssysteme}.
-Until a (logical) connection or \textit{channel} has been established, the receiver of a message must be unambiguously known.
-After this is the case, the identification of the receiver is not longer of relevance.
+Especially when the reliability of data transmission has a great significance, a \textit{connection-oriented} approach for message-based \ac{ipc} is choosen.
+This allows to guarantee the message sequence, monitor the transmission time of them and to intervene if neccessary\cite{glatz2015betriebssysteme}.
+Until a (logical) connection or \textit{channel} between the communication partners has been established, the initial message receiver must be unambiguously known.
+As soons as this is the case, the identification is not longer of relevance.
 The established channel provides a reliable end-to-end transmission which may have the following properties:
 %
 \begin{itemize}
-    \item An \textit{unidirectional} connection allows message transfers only in one direction. 
+    \item An \textit{unidirectional} connection allows message transfers only in one direction at a time. 
         \begin{itemize}
             \item If the roles of sender and receiver never change, one says the transmission is \textit{simplex}.
             \item If the participants alternate act as sender or receiver, the transmission is also called \textit{half duplex}.
@@ -841,7 +895,8 @@ The established channel provides a reliable end-to-end transmission which may ha
 \end{itemize}
 %
 If a connection is no longer needed, it must be disconnected and destroyed.
-This means an additional and noticable overhead for small amount of data to transmit which is only worthwhile if the reliable transmission is more important\cite{glatz2015betriebssysteme}.
+The construction and dismantling of a connection means an additional and noticable overhead especially for small amount of data to transmit.
+Is only worthwhile if the reliable transmission between designated instances is more significant as the connection costs\cite{glatz2015betriebssysteme}.
 One example for connection-oriented communication is a telephone call.
 
 But there are also good reasons for \textit{connectionless} communication.
@@ -851,22 +906,63 @@ The order of messages cannot be guaranteed for this connection type and also the
 Nevertheless, the recipient must be addressed anew in every single message.
 
 \paragraph{Receiver Addressing}
- 
-        % receiver addressing \cite{glatz} \cite{brause}
-    - unicast -> 1:1 relationship -> a certain receiver is addressed
-    - multicast -> 1:m -> a defined group of receivers is addressed
-    - anycast -> 1:1..n -> send a message to a group, at least 1 receiver
-    - broadcast -> 1:n -> send to all detectable receivers
-
+Message receivers respectively their message queues are commonly addressed by a symbolic name which is managed in a system-wide or cross-system directory.
+When addressing them, one speaks depending on the number of receivers and the liability of the transmission of:
+\begin{itemize}
+    \item a \textit{unicast}, if there is a 1:1 relationship between sender and a certain receiver addressed.
+    \item a \textit{multicast}, if there is a 1:m relationship between sender and a defined group of receivers addressed.
+    \item a \textit{anycast}, if there is a 1:1..n relationship between sender and group of receivers. At least on recipient from the group must receive the message.
+    \item a \textit{broadcast}, if there is a 1:n relationship between the sender and all dectectable receivers. Whether the message actually arrives does not matter\cite{glatz2015betriebssysteme}.
+\end{itemize}
 
 \paragraph{Priority}
-    % priority
-    -> same prio -> buffer with fifo
-    -> else queues for each priority
+In literature, asynchronous message-based \ac{ipc} mechanisms are usually modeled without prioriizing messages.
+A buffer, message queue or mailbox that works according the \ac{fifo} principle is suitable for this purpose.
+In order to enable a priorized message exchange, it is, iter alia, conceivable to use seperate buffers or queues for each priority\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+
+
+% \subsubsection{Network Communication}
+% Communication between processes is not only limited to one system but can also take place in cross-system networks.
+% The implementation of them should not be further considered at this point.
+% The book \textit{Computer Networks} by \textsc{Tanenbaum} and \textsc{Wetherall} is a good resource if there is interest in the topic.
+% Instead, the two basic concepts for this purpose, the Berkeley-Sockets and \acp{rpc}.
+%
+% \paragraph{Sockets}
+%
+%
+% % socket
+% -> enable a cross-computer data exchange via data streams, takes the idea of pipelines for distributed computer systems
+% -> applications use tcp/udp
+% -> socket is a communication end-point, where application and transport layer matches
+    % -> stream socket -> connection oriented, reliable transport e.g. tcp
+    % -> datagram socket -> connectionless, unreliable transport, e.g. udp
+    % -> seqpacket socket -> data set oriented, reliable transport
+    % -> raw socket, unreliable transport, e.g. ip
+%
+% reliable means the data is faultless transported, if not, the application is informed
+% unreliable -> no information
+%
+% connections needs the same socket type on both sides
+%
+%
+% \paragraph{RPC}
+% % rpc
+% -> call distributed/remote procedures
+% -> calling process : client
+% -> called procedure : server procedure
+% both systems implement a notification service which implements the call including parameters into a calling and a return message
+%
+% sequenz: -> client stub (does not fulfil action itself, just connects to rpc server, calling procedure is blocked until the call is done)
+% - wrap calling parameters in rpc message (marshaling)
+% - send rpc message to server
+% - wait for answer
+% - get answer (rpc message) -> unmarshaling -> send results to application
+%
+
+\subsection{IPC and Synchronization in Linux}
 
 
 \paragraph{Pipelines}
-    % pipes pipelines
     -> special buffered channel, unix concept
     -> transports datastreams, delimite messages is not needed
     -> redirect output from processes to input for another, data is buffered within the pipe (fifo)
@@ -884,39 +980,6 @@ Nevertheless, the recipient must be addressed anew in every single message.
 
 
 
-\subsubsection{Network Communication}
-
-\paragraph{Sockets}
-% socket
--> enable a cross-computer data exchange via data streams, takes the idea of pipelines for distributed computer systems
--> applications use tcp/udp
--> socket is a communication end-point, where application and transport layer matches 
-    -> stream socket -> connection oriented, reliable transport e.g. tcp
-    -> datagram socket -> connectionless, unreliable transport, e.g. udp
-    -> seqpacket socket -> data set oriented, reliable transport
-    -> raw socket, unreliable transport, e.g. ip
-
-reliable means the data is faultless transported, if not, the application is informed
-unreliable -> no information
-
-connections needs the same socket type on both sides
-
-
-\paragraph{RPC}
-% rpc
--> call distributed/remote procedures
--> calling process : client
--> called procedure : server procedure
-both systems implement a notification service which implements the call including parameters into a calling and a return message
-
-sequenz: -> client stub (does not fulfil action itself, just connects to rpc server, calling procedure is blocked until the call is done)
-- wrap calling parameters in rpc message (marshaling)
-- send rpc message to server
-- wait for answer
-- get answer (rpc message) -> unmarshaling -> send results to application
-
-
-\subsection{IPC and Synchronization in Linux}
 \subsection{IPC and Synchronization in Zircon}
 
 \section{Scheduling}\label{sec:scheduling}
