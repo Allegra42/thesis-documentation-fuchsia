@@ -362,8 +362,7 @@ It implements only a very limited subset of \ac{posix} consisting of basix \ac{i
 Zircon does not support Unix-like signals, symbolic links and much more\cite{zircon-libc-posix}.
 The libzircon.so does not support directly \ac{io} operations. 
 They are performed by the \textit{fdio.so} library which overwrites weak symbols of the libzircon\cite{zircon-libc-posix}.
-
-
+All available system calls in Zircon from the version this thesis is working on are documented in \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/docs/syscalls}. 
 
 \section{Processes and Threads}\label{sec:processes-threads}
 
@@ -624,65 +623,123 @@ But this also allows the kernel to recognize a blocked thread and schedule anoth
 
 
 \subsection{Processes and Threads in Linux} 
+As in the general model, a process in Linux corresponds to a program in execution.
+Initally, a process contains exactly one thread of execution but further ones can be created as soon as the process has started\cite{tanenbaum-modern-operating-systems}.
+Processes are organized in a tree-like structure with the so-called \textit{init} process on its top.
+Starting from init, each new process to be created is split off from its parent using the \textit{fork()} system call.
+Forking a process, the newly created child process inherits the whole environment of its parent including environmental variables, opened files and network connections.
+Furthermore, it gets a copy of its parents address space including the data and code sections.
+As both processes share the same data and resources at this time, synchronization is needed if both try to access the same one\cite{mandl2014Grundkurs}.
+This issue is considered in the following section~\ref{sec:synchro}.
+The distinction of parent and child is done via their \ac{pid}.
+The fork call returns 0 to the child and a non-null \ac{pid} to its parent. 
+Based on this, the execution paths can be splitted up\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
+Even if parent and child differ only by the \ac{pid} directly after the fork, changes in the parent are not visible to the child and vice versa.
+To take advantage of this fact to actually use the new created process independently of the parent, in Unix-like systems the fork call is in most cases directly followed by the call \textit{exec()}, which replaces the the complete process environment with the one from another, new program.
+As copying the process data is quite costly and needless if an exec follows directly, modern Linux systems use a \textit{copy-on-write} strategy for process forking.
+Childs get own page tables pointing to the parent ones.
+The child still can read the parent's environment data without a copy operation needed. 
+Only when the child tries a write access on this data, a \textit{protection fault} is thrown and the page to modify is copied to the child process\cite{tanenbaum-modern-operating-systems}.
+Such a fork is known as \textit{vfork()} and used especially in situations a \textit{exec()} follows directly to avoid the expensive and needless copy of the parent process's environment\cite{mandl2014Grundkurs}.
 
-\cite{tanenbaum-modern-operating-systems}
-- each process runs a single program - initially one thread of control -> allows to create additional threads
-- dozens of background processes -> deamons
+Within the Linux kernel, the difference between processes and threads (or heavy-weight and light-weight processes) is not as important as described in the general section about processes.
+It is rather spoken of \textit{tasks}.
+The reason for this is that the Linux kernel offers a possibility for a fine-granular process respectively thread creation via the \textit{clone()} call on kernel level.
+In addition, Linux respects \ac{posix} threads\cite{lfd430}.
+But as the clone call is an unique feature of Linux and not generally available on other Unix-like systems are application using the clone call directly not portable\cite{tanenbaum-modern-operating-systems}.
 
-- process creation via fork -> child inherit environment but changes are not visible to parent and vice versa
-- differ between parent and child via pid  -> fork returns 0 to child and a nun-null pid to parent process -> split program flow up based on this number
+Nevertheless, \textit{clone()} is a very interesting concept in Linux.
+In each case, a process or thread created with clone gets an empty private stack and executes directly a new program which is given as an argument to the call.
+The decisions whether a process or a thread should be created, which resources should be shared or copied and which process is actual the parent are based on the following flags:
+\begin{itemize}
+    \item if \texttt{CLONE\_VM} is set, a new thread is created, if not, the call results in a new process.
+    \item if \texttt{CLONE\_FS} is set, the newly created thread or process shares \textit{umask}, \textit{root} and \textit{working directories} with its parent. They are not shared at all if the flag is not set.
+    \item if \texttt{CLONE\_FILES} is set, the parent shares file descriptors with its child. If not, they are copied to the child.
+    \item if \texttt{CLONE\_PARENT} is set, the child's parent is the same as the calling process ones. If the flag is not set, the calling process becomes the parent\cite{tanenbaum-modern-operating-systems}.
+\end{itemize}
 
-- to avoid costly memory copies, modern linux systems use a copy on write strategy for processes. on forking, childs get own page tables pointing to the parents one. if the child tries to write sth, it gets a protection fault and the needed page is r/w copied to the child process. 
+The flags listed show only a partial amount of the possibilities \textit{clone()} offers.
+A full list the glibc wrapper to the corresponding systemcall is available as a man-page using \texttt{man 2 clone}.
+Both, processes (tasks) and threads based on the clone call are kernel constructs.
+The \ac{posix} thread implementation on Linux internally also uses the clone call with the special flag \texttt{CLONE\_THREAD}.
 
-
-- threads
-- kernel threads in linux : 
-    - clone syscall -> blurred the distinction between process and thread -> is a linux only call, not a unix one
-        - created eighter a new thread in the current process or a whole new process -> adress space is may shared or not depending on a flag (process/thread), in each case it executes directly a given funktion and a new private stack 
-        - options
-            - clone vm -> new thread -> if not set -> new process
-            - clone fs -> share umask, root and woprking dirs -> if not set -> dont share
-            - clone files -> share file descriptors -> if not set -> copy file descriptors
-            - clone parent -> new thread has same parent as the caller -> if not set -> new threads parent is the caller
-
--> using clone based threads leads to programs not portable to other unix like systems
-
-
-\cite{mandl2014Grundkurs}
-- processes are organized in a tree-like structure
-- init is the origin of all following processes
-- process creation -> fork -> gets a pid -> init has pid 1 (differs depending on the unix derivate)
-- child process inherit whole environment (environment vars, opened files, network connections..) and gets a copie of its parents address space including data and code section -> may run the same program or a new one by overwriting the actual one with execve
-- two processes share resources -> need synchronisation -> see next chapter
-
-- vfork -> fast process creation -> process data is not copied -> used if an execve follows
-- clone -> it is selectable which data is to be shared or copied between parent and child
-
-- unix systems use the posix thread api standard -> implemented in kernel or userspace 
-
-- unix like systems do very much process creation and destruction
-
-- process lifecycle -> extra state: zombie -> a process is in this state if it is to be terminated until its parent is informed about
-
-- each process (task) has a pcb in kernel -> task\_struct -> process status, prio, pointer to program code, stack, and associated data
-
-
-
-
-\cite{lfd430}
-- in linux each thread of execution is considered individually. the difference between heavy and light-weight processes having only to do with sharing of resources and faster context switches between threads of execution. 
-- linux respects posix and other standards for multithreaded processes, e.g. thread returns the same process id but distinct thread id
-- internally, processes are ususally called tasks in linux -> for heavy weight processes
-
-- linux kernels before 2.6 were not preemtible (but usespace code). was only interrupted on explicit or implicit sleep requests (e.g. resource not available) or on interrupts (if enabled-> runned isr (handler))
-- today, there are 3 preemption options 
-    - no forced preemption -> server
-    - voluntary kernel preemption -> desktop
-    - preemtible kernel -> low latency desktop
+In contrast to the process lifecycle presented in the generic section, Linux tasks have one extra state called \textit{zombie} which is entered on process termination until the parent process is informed about\cite{mandl2014Grundkurs}.
+%TODO deamons in linux?
 
 
 \subsection{Processes and Threads in Zircon}
+Similar to Linux, runnable entities of the Zircon kernel are called \textit{tasks}.
+On Zircon respectively Fuchsia, this term includes \textit{jobs}, \textit{processes} and \textit{threads}.
+All of them have in common that they can be suspended, resumed and killed.
+\textit{Task} specific systemcalls can be applied to all of them\cite{zircon-task}.
 
+\textit{Jobs} as an organizational unit are Zircon-specific and not known from the general or the Linux-specific section on processes and threads.
+A \textit{job} manages a group of processes but possibly other (child) jobs, too.
+According to Linux, jobs built a tree structure as every process must belong to a single job but jobs can be nested.
+Except the root job, which corresponds to the init process on Linux, each one has only one parent.
+
+A Job object consist of a reference to a single parent job, a number of child jobs and a set of member processes.
+In future\footnote{Unless otherwise noted, the status of the Zircon documentation cited in this thesis corresponds to the forked and frozen source code repository on which basis the driver development takes place. See \url{https://github.com/Allegra42/zircon/blob/i2c-grove-lcd/docs/}.}, they will also contain a set of policies\cite{zircon-job}.
+Jobs are used to track the privileges needed to perform kernel related operations like systemcalls but also to track and limit the consumption of basic computing resources such as memory, \ac{cpu} time or \ac{io} devices\cite{zircon-job}.
+The idea behind this concept is managing applications composed from more than one process as a single entity, both from a resource and permission view as well as from lifetime control\cite{zircon-process}.
+
+Zircon \textit{processes} itself are an instance of a program as defined in the general section about processes~\ref{sec:processes-threads}.
+A \textit{process} consists of the program code as a set of instructions to be executed by one or more \textit{threads} and a collection of resources.
+Threads are just as much a part of the resources as \textit{handles} and \textit{\acp{vmar}} are\cite{zircon-process}.
+The Zircon documentation describes \textit{handles} as ``kernel constructs that allows user-mode programs to reference a kernel object''\cite{zircon-process}, containing the reference to this object, the corresponding rights and the user-space process bounded to.
+Thus, a handle can reference each object type listed in the \textit{Zircon Kernel objects} reference\cite{zircon-objects}, including kernel objects for drivers like \textit{interrupts}, \textit{resource} objects and \textit{Log} objects.
+Strictly speaking, it is not necessary to mention \acp{vmar} as an own point.
+They are kernel objects itself.
+But as the documentation mentions them explicitly, they should also receive special attention in this place.
+A \ac{vmar} represents a contiguous part of virtual memory address space used by the kernel as well as by the user-space. 
+Each process starts an own \ac{vmar} to built up its address space.
+\acp{vmar} have a hierachical permission model, so a process with a read only address space cannot create a readable and writeable one, and are randomized per default\cite{zircon-vmar}.
+
+%TODO
+
+process \cite{zircon-process}
+- an instance of a program in the traditional sense
+    - set of instructions to be executed by one or more threads and
+    - a collection of resources
+
+- included resources:
+    - handles
+    - virtual memory address regions
+    - threads
+
+- processes are own by jobs -> allows an application that is composed by more than one process to be treated as a single entity (from resource and permission limits and lifetime control)
+
+lifetime:
+- created -> zx_process_create
+- execution begins with _process_start -> can just run once for a process -> no new threads to a process started and exits its last thread
+- stops
+    - if last thread is terminated or exits
+    - process calls process_exit
+    - parent job terminates process
+    - parent job is destroyed
+
+corresponding syscalls see doc
+
+
+thread \cite{zircon-thread}
+- runnable/computation entity
+- represents time-shared cpu execution context -> live within a process object which provides memory and the handles to other objects (e.g. for IO and computation)
+
+lifetime:
+- created with zx_thread_create
+- only started on thread/process_start -> take entrypoint of the initial routine to execute as arg
+- thread passed to process_start should be the frist thread to start execution on a process
+
+- terminates by
+    - calling thread_exit
+    - vmar_unmap_handle_cloas_thread_exit
+    - futex_wake_handle_close_thread_exit
+    - calling task_kill on threads handle
+    - after generating an exception for which there is no handler or handler decides to terminate the thread
+
+- returning from the entrypoint routine does not terminate the execution -> last action of an entrypoint should be one of the exit variants
+- closing the last handle to a thread does not terminate execution -> if there is no handle left kill with object_get_child to get handle -> avoid
+- fuchsia/zircon threads are always detached, no join operation needed to do a clean termination -> may needed by runtimes above kernel level
 
 \section{Synchronization and Inter Process Communication}\label{sec:ipc-and-synchro}
 % The term \ac{ipc} is not only used for pure communication between different processes but also for their synchronization\cite{glatz2015betriebssysteme}.
@@ -1016,6 +1073,15 @@ As soon as the semaphore respectively mutex is unlocked, the former priority is 
 
 
 \subsection{Scheduling in Linux}
+
+\cite{lfd430}
+- linux kernels before 2.6 were not preemtible (but usespace code). was only interrupted on explicit or implicit sleep requests (e.g. resource not available) or on interrupts (if enabled-> runned isr (handler))
+- today, there are 3 preemption options 
+    - no forced preemption -> server
+    - voluntary kernel preemption -> desktop
+    - preemtible kernel -> low latency desktop
+
+
 \subsection{Scheduling in Zircon}
 
 
