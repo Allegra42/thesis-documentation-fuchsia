@@ -708,32 +708,30 @@ The lifetime of Zircon processes (or jobs) ends if
     \item the parent job is destroyed\cite{zircon-process}.
 \end{itemize}
 
-As just as known from the general section are Zircon \textit{threads} the actual runnable computation entity living within a process.
-They are created within the \textit{process} context via \texttt{zx\_thread\_create()} but just as know from Zircon processes the actual execution is not started until \texttt{zx\_thread\_start()} \textbf{or} \texttt{zx\_process\_start()} is called.
+Just like known from the general section are Zircon \textit{threads} the actual runnable computation entity living within a process.
+They are created within the \textit{process} context via \texttt{zx\_thread\_create()} but as it is done with Zircon processes, the actual execution is not started until \texttt{zx\_thread\_start()} \textbf{or} \texttt{zx\_process\_start()} is called.
 The \texttt{main()} function or entrypoint of an application should be the first one started via \texttt{zx\_process\_start()}.
+But returning from such an entrypoint does not terminate a thread's execution.
+This must be done manually by voluntary calling 
+\begin{itemize}
+    \item \texttt{zx\_thread\_exit()},
+    \item \texttt{zx\_vmar\_unmap\_handle\_close\_thread\_exit()},
+    \item \texttt{zx\_futex\_wake\_handle\_close\_thread\_exit()}
+\end{itemize}
+on the thread itself\cite{zircon-thread}.
+Even if the last handle to a thread is closed, the thread is not terminated automatically.
+Instead the thread must be killed explicitly after the handle was restored via calling \texttt{zx\_object\_get\_child()} on the parent.
+On the other hand, a thread can be terminated involuntary 
+\begin{itemize}
+    \item if the parent process is terminated,
+    \item if someone calls \texttt{zx\_task\_kill()} on the thread's handle and
+    \item if an exception was generated for which is no handler or the handler terminated the thread\cite{zircon-thread}. 
+\end{itemize}
 
-%TODO
+In contrast to Linux threads and some library thread implementations, Zircon threads are always \textit{detachted} from each other.
+An operation like \texttt{join()} which waits for an undetached thread to complete and allows a clean termination is not needed in Zircon itself.
+Libraries and runtime environments on top of Zircon may require such an operation to reach e.g.\ \ac{posix} compatibility\cite{zircon-thread}.
 
-
-thread \cite{zircon-thread}
-- runnable/computation entity
-- represents time-shared cpu execution context -> live within a process object which provides memory and the handles to other objects (e.g. for IO and computation)
-
-lifetime:
-- created with zx_thread_create
-- only started on thread/process_start -> take entrypoint of the initial routine to execute as arg
-- thread passed to process_start should be the frist thread to start execution on a process
-
-- terminates by
-    - calling thread_exit
-    - vmar_unmap_handle_cloas_thread_exit
-    - futex_wake_handle_close_thread_exit
-    - calling task_kill on threads handle
-    - after generating an exception for which there is no handler or handler decides to terminate the thread
-
-- returning from the entrypoint routine does not terminate the execution -> last action of an entrypoint should be one of the exit variants
-- closing the last handle to a thread does not terminate execution -> if there is no handle left kill with object_get_child to get handle -> avoid
-- fuchsia/zircon threads are always detached, no join operation needed to do a clean termination -> may needed by runtimes above kernel level
 
 \section{Synchronization and Inter Process Communication}\label{sec:ipc-and-synchro}
 % The term \ac{ipc} is not only used for pure communication between different processes but also for their synchronization\cite{glatz2015betriebssysteme}.
@@ -1012,6 +1010,18 @@ In order to enable a priorized message exchange, it is, iter alia, conceivable t
 
 \subsection{IPC and Synchronization in Linux}
 
+ipc:
+- pipes - brause2017betriebssysteme
+- fifo - brause2017betriebssysteme
+- socket
+
+\cite{silberschatz2009operating} 6.8.3
+
+synchro:
+- mutex/semaphore
+    - futex
+- signals
+
 
 \paragraph{Pipelines}
     -> special buffered channel, unix concept
@@ -1033,6 +1043,17 @@ In order to enable a priorized message exchange, it is, iter alia, conceivable t
 
 \subsection{IPC and Synchronization in Zircon}
 
+ipc:
+- channel
+- socket
+- fifo
+
+synchro:
+- event (signal)
+- event pair
+- futex
+
+(vmar read/write memory within a process)
 \section{Scheduling}\label{sec:scheduling}
 
 
