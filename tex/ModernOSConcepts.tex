@@ -668,26 +668,27 @@ In contrast to the process lifecycle presented in the generic section, Linux tas
 
 
 \subsection{Processes and Threads in Zircon}
-Similar to Linux, runnable entities of the Zircon kernel are called \textit{tasks}.
-On Zircon respectively Fuchsia, this term includes \textit{jobs}, \textit{processes} and \textit{threads}.
-All of them have in common that they can be suspended, resumed and killed.
-\textit{Task} specific systemcalls can be applied to all of them\cite{zircon-task}.
+Similar to Linux, runnable entities of the Zircon kernel are called \textit{tasks} objects.
+This term includes the kernel objects \textit{jobs}, \textit{processes} and \textit{threads}.
+As the whole Zircon kernel is object-based, the user interacts with kernel objects like the ones mentioned above via handles.
+The Zircon documentation describes \textit{handles} as ``kernel constructs that allows user-mode programs to reference a kernel object''\cite{zircon-process}, containing the reference to this object, the corresponding rights and the user-space process bounded to.
+Thus, a handle can reference each object type listed in the \textit{Zircon Kernel objects} reference\cite{zircon-objects}, including kernel objects for drivers like \textit{interrupts}, \textit{resource} objects and \textit{Log} objects.
+The Zircon systemcall \texttt{zx\_status\_t zx\_task\_kill(zx\_handle\_t handle)} is such an interaction between an user application and the kernel. 
+It refers to a \textit{task} object handle and thus to all objects for which \textit{task} is a generic term\cite{zircon-task}.
+% All objects included in the definition of the term \textit{task} have in common that they can be suspended, resumed and killed.
 
 \textit{Jobs} as an organizational unit are Zircon-specific and not known from the general or the Linux-specific section on processes and threads.
 A \textit{job} manages a group of processes but possibly other (child) jobs, too.
 According to Linux, jobs built a tree structure as every process must belong to a single job but jobs can be nested.
 Except the root job, which corresponds to the init process on Linux, each one has only one parent.
-
 A Job object consist of a reference to a single parent job, a number of child jobs and a set of member processes.
 In future\footnote{Unless otherwise noted, the status of the Zircon documentation cited in this thesis corresponds to the forked and frozen source code repository on which basis the driver development takes place. See \url{https://github.com/Allegra42/zircon/blob/i2c-grove-lcd/docs/}.}, they will also contain a set of policies\cite{zircon-job}.
 Jobs are used to track the privileges needed to perform kernel related operations like systemcalls but also to track and limit the consumption of basic computing resources such as memory, \ac{cpu} time or \ac{io} devices\cite{zircon-job}.
 The idea behind this concept is managing applications composed from more than one process as a single entity, both from a resource and permission view as well as from lifetime control\cite{zircon-process}.
 
-Zircon \textit{processes} itself are an instance of a program as defined in the general section about processes~\ref{sec:processes-threads}.
-A \textit{process} consists of the program code as a set of instructions to be executed by one or more \textit{threads} and a collection of resources.
-Threads are just as much a part of the resources as \textit{handles} and \textit{\acp{vmar}} are\cite{zircon-process}.
-The Zircon documentation describes \textit{handles} as ``kernel constructs that allows user-mode programs to reference a kernel object''\cite{zircon-process}, containing the reference to this object, the corresponding rights and the user-space process bounded to.
-Thus, a handle can reference each object type listed in the \textit{Zircon Kernel objects} reference\cite{zircon-objects}, including kernel objects for drivers like \textit{interrupts}, \textit{resource} objects and \textit{Log} objects.
+A Zircon \textit{process} itself is an instance of a program as defined in the general section about processes~\ref{sec:processes-threads}.
+It consists of the program code as a set of instructions to be executed by one or more \textit{threads} and a collection of resources.
+Threads are just as much a part of a process' resources as \textit{handles} and \textit{\acp{vmar}} are\cite{zircon-process}.
 Strictly speaking, it is not necessary to mention \acp{vmar} as an own point.
 They are kernel objects itself.
 But as the documentation mentions them explicitly, they should also receive special attention in this place.
@@ -695,30 +696,23 @@ A \ac{vmar} represents a contiguous part of virtual memory address space used by
 Each process starts an own \ac{vmar} to built up its address space.
 \acp{vmar} have a hierachical permission model, so a process with a read only address space cannot create a readable and writeable one, and are randomized per default\cite{zircon-vmar}.
 
+The lifetime of Zircon processes differs from the general but also from the Linux model.
+In Zircon, a new process is created via \texttt{zx\_process\_create()} but the execution starts not before \texttt{zx\_process\_start()} is called.
+Once a process started and exits its last thread, it is impossible to add a new thread.
+Processes which are composed to a job are threaten as a single entity from a lifetime control's point of view.
+The lifetime of Zircon processes (or jobs) ends if 
+\begin{itemize}
+    \item the last thread within the process or job exits or is terminated,
+    \item the process or job itself calls \texttt{zx\_process\_exit()},
+    \item the parent job terminates the process or
+    \item the parent job is destroyed\cite{zircon-process}.
+\end{itemize}
+
+As just as known from the general section are Zircon \textit{threads} the actual runnable computation entity living within a process.
+They are created within the \textit{process} context via \texttt{zx\_thread\_create()} but just as know from Zircon processes the actual execution is not started until \texttt{zx\_thread\_start()} \textbf{or} \texttt{zx\_process\_start()} is called.
+The \texttt{main()} function or entrypoint of an application should be the first one started via \texttt{zx\_process\_start()}.
+
 %TODO
-
-process \cite{zircon-process}
-- an instance of a program in the traditional sense
-    - set of instructions to be executed by one or more threads and
-    - a collection of resources
-
-- included resources:
-    - handles
-    - virtual memory address regions
-    - threads
-
-- processes are own by jobs -> allows an application that is composed by more than one process to be treated as a single entity (from resource and permission limits and lifetime control)
-
-lifetime:
-- created -> zx_process_create
-- execution begins with _process_start -> can just run once for a process -> no new threads to a process started and exits its last thread
-- stops
-    - if last thread is terminated or exits
-    - process calls process_exit
-    - parent job terminates process
-    - parent job is destroyed
-
-corresponding syscalls see doc
 
 
 thread \cite{zircon-thread}
