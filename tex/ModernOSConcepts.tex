@@ -1008,7 +1008,42 @@ In order to enable a priorized message exchange, it is, iter alia, conceivable t
 % - get answer (rpc message) -> unmarshaling -> send results to application
 %
 
-\subsection{IPC and Synchronization in Linux}
+\subsection{Synchronization and IPC in Linux}
+\subsubsection*{Basic Synchronization}
+Modern Linux based operating systems provide a wide range of basic thread synchronization mechanism from a user's point of view.
+Examples are \ac{posix} realtime semaphores, \ac{posix} mutex and System-V semaphores\cite{glatz2015betriebssysteme}.
+The underlying implementation in Linux versions starting from 2.6 is based the concept of futexes to provide an efficient locking mechanism\cite{tanenbaum-modern-operating-systems}.
+While in userspace the grown structure of Linux, its openess, but also standards like \ac{posix} allows to find nearly every variant of basic synchronization mechansims, the kernel itself is much more limited.
+
+Within the actual Linux kernel, only \textit{spinlocks} and \textit{mutexes} are available besides \textit{atomic data operations} like \texttt{atomic\_set()}, \texttt{atomic\_inc()}, \texttt{atomic\_dec()} and others\cite{achilles2006betriebssysteme}.
+As mentioned in the general section~\ref{sec:synchro}, a spinlock uses busy waiting while the kernel's implementation of mutexes is a blocking one.
+Both are binary semaphore versions that only differ in terms of waiting behaviour\cite{linux-locking}.
+Linux versions compiled for single processing core systems and without preemption support do not provide any locking mechanism at all.
+It is not needed in this case.
+Preemptible single core systems provide spinlocks but they only disable preemption during a critical region\cite{linux-locking}.
+
+\subsubsection*{Signals}
+\textit{Signals} are a special concept of UNIX and Unix-like operating systems, located somewhere between process synchronization and \ac{ipc}.
+They are used to transmit events or information between processes similar to hardware interrupts\cite{glatz2015betriebssysteme}.
+The most known usecase of signals is to interrupt or terminate one processes from another one, but actually they are also used for signaling and handling errors, \ac{io} events or to trigger even user-defined actions\cite{achilles2006betriebssysteme}.
+Signals are in common send between processes, e.g.\ to indicate illegal instructions or memory access, arithmetic errors, expiring timers and much more.
+The most of them are ignorable and/or handable by the receiving process, execpt from the \texttt{SIGKILL} and \texttt{SIGSTOP} signals\cite{achilles2006betriebssysteme}.
+
+Signal handlers are commonly used to grateful terminate a process or handle the indicated situation.
+They provide a default behaviour which can be overwritten to handle specific signals tailored to the particular process.
+In this case is it convention to raise the same signal with its default action again right after the custom handling finished\cite{achilles2006betriebssysteme}.
+Each Linux process is aware to receive signals, but if a signal is ignored, the result is not predictable in most cases. 
+
+\subsubsection*{Inter Process Communication}
+\paragraph{Pipes}
+Pipes were one of the first \ac{ipc} mechanisms in Unix-like systems.
+They are also in Linux wide-spread, especially for process chaining like it is done in the command line instruction \texttt{ps -A | sort | more}.
+This instruction takes the output of the first command, \texttt{ps -A} (show all processes), and uses it as input to the second one, \texttt{sort}, which is used as input for the last one, \texttt{more}, again.
+In general, pipes can provide unidirectional or bidirectional communication between processes but ordinary Linux pipes provide only an unidirectional but buffered communication between the \textit{write-end} to the \textit{read-end} of a pipe\cite{glatz2015betriebssysteme},~\cite{silberschatz2009operating}.
+A bidirectional communication requires two inverse pipes\cite{silberschatz2009operating}.
+As a pipe is buffered, both processes are decoupled to some degree, which is influenced by the actual buffer size.
+It is a system and architecture dependent value.
+
 
 ipc:
 - pipes - brause2017betriebssysteme
@@ -1017,13 +1052,9 @@ ipc:
 
 \cite{silberschatz2009operating} 6.8.3
 
-synchro:
-- mutex/semaphore
-    - futex
-- signals
 
+\paragraph{Pipes}
 
-\paragraph{Pipelines}
     -> special buffered channel, unix concept
     -> transports datastreams, delimite messages is not needed
     -> redirect output from processes to input for another, data is buffered within the pipe (fifo)
@@ -1041,7 +1072,7 @@ synchro:
 
 
 
-\subsection{IPC and Synchronization in Zircon}
+\subsection{Synchronization and IPC in Zircon}
 
 ipc:
 - channel
