@@ -1036,55 +1036,154 @@ Each Linux process is aware to receive signals, but if a signal is ignored, the 
 
 \subsubsection*{Inter Process Communication}
 \paragraph{Pipes}
-Pipes were one of the first \ac{ipc} mechanisms in Unix-like systems.
-They are also in Linux wide-spread, especially for process chaining like it is done in the command line instruction \texttt{ps -A | sort | more}.
+Pipes were one of the first \ac{ipc} mechanisms in Unix-like systems besides shared memory between threads within a process and additional memory regions shared between processes.
+They provide a message-based communication mechanism using datagram-typed messages.
+Pipes are also in Linux wide-spread and especially known for process chaining like it is done in the command line instruction \texttt{ps -A | sort | more}.
 This instruction takes the output of the first command, \texttt{ps -A} (show all processes), and uses it as input to the second one, \texttt{sort}, which is used as input for the last one, \texttt{more}, again.
 In general, pipes can provide unidirectional or bidirectional communication between processes but ordinary Linux pipes provide only an unidirectional but buffered communication between the \textit{write-end} to the \textit{read-end} of a pipe\cite{glatz2015betriebssysteme},~\cite{silberschatz2009operating}.
 A bidirectional communication requires two inverse pipes\cite{silberschatz2009operating}.
-As a pipe is buffered, both processes are decoupled to some degree, which is influenced by the actual buffer size.
-It is a system and architecture dependent value.
+As a pipe is buffered, both processes are decoupled to some degree, which is influenced by the actual buffer size, a system and architecture dependent value.
+Using a pipe synchronizes the involved processes implicitly.
+A reading process is blocked on an empty pipe, a writing one on a full pipe\cite{glatz2015betriebssysteme}.
+Ordinary Linux pipes are not accessable by another than the creating process.
+Thus, pipes are commonly used between a parent process and its childs or between childs.
+The parent creates a pipe which is inherit to forked childs\cite{silberschatz2009operating}.
+For further reading, \textsc{Achilles} gives a good introduction to the implementation of Linux pipes and their usage in his book\cite{achilles2006betriebssysteme}. 
 
+\paragraph{Named Pipes (FIFOs)}
+Named pipes or \acp{fifo} are an enhancement to the ordinary pipes described previous.
+In contrast to them are named pipes even between unrelated processes available.
+Several writers or readers on a single pipe are possible.
+Indeed, named pipes are capable for a bidirectional communication in half-duplex mode, too.
+But in fact, bidirectional \ac{ipc} is done via two distinct pipes\cite{silberschatz2009operating}.
+Named pipes are a special type of file which can be created with a freely selectable name at any point in a filesystem.
+A writing as well as a reading process can open and use a pipe by its given name just like an ordinary file or pipe\cite{glatz2015betriebssysteme}.
+Once, a named pipe was created, it exists until it is explicitly deleted. 
+The termination of the process which created influences the pipe just as little as a system reboot\cite{silberschatz2009operating}.
+That is not the fact for ordinary pipes as the are bounded to the creating process and its childs.
+Both, ordinary and named pipes are only available between processes on the same system in Linux\cite{silberschatz2009operating}. 
 
-ipc:
-- pipes - brause2017betriebssysteme
-- fifo - brause2017betriebssysteme
-- socket
-
-\cite{silberschatz2009operating} 6.8.3
-
-
-\paragraph{Pipes}
-
-    -> special buffered channel, unix concept
-    -> transports datastreams, delimite messages is not needed
-    -> redirect output from processes to input for another, data is buffered within the pipe (fifo)
-    -> synchronizes involved processes, a reading process is blocked by an empty pipe, a writing process by a full pipe
-    -> unix instruction chaining (who | sort | more)
-
-    -> named/ unnamed pipes -> unidirectional, simplex operating mode
-    -> for duplex communication, 2 pipes are needed
-    -> size is system dependent
-    -> unix concept
-
-    \cite{brause}
-    unidirectional , via operating system 
-    fifos are named pipes, live even if the system restarts  
-
+\paragraph{Berkeley Sockets}
+While both types of pipes are bounded to a single system, a corresponding mechanism for cross-system communication respectively network communication is needed.
+The best known mechanism to do this in Linux and other Unix-like systems are Berkeley sockets.
+They provide cross-system communication comparable to pipes\cite{glatz2015betriebssysteme}.
+Sockets are \textit{communication endpoints}, put on top of the \ac{tcp} (connection-oriented) respectively the \ac{udp} (connectionless) as a transportation layer and identified by an \ac{ip} address together with a port number\cite{silberschatz2009operating}.
+This work will not examine the transportation layer and physical networking more closely.
+Using \ac{tcp}, the resulting socket is called \textit{stream socket}.
+The resulting communication is stream-based.
+In contrast, using \ac{udp} as transportation protocol, the socket is a \textit{datagram socket}\cite{silberschatz2009operating}.
+A communication between two processes is implemented using an own socket from the same type for each one, working according a client-server model.
+Sockets provide a bidirectional communication between the processes owning the endpoints with the basic operations \texttt{send()} and \texttt{recv()}.
+Connection-oriented sockets using \ac{tcp} are additionally in need to establish a connection and shut it down as soon as it is not longer needed\cite{glatz2015betriebssysteme}.
+%TODO is this enough?
 
 
 \subsection{Synchronization and IPC in Zircon}
 
-ipc:
-- channel
-- socket
-- fifo
+\subsubsection*{Synchronization with Futexes}
+In Zircon, all low level synchronization mechanisms are based on futexes.
+High level implementations of mutexes and semaphores such as \texttt{pthread\_mutex\_t} are built on top.
+Thus, normal users and user applications are rarely directly in touch with futexes\cite{zircon-concepts},~\cite{zircon-futex}.
+The Zircon futex implementation is very efficient.
+It does not enter the kernel space or allocate any kernel resources in the uncontested case.
+In contrast to the Linux futex implementation do Zircon futex operations key off of the virtual address of an userspace pointer while Linux differentiate private futex actions from the ones shared across the address spaces of more than one process.
+Futher, Zircon futex operations do not modify the futex from the kernel, such an action is not required in the current implementation\cite{zircon-futex}.
 
-synchro:
-- event (signal)
-- event pair
-- futex
+\subsubsection*{Events and Event Pairs}
+Events are described as \textit{signalable event for concurrent programming}\cite{zircon-event} and \textit{user signalable kernel objects}\cite{zircon-event}.
+A variant of events are event pairs.
+They are described as \textit{mutually signalable linked pairs of signalable objects for concurrent programming}\cite{zircon-eventpair}.
+Unfortunately, there is not any more documentation about them and their use at all, not even in Google's zircon master repository.
 
-(vmar read/write memory within a process)
+\subsubsection*{Signals}
+Signals in Zircon are e.g.\ used for channels to indicate it contains messages to read.
+They are information exposed to applications by waitable kernel objects.
+Each object can expose a number of signal including generic ones for all objects but also ones that are specific to the object type such the signal described in the example above.
+Signals can be observed by processes respectively applications by \texttt{zx\_object\_wait\_one()} for example.
+It is possible to wait for specific signals on several objects\cite{zircon-signals}.
+
+\subsubsection*{Inter Process Communication}
+\paragraph{Shared Memory}
+Zircon provides so-called \textit{\ac{vmo}} and \textit{\ac{vmar}} which represents a contiguous region of virtual memory respectively of virtual memory address space.
+Both go together and are mixed up sometimes.
+Generally, the term \ac{vmar} is used for any operating according to address regions, e.g.\ allocate them, map and unmap \acp{vmo} to processes, but also to protect and destroy regions\cite{zircon-vmar}.
+The term \ac{vmo} is used for actions on the memory object, such as create one, read or write it\cite{zircon-vmo}.
+A \ac{vmo} represents a set of physical memory pages on the one hand, but also the potential for pages on-demand via lazy creation on the other.
+Such objects are available on both, kernel and user-space and can be mapped into the address spaces of multiple, distinct processes\cite{zircon-vmo},~\cite{zircon-concepts}.
+\acp{vmar} in Zircon are randomized by default and additionally allowes adjusting the permissions of mapped pages\cite{zircon-vmar}.
+The mapped \acp{vmo} are not only directly writeable and readable.
+\acp{vmo} also provide an one-shot mechanism to avoid the cost of mapping them more often into address spaces than necessary.
+In such a case, a \ac{vmo} is created and initially written by one process and subsequently handed over to the control of another process\cite{zircon-concepts}.
+Thus, they are very suitable for efficient \ac{ipc} via shared memory.
+
+% \cite{zircon-concepts}
+% shared memory: VMOs
+% - represent a set of physical memory pages or the potential for pages (lazy creation, on-demand)
+% - may mapped into the address space of a process
+% - permissions of mapped pages are adjustable
+% - can be directly written
+% -> cost of mapping them to address spaces may be avoided by one-shot operations: create vmo, write a dataset to it -> hand it over to another process to use
+%
+% \cite{zircon-vmo}
+% - represent a contiguous region of virtual memory -> can be mapped into multiple address spaces
+% - used by kernel and userspace
+% - represent paged and physical memory
+% - standard methods for sharing mem between processes but also between kernel and userspace available
+% - basic operation directly on them are possible
+
+\paragraph{Channels}
+
+\cite{zircon-concepts}
+- ipc object
+- bidirectional
+- two-ended -> two handles, one referring to each end of the object
+
+- datagram oriented
+- maximum message size and maximum number of handles
+- does not support short read/write -> either a message fits or it does not
+
+- handles written into a channel are removed from the sending process
+- handles read from a channel are added to the receiving process -> between, the handle still exists 
+
+\cite{zircon-channel}
+- ordered message queue
+- bidirectional
+- a thread can block until messages are available using wait
+- channel_call -> enqueues a message in one direction, waits for response and dequeues the response -> idenetified by first 4 byte
+
+- two steps in sending a message:
+    - atomically write message data into the channel
+    - move ownership of all handles in the message into the channel
+
+- channels are not duplicateable
+
+\paragraph{Sockets}
+\cite{zircon-concepts}
+- ipc object
+- bidirectional
+- two-ended -> two handles, one referring to each end of the object
+
+- stream oriented
+- data may be written into or read out of them in units of one or more bytes
+- short writes (if the sockts buffers are full) and short reads (if more data is requested than in the buffers) are possible
+
+\cite{zircon-socket}
+- bidirection streaming ipc transport
+- can only move data, no handles
+- data is written into one end and read from the other 
+- both ends are read/writeable
+- ends can be shut down for writing/reading
+
+- some signals are available for socket objects
+
+\paragraph{FIFO}
+\cite{zircon-fifo}
+- first in first out ipc queue
+- intented to be the control plane for shared memory transports
+- read and write operations are more efficient thant channels or sockets
+- restrictions on size of elements and buffers
+
+
 \section{Scheduling}\label{sec:scheduling}
 
 
