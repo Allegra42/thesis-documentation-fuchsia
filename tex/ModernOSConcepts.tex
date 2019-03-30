@@ -1132,57 +1132,86 @@ Thus, they are very suitable for efficient \ac{ipc} via shared memory.
 % - basic operation directly on them are possible
 
 \paragraph{Channels}
+Channels are Zircon \ac{ipc} objects, comparable with Pipes in Linux.
+But in contrast to Linux, they are bidirectional, ordered message queues with two handles, each one refers to on end of the channel.
+Channels provide a datagram oriented message based communication between arbitrary and unrelated processes\cite{zircon-channel},~\cite{zircon-concepts}.
+The maximum number of handles to a channel and its message size are limited.
+In common, there are two steps in sending a message over a Zircon channel.
+At first, a message is atomically written into the channel.
+Afterwards, the ownership of all handles in the context of the message is transfered into the channel\cite{zircon-channel}.
+As a result, object handles which are written into a channel are removed from the sending process.
+Handles which are read from a channel become added to the receiving process.
+During the transmission within the channel, the handle still exists to ensure the life of related objects\cite{zircon-concepts}.
+Threads can block on a channel until messages are available.
+Short reads or writes are not supported.
+This means, a message must fit or it is not read from or written to a channel.
+In contrast to pipes on Linux, Zircon channels provide a special operation called \texttt{channel\_call()} which bundles the common situation a message is sent in one direction and its response is await right after.
+The sending process dequeues the matching response identified by its first four bytes by itself\cite{zircon-concepts},~\cite{zircon-channel}.
 
-\cite{zircon-concepts}
-- ipc object
-- bidirectional
-- two-ended -> two handles, one referring to each end of the object
-
-- datagram oriented
-- maximum message size and maximum number of handles
-- does not support short read/write -> either a message fits or it does not
-
-- handles written into a channel are removed from the sending process
-- handles read from a channel are added to the receiving process -> between, the handle still exists 
-
-\cite{zircon-channel}
-- ordered message queue
-- bidirectional
-- a thread can block until messages are available using wait
-- channel_call -> enqueues a message in one direction, waits for response and dequeues the response -> idenetified by first 4 byte
-
-- two steps in sending a message:
-    - atomically write message data into the channel
-    - move ownership of all handles in the message into the channel
-
-- channels are not duplicateable
+% \cite{zircon-concepts}
+% - ipc object
+% - bidirectional
+% - two-ended -> two handles, one referring to each end of the object
+%
+% - datagram oriented
+% - maximum message size and maximum number of handles
+% - does not support short read/write -> either a message fits or it does not
+%
+% - handles written into a channel are removed from the sending process
+% - handles read from a channel are added to the receiving process -> between, the handle still exists
+%
+% \cite{zircon-channel}
+% - ordered message queue
+% - bidirectional
+% - a thread can block until messages are available using wait
+% - channel_call -> enqueues a message in one direction, waits for response and dequeues the response -> idenetified by first 4 byte
+%
+% - two steps in sending a message:
+    % - atomically write message data into the channel
+    % - move ownership of all handles in the message into the channel
+%
+% - channels are not duplicateable
 
 \paragraph{Sockets}
-\cite{zircon-concepts}
-- ipc object
-- bidirectional
-- two-ended -> two handles, one referring to each end of the object
+There are two main differences between Zircon channels and sockets.
+At first, sockets offer stream-oriented message passing instead of the datagram oriented one known of channels.
+Besides, sockets can not transfer object handles\cite{zircon-concepts},~\cite{zircon-socket}.
+Just as channels, sockets allow a bidirection communication with two ends.
+The data is written to one handle and read from the other one. 
+Both ends can fulfil both jobs and can also been shutdown for reading or writing\cite{zircon-socket}.
+Unlike channels, sockets provide short writes if the internal message buffer is almost filled and short reads if more data than available is requested\cite{zircon-concepts}.
 
-- stream oriented
-- data may be written into or read out of them in units of one or more bytes
-- short writes (if the sockts buffers are full) and short reads (if more data is requested than in the buffers) are possible
-
-\cite{zircon-socket}
-- bidirection streaming ipc transport
-- can only move data, no handles
-- data is written into one end and read from the other 
-- both ends are read/writeable
-- ends can be shut down for writing/reading
-
-- some signals are available for socket objects
+% \cite{zircon-concepts}
+% - ipc object
+% - bidirectional
+% - two-ended -> two handles, one referring to each end of the object
+%
+% - stream oriented
+% - data may be written into or read out of them in units of one or more bytes
+% - short writes (if the sockts buffers are full) and short reads (if more data is requested than in the buffers) are possible
+%
+% \cite{zircon-socket}
+% - bidirection streaming ipc transport
+% - can only move data, no handles
+% - data is written into one end and read from the other
+% - both ends are read/writeable
+% - ends can be shut down for writing/reading
+%
+% - some signals are available for socket objects
 
 \paragraph{FIFO}
-\cite{zircon-fifo}
-- first in first out ipc queue
-- intented to be the control plane for shared memory transports
-- read and write operations are more efficient thant channels or sockets
-- restrictions on size of elements and buffers
+The last \ac{ipc} object Zircon provide, is a \ac{fifo}.
+There is no much documentation about, yet, neighter in the usual documentation version used nor in Google's master repository ones.
+\acp{fifo} are described as \ac{ipc} queues with an advantage on read and write operations.
+They are intended to be a top level interface for shared memory based \ac{ipc} which enables the performance advantages over channels and sockets.
+Nevertheless are \acp{fifo} on Zircon more limited on the size of elements and buffers than the previously named mechanisms\cite{zircon-fifo}.
 
+% \cite{zircon-fifo}
+% - first in first out ipc queue
+% - intented to be the control plane for shared memory transports
+% - read and write operations are more efficient thant channels or sockets
+% - restrictions on size of elements and buffers
+%
 
 \section{Scheduling}\label{sec:scheduling}
 
