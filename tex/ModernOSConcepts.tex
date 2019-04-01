@@ -1104,10 +1104,10 @@ It is possible to wait for specific signals on several objects\cite{zircon-signa
 
 \subsubsection*{Inter Process Communication}
 \paragraph{Shared Memory}
-Zircon provides so-called \textit{\ac{vmo}} and \textit{\ac{vmar}} which represents a contiguous region of virtual memory respectively of virtual memory address space.
+Zircon provides so-called \textit{\acp{vmo}} and \textit{\acp{vmar}} which represents a contiguous region of virtual memory respectively of virtual memory address space.
 Both go together and are mixed up sometimes.
 Generally, the term \ac{vmar} is used for any operating according to address regions, e.g.\ allocate them, map and unmap \acp{vmo} to processes, but also to protect and destroy regions\cite{zircon-vmar}.
-The term \ac{vmo} is used for actions on the memory object, such as create one, read or write it\cite{zircon-vmo}.
+The term \ac{vmo} is used for actions on the memory object, such as create one and read or write it\cite{zircon-vmo}.
 A \ac{vmo} represents a set of physical memory pages on the one hand, but also the potential for pages on-demand via lazy creation on the other.
 Such objects are available on both, kernel and user-space and can be mapped into the address spaces of multiple, distinct processes\cite{zircon-vmo},~\cite{zircon-concepts}.
 \acp{vmar} in Zircon are randomized by default and additionally allowes adjusting the permissions of mapped pages\cite{zircon-vmar}.
@@ -1135,7 +1135,7 @@ Thus, they are very suitable for efficient \ac{ipc} via shared memory.
 Channels are Zircon \ac{ipc} objects, comparable with Pipes in Linux.
 But in contrast to Linux, they are bidirectional, ordered message queues with two handles, each one refers to on end of the channel.
 Channels provide a datagram oriented message based communication between arbitrary and unrelated processes\cite{zircon-channel},~\cite{zircon-concepts}.
-The maximum number of handles to a channel and its message size are limited.
+The maximum number of handles referring to a channel respectively its ends and its message size are limited.
 In common, there are two steps in sending a message over a Zircon channel.
 At first, a message is atomically written into the channel.
 Afterwards, the ownership of all handles in the context of the message is transfered into the channel\cite{zircon-channel}.
@@ -1144,7 +1144,7 @@ Handles which are read from a channel become added to the receiving process.
 During the transmission within the channel, the handle still exists to ensure the life of related objects\cite{zircon-concepts}.
 Threads can block on a channel until messages are available.
 Short reads or writes are not supported.
-This means, a message must fit or it is not read from or written to a channel.
+This means, messages read from or written to a channel must fit or they can not been read from or written.
 In contrast to pipes on Linux, Zircon channels provide a special operation called \texttt{channel\_call()} which bundles the common situation a message is sent in one direction and its response is await right after.
 The sending process dequeues the matching response identified by its first four bytes by itself\cite{zircon-concepts},~\cite{zircon-channel}.
 
@@ -1178,7 +1178,7 @@ At first, sockets offer stream-oriented message passing instead of the datagram 
 Besides, sockets can not transfer object handles\cite{zircon-concepts},~\cite{zircon-socket}.
 Just as channels, sockets allow a bidirection communication with two ends.
 The data is written to one handle and read from the other one. 
-Both ends can fulfil both jobs and can also been shutdown for reading or writing\cite{zircon-socket}.
+Both ends can fulfil both jobs but they can also been shutdown for reading or writing\cite{zircon-socket}.
 Unlike channels, sockets provide short writes if the internal message buffer is almost filled and short reads if more data than available is requested\cite{zircon-concepts}.
 
 % \cite{zircon-concepts}
@@ -1201,7 +1201,7 @@ Unlike channels, sockets provide short writes if the internal message buffer is 
 
 \paragraph{FIFO}
 The last \ac{ipc} object Zircon provide, is a \ac{fifo}.
-There is no much documentation about, yet, neighter in the usual documentation version used nor in Google's master repository ones.
+There is no much documentation about yet, neighter in the usual documentation version used nor in Google's master repository ones.
 \acp{fifo} are described as \ac{ipc} queues with an advantage on read and write operations.
 They are intended to be a top level interface for shared memory based \ac{ipc} which enables the performance advantages over channels and sockets.
 Nevertheless are \acp{fifo} on Zircon more limited on the size of elements and buffers than the previously named mechanisms\cite{zircon-fifo}.
@@ -1214,7 +1214,85 @@ Nevertheless are \acp{fifo} on Zircon more limited on the size of elements and b
 %
 
 \section{Scheduling}\label{sec:scheduling}
+% Intro
+The term \textit{scheduling} was already part of this work in the context of processes and threads.
+It was used to describe situations in which the actual executed processes and threads must be replaced at certain intervals to provide the impression of parallelism.
+In most cases, there are much more processes ready for execution than the actual number of available execution units, the \ac{cpu} cores.
+Although this work assumes modern multicore \acp{cpu} and thus real parallelism, the number of processes in interactive or realtime operating systems is much higher than the number of cores, too.
+A mechanism to provide the resource \textit{computing time} to each process being in need of it is required accordingly.
 
+Scheduling is generally used as an umbrella term for the actual \textit{scheduling}, i.e.\ the planning of the process execution and allocation of resources like computing time on the basis of certain criteria, and the \textit{dispatching}, i.e.\ the mechanism which provides the assignment of a process and its data to a \ac{cpu} core respectively their exchange\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
+Since the concept of scheduling is already divided into strategy (policy) and mechanism, it is obvious to do this also in the implementation.
+The mechanism of the dispatcher is already known from context switching.
+Basically scheduling can refer to processes in the whole or individual threads\cite{mandl2014Grundkurs}.
+The differences and effects of both variants have already been discussed as part of the section~\ref{sec:processes-threads}.
+Scheduling strategies presented as part of this section apply to both, regardless of whether they are applied on processes or threads managed by an operating system or threads managed by a runtime environment.
+Thus it is often generally referred to as job scheduling\cite{mandl2014Grundkurs}.
+Furthermore, only \textit{dynamic scheduling} is considered in the following.
+In contrast to \textit{static scheduling}, changing tasks, as known from interactive or dialog driven systems, can be taken into account there.
+Operating systems with a fixed and static scheduling list are very rare\cite{brause2017betriebssysteme}.
+In addition, a distrinction is made between \textit{long term scheduling} which describes the management of all tasks arriving in an operating system, especially the skillful execution of long-running jobs at times the system is not actively in use, and \textit{short term scheduling}, the strategy to assign the processes which are currently read to run to a \ac{cpu} core\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
+
+\subsubsection*{Scheduling goals}
+Having the common case that more processes or, more generally spoken, jobs ready to be executed, there is a need of a policy to find the next one to run.
+Such a strategy is influenced by various design goals, depending on the operating system's type, its purpose and the actual application\cite{mandl2014Grundkurs}.
+The goals which can be included in an individual strategy are as follows:
+\begin{itemize}
+    \item \textit{Fairness}, i.e.\ a minimum computing time is guaranteed for each job and no one should be preferred if not explicitly part of the strategy.
+    \item The \textit{\ac{cpu} utilization} should generally as high as possible. It is the most limited resource in a computing system.
+    \item \textit{Minimize response times} is especially important in interactive systems as a delayed reaction to an user input is more noticable than a longer runtime of an already long running background job.
+    \item \textit{Minimize wait times} could also be an interest. But this fact depends not only on a scheduling strategy and the related resource synchronization but also on \ac{io} operations are not directly influenced by a job scheduler. 
+    \item \textit{Maximize throughput} refers to the number of settled jobs per time.
+    \item \textit{Minimize the turnaround time}, i.e.\ the complete time a job needs for its execution. As with the related point ``minimize wait times'', a scheduling strategy only impacts the time in a waiting queue.
+    \item A \textit{Predictable process execution} is especially a requirement for the use in realtime operating systems\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}. 
+\end{itemize}
+But there is no single scheduling strategy that fits all situations equally well.
+In some cases, the goals named above even contradict each other.
+However, the decoupling of mechanism and policy enables the user to change the latter one according the current needs and interests\cite{brause2017betriebssysteme}.
+
+\subsubsection*{Scheduling policies}
+One of the most important questioning in the selection of a suitable scheduling strategy is whether it should be preemtible or not.
+This term was already marginally mentioned in the context of process and thread synchronization (see section~\ref{sec:processes-threads}).
+The focus there was rather on the impact the interruptibility of a process or thread has on itself and shared resources.
+In the context of job scheduling, a non-preemptive job implies the job runs until its completion.
+Depending on the exact policy, a maximum computation time is often given nevertheless in such a case.
+It prevents faulty or malicious processes from blocking an entire system\cite{achilles2006betriebssysteme}.
+% But during this timeslice, another job is not executed before the current one is finished, even if the scheduled job waits for a resource held by another one.
+% The situation described is called \textit{deadlock}.
+% The currently running job is blocked, waiting for a resource, but the one holding the resource
+Even on modern multicore \acp{cpu} is a non-preemptive scheduling strategy not suitable for interactive and realtime operating systems, but for batch jobs.
+%TODO
+\ \\
+\ \\
+
+% Strategies
+    % preemptive vs non-preemptive
+    \cite{mandl2014Grundkurs}:
+    non-preemptive -> ``run-to-completion'' -> not suitable for interactive or realtime system -> just as the ones considered in this work
+    preemptive -> priority based process interruption -> Strategies / algorithms needed 
+        - mostly based on timesharing / time slice methods
+        - starvation -> low priority process may never become scheduled \cite{achilles}
+
+    % Dialog oriented
+    \cite{mandl2014Grundkurs}
+    - round robin
+    - priority scheduling
+    - guaranteed scheduling/fair share scheduling
+    - lottery scheduling
+
+    % Real time systems
+    \cite{mandl2014Grundkurs}
+    (hard vs soft realtime)
+
+    - earliest deadline first
+    - polled loop
+    - interrupt controlled
+
+    % Multilevel scheduling with priorities
+    \cite{mandl2014Grundkurs}
+    - own queues for each priority
+
+    - round robin with priorities
 
 \subsubsection*{Priority Inversion}
 Using locking mechanisms like semaphores respectively mutexes may lead to dangerous behaviour in context of priority based scheduling.
