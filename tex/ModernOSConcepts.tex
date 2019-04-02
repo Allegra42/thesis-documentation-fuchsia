@@ -1224,6 +1224,7 @@ A mechanism to provide the resource \textit{computing time} to each process bein
 Scheduling is generally used as an umbrella term for the actual \textit{scheduling}, i.e.\ the planning of the process execution and allocation of resources like computing time on the basis of certain criteria, and the \textit{dispatching}, i.e.\ the mechanism which provides the assignment of a process and its data to a \ac{cpu} core respectively their exchange\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
 Since the concept of scheduling is already divided into strategy (policy) and mechanism, it is obvious to do this also in the implementation.
 The mechanism of the dispatcher is already known from context switching.
+Except the change of the \ac{cpu}'s operating mode, pure process switching follows the same rules.
 Basically scheduling can refer to processes in the whole or individual threads\cite{mandl2014Grundkurs}.
 The differences and effects of both variants have already been discussed as part of the section~\ref{sec:processes-threads}.
 Scheduling strategies presented as part of this section apply to both, regardless of whether they are applied on processes or threads managed by an operating system or threads managed by a runtime environment.
@@ -1246,53 +1247,92 @@ The goals which can be included in an individual strategy are as follows:
     \item \textit{Minimize the turnaround time}, i.e.\ the complete time a job needs for its execution. As with the related point ``minimize wait times'', a scheduling strategy only impacts the time in a waiting queue.
     \item A \textit{Predictable process execution} is especially a requirement for the use in realtime operating systems\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}. 
 \end{itemize}
-But there is no single scheduling strategy that fits all situations equally well.
+But there is no single scheduling strategy that fits all situations and goals equally well.
 In some cases, the goals named above even contradict each other.
 However, the decoupling of mechanism and policy enables the user to change the latter one according the current needs and interests\cite{brause2017betriebssysteme}.
 
 \subsubsection*{Scheduling policies}
-One of the most important questioning in the selection of a suitable scheduling strategy is whether it should be preemtible or not.
+One of the most important questions in the selection of a suitable scheduling strategy is whether it should be preemtible or not.
 This term was already marginally mentioned in the context of process and thread synchronization (see section~\ref{sec:processes-threads}).
 The focus there was rather on the impact the interruptibility of a process or thread has on itself and shared resources.
-In the context of job scheduling, a non-preemptive job implies the job runs until its completion.
+In the context of job scheduling, a non-preemptive job implies the job runs until it voluntary hands over the control back to the system, e.g.\ because it is waiting for a resource or an event or it reachs its completion\cite{mandl2014Grundkurs}.
 Depending on the exact policy, a maximum computation time is often given nevertheless in such a case.
 It prevents faulty or malicious processes from blocking an entire system\cite{achilles2006betriebssysteme}.
-% But during this timeslice, another job is not executed before the current one is finished, even if the scheduled job waits for a resource held by another one.
-% The situation described is called \textit{deadlock}.
-% The currently running job is blocked, waiting for a resource, but the one holding the resource
-Even on modern multicore \acp{cpu} is a non-preemptive scheduling strategy not suitable for interactive and realtime operating systems, but for batch jobs.
-%TODO
-\ \\
-\ \\
+Even on modern multicore \acp{cpu} is a pure non-preemptive scheduling strategy rather not suitable for interactive, multiuser and realtime operating systems, but for batch jobs.
+For these systems, a preemptive scheduling strategy with generally interruptible jobs is more appropriated.
+The whole available computing time is sliced down into equal sized time slots which are assigned to the jobs.
+If a job does not finish within such a slot, it needs to be rescheduled according a certail policy\cite{brause2017betriebssysteme}.
 
-% Strategies
-    % preemptive vs non-preemptive
-    \cite{mandl2014Grundkurs}:
-    non-preemptive -> ``run-to-completion'' -> not suitable for interactive or realtime system -> just as the ones considered in this work
-    preemptive -> priority based process interruption -> Strategies / algorithms needed 
-        - mostly based on timesharing / time slice methods
-        - starvation -> low priority process may never become scheduled \cite{achilles}
+The question whether a scheduling policy should be aware to priorized jobs follows directly.
+There are a lot of reasons to give priority to certain jobs, e.g.\ to create the impression of a notably reactive system by priorize \ac{ui} related jobs or to ensure the fastest possible processing of a security-critical task in a realtime system\cite{mandl2014Grundkurs}.
+In general, priorized jobs are available on both, preemptive and non-preemptive policies\cite{brause2017betriebssysteme}.
 
-    % Dialog oriented
-    \cite{mandl2014Grundkurs}
-    - round robin
-    - priority scheduling
-    - guaranteed scheduling/fair share scheduling
-    - lottery scheduling
+The intention of this work is not to provide a complete enumeration of scheduling policies but a selection of relevant ones with respect to Linux and Zircon.
+As a consequence, preemptive strategies for interactive multiuser and realtime systems are considered in particular.
+More complete considerations are available in the books of \textsc{Brause}\cite{brause2017betriebssysteme},~\textsc{Mandl}\cite{mandl2014Grundkurs}, \textsc{Achilles}\cite{achilles2006betriebssysteme} and others.
+For the intoduction to scheduling strategies within this work, the individual ones are examined on basis of a single \ac{cpu} core.
+In fact do modern multicore processing systems using \ac{smp} manage an own job scheduling for each core seperately.
+As a result, competing situations for processes and threads such as discussed in the previous section~\ref{sec:synchro} arise again.
+An optimal scheduling strategy for multicore systems should therefore also take the required resources into account to avoid unnecessary blocking or context changes\cite{brause2017betriebssysteme}.
+A global component named \textit{load balancer} can step in if the load on an individual core is much higher as the average\cite{achilles2006betriebssysteme}.
 
-    % Real time systems
-    \cite{mandl2014Grundkurs}
-    (hard vs soft realtime)
+\paragraph{Round Robin}
+\acused{rr}(\acs{rr}) is intended for the the use in interactive multiuser systems.
+It is an enhancement of the so-called \textit{\ac{fcfs}} strategy used in batch-oriented systems for preemptive timesharing systems\cite{achilles2006betriebssysteme}.
+\ac{rr} does not priorize jobs.
+All reaching jobs are put into a \ac{fifo} based queue.
+The first one which was putted in is also the first one how gets assigned to a \ac{cpu} core from the scheduler.
+In contrast to \ac{fcfs} as a non-preemptive strategy for batch jobs is the maximum time a job is allowed to use the resource \ac{cpu} limited.
+Does a running job not voluntary release the \ac{cpu} within its time slice, an interrupt to interrupt it is triggered.
+The job loses its \ac{cpu} core, it is reassigned to the next job in the queue.
+If the replaced job was not finished yet, it becomes enqueued again\cite{achilles2006betriebssysteme},~\cite{mandl2014Grundkurs}.
+The size of the time slice or \textit{quantum} is the same for each process, but the difficulty in this strategy is determination of its effective size\cite{brause2017betriebssysteme}.
+Is the slice too small becomes the overhead caused by switching the process contexts superior, is its size choosen too long, the resulting strategy evokes on \ac{fcfs} more likely.
+\ac{rr} as a strategy is very cheap reagarding the calculation of the next job to schedule\cite{brause2017betriebssysteme}.
 
-    - earliest deadline first
-    - polled loop
-    - interrupt controlled
+\paragraph{Dynamic Priority Round Robin}
+\acused{dprr}(\ac{dprr}) is a priority aware modification of the usual \ac{rr} scheduling strategy.
+The only point that differs is an additional queue in front of the known one.
+Each job arrives in the first queue with a priority and stay there until this value reaches a certain threshold.
+The priority value of each job in the preceding queue is increased after a time slices is finished.
+As a result a job with the priority 8 is executed prior to one with a priority of 4, even if it arrived shortly after the lower priorized one.
+The subsequent \ac{rr} strategy is not touched to add priority support, but the management of the additional queue requires little more management effort\cite{brause2017betriebssysteme}.
 
-    % Multilevel scheduling with priorities
-    \cite{mandl2014Grundkurs}
-    - own queues for each priority
+\paragraph{Shortest Remaining Time First}
+\acused{srtf}(\ac{srtf}) is an algorithm for preemptive scheduling with time slices, too.
+The decision for the next job is, as described by the name, made based on the shortest remaining computing time needed.
+As a result, each time a slice ends and a new job needs to be assigned to a \ac{cpu} core, the remaining time for each upcoming job must be recalculated. 
+Thus, the selection of the succeeding job is quite complex every time\cite{brause2017betriebssysteme},~\cite{glatz2015betriebssysteme}.
 
-    - round robin with priorities
+\paragraph{Multilevel Scheduling}
+is a strategy to schedule various types of jobs with different importances.
+The jobs are often split up into \textit{system processes} with the highest priority, followed by \textit{interactive jobs} and \textit{general jobs}. 
+The lowest priority is given to expensive and long-running \textit{batch jobs}\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
+In the concept of multilevel scheduling is a distinct queue for each priority level available.
+Jobs in the queue with the highest priority become processed first. 
+The ones in next lower priority are not touched until the higher ones are emptied.
+As a consequence are situations possible where low priority processes never become scheduled.
+One speaks of \textit{starvation}\cite{glatz2015betriebssysteme}.
+This strategy allows some variants.
+The actual scheduling strategy for each queue itself is variable.
+\ac{rr} can be used to provide a fair scheduling between all jobs on a single priority level.
+For realtime systems with one or just a few job in the highest level, \textit{fcfs} could be more appropriated in certain cases.
+Generally is an additional reassignment of the \ac{cpu} core as soon as a high priorized job enters its queue reasonable in realtime system using multilevel scheduling as a strategy\cite{glatz2015betriebssysteme}.
+
+\paragraph{Fair Share Scheduling}
+is a strategy to guarantee the same share of the \ac{cpu} to each single job.
+Having \textit{n} jobs in the whole system, each one gets a \textit{1/n} share of the whole computing time allocated.
+As a result, the comuting time used so far must be tracked along with each job.
+This time is compared with the actual overall time the \ac{cpu} worked.
+The decision which job is assigned to the \ac{cpu} next is made on basis of the worst ratio between already consumed computing time and the overall available one.
+A job scheduled according this strategy is allowed to stay active until the worst ratio is calculated for another one\cite{mandl2014Grundkurs}.
+
+\paragraph{Earliest Deadline First} \cite{mandl2014Grundkurs}, \cite{brause2017betriebssysteme}
+\acused{edf}(\ac{edf})is a realtime scheduling strategy.
+Since certain critical tasks have to be completed at a given time to avoid more or less serious consequences, this algorithm uses this deadlines to decide on their basis which job must be executed next.
+The strategy itself is rather complex but useless in situations where several critical jobs must be completed at the same time\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
+Nevertheless is \ac{edf} a common algorithm for hard realtime systems and an ideal strategy on single core systems with up to 100\% \ac{cpu} utilization\cite{brause2017betriebssysteme}.
+
 
 \subsubsection*{Priority Inversion}
 Using locking mechanisms like semaphores respectively mutexes may lead to dangerous behaviour in context of priority based scheduling.
