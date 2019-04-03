@@ -1219,23 +1219,23 @@ The term \textit{scheduling} was already part of this work in the context of pro
 It was used to describe situations in which the actual executed processes and threads must be replaced at certain intervals to provide the impression of parallelism.
 In most cases, there are much more processes ready for execution than the actual number of available execution units, the \ac{cpu} cores.
 Although this work assumes modern multicore \acp{cpu} and thus real parallelism, the number of processes in interactive or realtime operating systems is much higher than the number of cores, too.
-A mechanism to provide the resource \textit{computing time} to each process being in need of it is required accordingly.
+A mechanism to share the resource \textit{computing time} between all processes being in need of it is required accordingly.
 
-Scheduling is generally used as an umbrella term for the actual \textit{scheduling}, i.e.\ the planning of the process execution and allocation of resources like computing time on the basis of certain criteria, and the \textit{dispatching}, i.e.\ the mechanism which provides the assignment of a process and its data to a \ac{cpu} core respectively their exchange\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
+Scheduling is generally used as an umbrella term for the actual \textit{scheduling}, i.e.\ the planning of the process execution and allocation of resources like computing time on the basis of certain criteria, and the \textit{dispatching}, i.e.\ the mechanism which provides the assignment of a process and its data to a \ac{cpu} core and executes their exchange\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
 Since the concept of scheduling is already divided into strategy (policy) and mechanism, it is obvious to do this also in the implementation.
-The mechanism of the dispatcher is already known from context switching.
-Except the change of the \ac{cpu}'s operating mode, pure process switching follows the same rules.
+The mechanism of the dispatcher is familiar from context switching.
+Except changing the \ac{cpu}'s operating mode, pure process switching follows the same rules.
 Basically scheduling can refer to processes in the whole or individual threads\cite{mandl2014Grundkurs}.
 The differences and effects of both variants have already been discussed as part of the section~\ref{sec:processes-threads}.
 Scheduling strategies presented as part of this section apply to both, regardless of whether they are applied on processes or threads managed by an operating system or threads managed by a runtime environment.
 Thus it is often generally referred to as job scheduling\cite{mandl2014Grundkurs}.
 Furthermore, only \textit{dynamic scheduling} is considered in the following.
 In contrast to \textit{static scheduling}, changing tasks, as known from interactive or dialog driven systems, can be taken into account there.
-Operating systems with a fixed and static scheduling list are very rare\cite{brause2017betriebssysteme}.
+Operating systems with a fixed and static scheduling list which are setup in advanced and not changed during runtime are rare\cite{brause2017betriebssysteme}.
 In addition, a distrinction is made between \textit{long term scheduling} which describes the management of all tasks arriving in an operating system, especially the skillful execution of long-running jobs at times the system is not actively in use, and \textit{short term scheduling}, the strategy to assign the processes which are currently read to run to a \ac{cpu} core\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
 
 \subsubsection*{Scheduling goals}
-Having the common case that more processes or, more generally spoken, jobs ready to be executed, there is a need of a policy to find the next one to run.
+Having the common case that more processes or, more generally spoken, jobs are ready to be executed, there is a need of a policy to find the next one to run.
 Such a strategy is influenced by various design goals, depending on the operating system's type, its purpose and the actual application\cite{mandl2014Grundkurs}.
 The goals which can be included in an individual strategy are as follows:
 \begin{itemize}
@@ -1253,17 +1253,18 @@ However, the decoupling of mechanism and policy enables the user to change the l
 
 \subsubsection*{Scheduling policies}
 One of the most important questions in the selection of a suitable scheduling strategy is whether it should be preemtible or not.
-This term was already marginally mentioned in the context of process and thread synchronization (see section~\ref{sec:processes-threads}).
+This term was also already marginally mentioned in the context of process and thread synchronization (see section~\ref{sec:processes-threads}).
 The focus there was rather on the impact the interruptibility of a process or thread has on itself and shared resources.
 In the context of job scheduling, a non-preemptive job implies the job runs until it voluntary hands over the control back to the system, e.g.\ because it is waiting for a resource or an event or it reachs its completion\cite{mandl2014Grundkurs}.
-Depending on the exact policy, a maximum computation time is often given nevertheless in such a case.
+Depending on the exact policy, a high maximum computation time is often given nevertheless in such a case.
 It prevents faulty or malicious processes from blocking an entire system\cite{achilles2006betriebssysteme}.
 Even on modern multicore \acp{cpu} is a pure non-preemptive scheduling strategy rather not suitable for interactive, multiuser and realtime operating systems, but for batch jobs.
 For these systems, a preemptive scheduling strategy with generally interruptible jobs is more appropriated.
 The whole available computing time is sliced down into equal sized time slots which are assigned to the jobs.
 If a job does not finish within such a slot, it needs to be rescheduled according a certail policy\cite{brause2017betriebssysteme}.
+This makes such a system much more responsible.
 
-The question whether a scheduling policy should be aware to priorized jobs follows directly.
+The question whether a scheduling policy should be aware to priorized jobs follows directly after.
 There are a lot of reasons to give priority to certain jobs, e.g.\ to create the impression of a notably reactive system by priorize \ac{ui} related jobs or to ensure the fastest possible processing of a security-critical task in a realtime system\cite{mandl2014Grundkurs}.
 In general, priorized jobs are available on both, preemptive and non-preemptive policies\cite{brause2017betriebssysteme}.
 
@@ -1278,17 +1279,17 @@ A global component named \textit{load balancer} can step in if the load on an in
 
 \paragraph{Round Robin}
 \acused{rr}(\acs{rr}) is intended for the the use in interactive multiuser systems.
-It is an enhancement of the so-called \textit{\ac{fcfs}} strategy used in batch-oriented systems for preemptive timesharing systems\cite{achilles2006betriebssysteme}.
-\ac{rr} does not priorize jobs.
+It is an enhancement of the so-called \textit{\ac{fcfs}} strategy used in batch-oriented systems. 
+\ac{rr} is applied for non-priorizing preemptive timesharing systems instead\cite{achilles2006betriebssysteme}.
 All reaching jobs are put into a \ac{fifo} based queue.
 The first one which was putted in is also the first one how gets assigned to a \ac{cpu} core from the scheduler.
-In contrast to \ac{fcfs} as a non-preemptive strategy for batch jobs is the maximum time a job is allowed to use the resource \ac{cpu} limited.
-Does a running job not voluntary release the \ac{cpu} within its time slice, an interrupt to interrupt it is triggered.
-The job loses its \ac{cpu} core, it is reassigned to the next job in the queue.
-If the replaced job was not finished yet, it becomes enqueued again\cite{achilles2006betriebssysteme},~\cite{mandl2014Grundkurs}.
-The size of the time slice or \textit{quantum} is the same for each process, but the difficulty in this strategy is determination of its effective size\cite{brause2017betriebssysteme}.
+In contrast to \ac{fcfs} as a non-preemptive strategy for batch jobs, the maximum time a job is allowed to use the resource \ac{cpu} is limited.
+Does a running job not voluntary release the \ac{cpu} within its time slice, an interrupt to cut it off is triggered.
+The job loses its \ac{cpu} core which becomes reassigned to the next job in the queue.
+If the replaced job was not finished yet, it is enqueued again\cite{achilles2006betriebssysteme},~\cite{mandl2014Grundkurs}.
+The size of the time slice, also called \textit{quantum}, is the same for each process, but the difficulty in this strategy is determination of its effective size\cite{brause2017betriebssysteme}.
 Is the slice too small becomes the overhead caused by switching the process contexts superior, is its size choosen too long, the resulting strategy evokes on \ac{fcfs} more likely.
-\ac{rr} as a strategy is very cheap reagarding the calculation of the next job to schedule\cite{brause2017betriebssysteme}.
+The calculation of the next job to schedule is very cheap, using \ac{rr} as a strategy\cite{brause2017betriebssysteme}.
 
 \paragraph{Dynamic Priority Round Robin}
 \acused{dprr}(\ac{dprr}) is a priority aware modification of the usual \ac{rr} scheduling strategy.
@@ -1296,7 +1297,7 @@ The only point that differs is an additional queue in front of the known one.
 Each job arrives in the first queue with a priority and stay there until this value reaches a certain threshold.
 The priority value of each job in the preceding queue is increased after a time slices is finished.
 As a result a job with the priority 8 is executed prior to one with a priority of 4, even if it arrived shortly after the lower priorized one.
-The subsequent \ac{rr} strategy is not touched to add priority support, but the management of the additional queue requires little more management effort\cite{brause2017betriebssysteme}.
+The subsequent \ac{rr} strategy is not touched at all to add priority support, but the management of the additional queue requires little more management effort\cite{brause2017betriebssysteme}.
 
 \paragraph{Shortest Remaining Time First}
 \acused{srtf}(\ac{srtf}) is an algorithm for preemptive scheduling with time slices, too.
@@ -1307,13 +1308,13 @@ Thus, the selection of the succeeding job is quite complex every time\cite{braus
 \paragraph{Multilevel Scheduling}
 is a strategy to schedule various types of jobs with different importances.
 The jobs are often split up into \textit{system processes} with the highest priority, followed by \textit{interactive jobs} and \textit{general jobs}. 
-The lowest priority is given to expensive and long-running \textit{batch jobs}\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
-In the concept of multilevel scheduling is a distinct queue for each priority level available.
+The lowest priority is given to \ac{cpu}-intensive and long-running \textit{batch jobs}\cite{brause2017betriebssysteme},~\cite{mandl2014Grundkurs}.
+The idea for the multilevel scheduling algorithm is to hold a distinct queue for each priority level available.
 Jobs in the queue with the highest priority become processed first. 
 The ones in next lower priority are not touched until the higher ones are emptied.
 As a consequence are situations possible where low priority processes never become scheduled.
 One speaks of \textit{starvation}\cite{glatz2015betriebssysteme}.
-This strategy allows some variants.
+Multilevel scheduling also allows some variants.
 The actual scheduling strategy for each queue itself is variable.
 \ac{rr} can be used to provide a fair scheduling between all jobs on a single priority level.
 For realtime systems with one or just a few job in the highest level, \textit{fcfs} could be more appropriated in certain cases.
@@ -1336,27 +1337,27 @@ Nevertheless is \ac{edf} a common algorithm for hard realtime systems and an ide
 
 \subsubsection*{Priority Inversion}
 Using locking mechanisms like semaphores respectively mutexes may lead to dangerous behaviour in context of priority based scheduling.
-For a basic example are two processes, H (high priority) and L (low priority) are given.
-Both processes want to use the same resource.
-The H process is scheduled as soon as it enters the \textit{ready} state.
-The problem arises if the L process starts first while H is waiting for e.g.\ another resource.
+For a basic example are two jobs, H (high priority) and L (low priority) are given.
+Both jobs want to use the same resource.
+The H job is scheduled as soon as it enters the \textit{ready} state.
+The problem arises if the L job starts first while H is waiting for e.g.\ another resource.
 L enters the critical section and occupies the contested resource.
-Just in this situation, the H process becomes ready and is scheduled according to the priority based policy.
+Just in this situation, the H job becomes ready and is scheduled according to the priority based policy.
 If H is busy waiting for the resouce, L is never rescheduled, can not end its critical section and free the resource\cite{tanenbaum-modern-operating-systems}.
-Both processes are blocking each other, they are in a \textit{deadlock}\cite{glatz2015betriebssysteme}.
+Both jobs are blocking each other, they are in a \textit{deadlock}\cite{glatz2015betriebssysteme}.
 If H blocks and hands over to L again, the priorities got inverted.
-A lower priorized process runned before one with a high priority.
+A lower priorized job runned before one with a high priority.
 Such a situation is referred as \textit{priority inversion}\cite{tanenbaum-modern-operating-systems}.
-The situation described here is not that dangerous but the very similar real world example of the mars spacecraft \textit{Pathfinder}.
-There was also priority based scheduling and three processes, H (high priority), M (medium priority, long runtime) and L (low priority).
-Just as explained above, the H process becomes waiting for a resource held by the L process. 
-When the H process blocked, the M process was scheduled and had to finished until the L process had the chance to free the resource needed by H.
-But high priorized task of H was to reset a watchdog to prevent a system reset accompanied with the loss of data\cite{glatz2015betriebssysteme},~\cite{silberschatz2009operating}.
+The situation described here is only dangerous if the H job misses a critical deadline, but there is a very similar and serious real world example of the mars spacecraft \textit{Pathfinder}.
+It also uses priority based scheduling with three jobs, H (high priority), M (medium priority, long runtime) and L (low priority).
+Just as explained for the situation above, the H job becomes waiting for a resource held by the L job. 
+When H blocked, the M job was scheduled and had to finished until the L job had the chance to free the resource needed by H.
+But the high priorized task of H was to reset a watchdog to prevent a system reset accompanied with the loss of data\cite{glatz2015betriebssysteme},~\cite{silberschatz2009operating}.
 A more detailed description of the situation is given by \textsc{Silberschatz} in \cite{silberschatz2009operating}.
 
 The most common technique to prevent dangerous \textit{priority inversion} is \textit{priority inheritance}, a special propery of semaphores which needs to be implemented within the operating system.
-If a higher priorized process or thread is waiting for a resource occupied by a less priorized, the prioity of the second process will be raised to the one of the higher priorized.
-This ensures that the actual low prior process frees the resource as soon as possible and the truly high priorized task can run next.
+If a higher priorized process or thread is waiting for a resource occupied by a less priorized, the prioity of the second job will be raised to the one of the higher priorized.
+This ensures that the actual low prior job frees the resource as soon as possible and the truly high priorized task can run next.
 The original priority becomes restored, once the resource has been freed\cite{glatz2015betriebssysteme}.
 
 An alternative mechanism that can act without operating system support is \textit{priority ceiling}.
@@ -1365,14 +1366,60 @@ As soon as the semaphore respectively mutex is unlocked, the former priority is 
 
 
 \subsection{Scheduling in Linux}
+As usual, modern Linux systems offer various opportunities to adjust even scheduling to the needs of its intended application.
+While code running in user space may be preempted at any time, common modern Linux kernels itself can be compiled in tree variants:
+\begin{itemize}
+    \item As a no-forced preemption version, suitable for the use in servers.
+    \item With voluntary kernel preemption for the use in desktop systems and
+    \item as a fully preemtible kernel for desktop systems with low latency requirements\cite{lfd430},~\footnote{See also ``\texttt{man 7 sched}'' on Linux systems as an additional source for this section}.
+\end{itemize}
+Older kernels before version 2.6.23 were not preemptible at all.
+They were only disturbed by explicit or implicit sleep requests, e.g.\ if a required resource was not available, or, if enabled, on interrupts.
+After the distruption, the previous task was resumed on the \ac{cpu} core.
+
+Back on modern kernel versions, one task can not interrupt another on by itself.
+As scheduling in Linux is based on time slices, is it the mission of the scheduler to assign another job to a \ac{cpu} core as soon as a slice ends.
+Summarized, a job scheduled in Linux is allowed to run until
+\begin{itemize}
+    \item it needs to wait for a resource to be freed or a system event to complete,
+    \item it reaches the end of its lifetime and exits,
+    \item its time slice expires,
+    \item the scheduler becomes invoked and finds another job that has to be scheduled according the current policy\cite{lfd430}.
+\end{itemize}
+Linux uses one scheduler per \ac{cpu} core and a global load balancer to move jobs between them, just as named in the general section.
+However, both try to schedule a job on the same \ac{cpu} to minimize cache thrashing\cite{lfd430}.
+
+Before kernel version 2.6.23, the default scheduler in Linux was named \textit{O(1)} scheduler. 
+It is named after the \textit{Big-O notation} of its algorithm which classifies the runtime or memory requirements of algorithms according its inputs.
+This means in case of the O(1) scheduler that the time it needs to make the decision which task is to be scheduled next is independent of the number of tasks in the system at all.
+It was using a priority ordered queue for each \ac{cpu} core\cite{lfd430}.
+
+Since kernel 2.6.23, the \ac{cfs} became the new default scheduler.
+It is a fair share scheduler, similar to the strategy described in the general section.
+The decision which task must be scheduled next is made on the basis of the amount of time a task has been waiting to run, divided by the number of running tasks.
+The resulting time of each task is compared with the actual time received so far.
+The one with the worst ratio is selected.
+Thus, the finding a decision is rather complex in this strategy\cite{lfd430}.
+
+%TODO rt patch, stategies
 
 \cite{lfd430}
-- linux kernels before 2.6 were not preemtible (but usespace code). was only interrupted on explicit or implicit sleep requests (e.g. resource not available) or on interrupts (if enabled-> runned isr (handler))
-- today, there are 3 preemption options 
-    - no forced preemption -> server
-    - voluntary kernel preemption -> desktop
-    - preemtible kernel -> low latency desktop
+rt_preempt patch
 
+- brings lower latencies to linux than other preemption methods 
+- affects wide parts of the kernel (slowly the patch's changes go to the mainline kernel) also cite man 7 sched
+    -> spinlocks become preemptible -> replaced with rtmutexes
+    -> priority inheritance is implemented for spinlocks and semaphores
+    -> interrupt handlers become preemptible kernel threads -> they can sleep and be scheduled
+
+
+available scheduling policies -> man 7 sched
+- SCHED_FIFO
+- SCHED_RR
+- SCHED_DEADLINE
+- sched other
+- sched batch
+- sched idle
 
 \subsection{Scheduling in Zircon}
 
