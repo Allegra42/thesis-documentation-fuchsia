@@ -1337,7 +1337,7 @@ The strategy itself is rather complex but useless in situations where several cr
 Nevertheless is \ac{edf} a common algorithm for hard realtime systems and an ideal strategy on single core systems with up to 100\% \ac{cpu} utilization\cite{brause2017betriebssysteme}.
 
 
-\subsubsection*{Priority Inversion}
+\subsubsection*{Priority Inversion}\label{sec:priority-inversion}
 Using locking mechanisms like semaphores respectively mutexes may lead to dangerous behaviour in context of priority based scheduling.
 For a basic example are two jobs, H (high priority) and L (low priority) are given.
 Both jobs want to use the same resource.
@@ -1366,7 +1366,7 @@ An alternative mechanism that can act without operating system support is \texti
 Whenever a process locks a semaphore or mutex, its priority is raised to a higher level than any other process may waiting for the resource.
 As soon as the semaphore respectively mutex is unlocked, the former priority is restored\cite{glatz2015betriebssysteme}.
 
-
+ 
 \subsection{Scheduling in Linux}
 As usual, modern Linux systems offer various opportunities to adjust even scheduling to the needs of its intended application.
 While code running in user space may be preempted at any time, common modern Linux kernels itself can be compiled in tree variants:
@@ -1412,47 +1412,63 @@ They include amongst others:
     \item Replace common interrupt handlers with preemptible kernel thread so that they can be scheduled and sleep\cite{lfd430}.
 \end{itemize}
 
+The scheduling in Linux is very finely granular adjustable to the system and its applications needs.
+It is not only possible to select the grade of preemptibility and make it aware for realtime tasks, but also to set a scheduling policy for each single thread.
+Three normal and three realtime policies are available for this purpose.
+The normal ones are:
+\begin{itemize}
+    \item \texttt{SCHED\_OTHER} respectively \texttt{SCHED\_NORMAL}, as it is called within the kernel, which describes the default timesharing scheduling with a static priority level.
+    \item \texttt{SCHED\_BATCH} which is used to schedule \ac{cpu}-intensive and non-interactive tasks. It has to be used with the static priority 0.
+    \item \texttt{SCHED\_IDLE} which is used for tasks with a very low priority, even lower than batch jobs.
+\end{itemize}
+For realtime tasks, Linux provides:
+\begin{itemize}
+    \item \texttt{SCHED\_FIFO}, a \acl{fifo} policy just as described in the general section. It can be used with static priories greater 0. A runnable thread using this policy will immediately preempt any running task using the normal policies mentioned above.
+    \item \texttt{SCHED\_RR} just as mentioned in the general section is \acl{rr} even in Linux a timeslicing version of the \ac{fifo} policy.
+    \item \texttt{SCHED\_DEADLINE} is the latest scheduling policy in Linux. It is available since version 3.14 and provides a variant of the \acl{edf} policy mentioned in the general section combined with the \ac{cbs} policy.
+    \ac{edf} is used for the actual deadline scheduling while \ac{cbs} guarantees non-interferences between threads.
+    This strategy targets hard realtime requirements. Thread scheduled with it are the ones with the highest priority which can be controlled by a user.
+\end{itemize}
+A much more detailed explanation of thread specific scheduling policies and their use via \texttt{sched()} is given as part of the man-pages project using the command \texttt{man 7 sched} on a Linux system\footnote{The man-pages version used is \textit{2019-03-06} on a kernel in version 5.0.2.}.  
 
-
-
-% available scheduling policies -> man 7 sched
-% - SCHED_FIFO
-% - SCHED_RR
-% - SCHED_DEADLINE
-% - sched other
-% - sched batch
-% - sched idle
 
 \subsection{Scheduling in Zircon}
-% - scheduler is an evolution of the LK scheduler (minimal sched)
-%
-% - per cpu scheduling
-% - each cpu has its own set of priority queues, one for each pio level in the system (currently 32) -> fifo queues
-% -> Multi Level scheduling -> with time slices, each job gets the same timeslice, if not finished, it is enqueued again
-%
-% - if there are not jobs in any queue, the scheduler runs the idle thread
-% -> runs if no other thread is active, not held in any prio queue -> used to track idle times, may used by platform implementations for a low power wait mode
-%
-% - if a thread/job blocks, it is removed from the scheduling queue and added to a distinct waitqueue until the resource is available
-% -> then it is inserted in a cpus queue again (in the right prio), if the job was blocked before its timeslice was finished, it is added in the front of the queue to resume as soon as possible
-%
-%
-% - the priority is calculated from 3 factors
-    % - the base prio (32 level, 0 - 31)
-    % - the priority boost
-        % -> given when a thread in unblocked after waiting on a resource or sleeping ++1
-        % -> if a job voluntary give up the control, its boost is decremented (--) (wont go negative)
-        % -> when a thread is preempted and has used up its entire time slice, its boost is decremented by one -> may go negative
-    % - priority inheritance, if the thread controls a resource another with a higher prio needs (and blocks the other one), it is temporary boosted up to the prio of the higher thread -> see prio inversion
-%
-    % effective prio : the inherit one or the base plus boost, when the prio changes the scheduler will move a job to another queue and reschedule the cpu
-%
-% -> serve interactive tasks quickly -> ui tasks do little work, are often blocked by user events -> get a priority boost from unblocking
-% background processes get a priority penality for using the entire timeslice
-%
-%
-% - zircon supports also special real time threads (THREAD\_FLAG\_REAL\_TIME)
-% -> they are allowed to run without preemption until they block. yield or manually reschedule
+The Zircon scheduler was developed out of Little Kernel's one and provide just a minimal realtime aware scheduling mechanism instead of the variety of possibilities known from Linux.
+But the basic mechanims behind is also already known.
+Zircon scheduling is a kind of multi-level scheduling with time slicing as stated in the general section.
+The scheduling is done for each \ac{cpu} core at its own and each core has its very own set of queues.
+As Zircon supports 32 priority levels right now, this makes 32 \ac{fifo} queues per core\cite{zircon-scheduling}.
+Each job gets the same time slice, if it is not finished with its work, it is enqueued again.
+The scheduler starts with the queue with the highest priority and executes the jobs for the maximum time of a time slice.
+Only when this queue is empty, the next one is considered.
+If a job blocks, it is completely removed from the \ac{cpu}'s queue and added to a distinct waiting queue.
+The stayes there until the required resource becomes available and thus its status changes to runnable again.
+The job is put back to ,whenever possibe the previous \ac{cpu} core's, queue with the right prioity.
+Was the job blocked before its time slice was finished, it becomes rewarded by beeing inserted at the front of the queue to resume as soon as possible\cite{zircon-scheduling}.
+
+The priority of jobs in Zircon is determined on the basis of three criteria:
+\begin{itemize}
+    \item A base priority from 0 to 31.
+    \item A priority boost. 
+        \begin{itemize}
+            \item A job is rewarded with an one level upgrade when it unblocks after waiting for a resource or sleeping. 
+            \item A job is penalized with an one level downgrade if it voluntary give up the control. The minimum priority value in this situation is 0.
+            \item A job is penalized with an one level downgrade if it is preempted after using up its entire time slice. In this situation, the prioity value may become negative.
+        \end{itemize}
+    \item Priority inheritance is a special criteria. If a job controls a resource which is needed by one with a higher priority, the job's priority is temporary boosted up to the priority level of the other job to prevent priority inversion (see \ref{sec:priority-inversion}). 
+\end{itemize}
+As a result, the effective priority is either calculated from the base value in combination with the boost or it is the inherit one\cite{zircon-scheduling}.
+This policy is designed for an interactive system.
+Rewarding short and non-\ac{cpu} intensive jobs affects most of all \ac{ui} related tasks which are often blocked by waiting for user interaction, while \ac{cpu} intensive background tasks are penalized for using the whole time slice and hindering the ability to react.
+
+Zircon is per design capable for realtime tasks.
+Within the scheduler is it considered by a special flag for them: \texttt{THREAD\_FLAG\_REAL\_TIME}.
+Such a job is allowed to run within its priority level without beein preempted until it blocks, yields or is manually rescheduled\cite{zircon-scheduling}.
+
+A special role belongs to the \textit{idle thread}.
+It lives besides the normal \ac{fifo} queues and is runned by the scheduler if there are not any other jobs ready to be assigned.
+The purpose of the idle thread is to keep track of idle times, but some platform implementions may use it to implement a low power consumption wait mode\cite{zircon-scheduling}.
+
 
 \section{Memory Management} %TODO label
 %    Linux Concept -> LFD430 pic
