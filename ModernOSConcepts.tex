@@ -14,6 +14,8 @@
 % even start my project: the fact is that it wasn't and still isn't. Linux
 % wins heavily on points of being available now.
 %
+
+Hallo
 This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by refering to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992.
 Besides the discussion is quite interessting from todays view on different operating systems, the forecasts on their future and the actual development, are both, \textsc{Tanenbaum} and \textsc{Torvalds} underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
 And roughly spoken are exactly such different problems which needs to be solved with an operating system one reason for their diversity. 
@@ -1371,7 +1373,7 @@ While code running in user space may be preempted at any time, common modern Lin
 \begin{itemize}
     \item As a no-forced preemption version, suitable for the use in servers.
     \item With voluntary kernel preemption for the use in desktop systems and
-    \item as a fully preemtible kernel for desktop systems with low latency requirements\cite{lfd430},~\footnote{See also ``\texttt{man 7 sched}'' on Linux systems as an additional source for this section}.
+    \item as a fully preemtible kernel for desktop systems with low latency requirements\cite{lfd430},~\footnote{See also ``\texttt{man 7 sched}'' on Linux systems as an additional source for this section.}.
 \end{itemize}
 Older kernels before version 2.6.23 were not preemptible at all.
 They were only disturbed by explicit or implicit sleep requests, e.g.\ if a required resource was not available, or, if enabled, on interrupts.
@@ -1393,7 +1395,6 @@ Before kernel version 2.6.23, the default scheduler in Linux was named \textit{O
 It is named after the \textit{Big-O notation} of its algorithm which classifies the runtime or memory requirements of algorithms according its inputs.
 This means in case of the O(1) scheduler that the time it needs to make the decision which task is to be scheduled next is independent of the number of tasks in the system at all.
 It was using a priority ordered queue for each \ac{cpu} core\cite{lfd430}.
-
 Since kernel 2.6.23, the \ac{cfs} became the new default scheduler.
 It is a fair share scheduler, similar to the strategy described in the general section.
 The decision which task must be scheduled next is made on the basis of the amount of time a task has been waiting to run, divided by the number of running tasks.
@@ -1401,28 +1402,57 @@ The resulting time of each task is compared with the actual time received so far
 The one with the worst ratio is selected.
 Thus, the finding a decision is rather complex in this strategy\cite{lfd430}.
 
-%TODO rt patch, stategies
+Linux' origin is an interactive operating system kernel, but there was the desire to use it in realtime environments as well. 
+For this use, the Linux kernels needed lower latencies, other preemption methods and realtime capable schedulers.
+As the needed changes affect wide parts of the kernel were they initially developed as a patch set called \textit{rt\_preempt}.
+They include amongst others:
+\begin{itemize}
+    \item Replacing spinlocks with preemptible \textit{rtmutexes} in the whole kernel.
+    \item Implementing priority inheritance for locking mechanisms.
+    \item Replace common interrupt handlers with preemptible kernel thread so that they can be scheduled and sleep\cite{lfd430}.
+\end{itemize}
 
-\cite{lfd430}
-rt_preempt patch
-
-- brings lower latencies to linux than other preemption methods 
-- affects wide parts of the kernel (slowly the patch's changes go to the mainline kernel) also cite man 7 sched
-    -> spinlocks become preemptible -> replaced with rtmutexes
-    -> priority inheritance is implemented for spinlocks and semaphores
-    -> interrupt handlers become preemptible kernel threads -> they can sleep and be scheduled
 
 
-available scheduling policies -> man 7 sched
-- SCHED_FIFO
-- SCHED_RR
-- SCHED_DEADLINE
-- sched other
-- sched batch
-- sched idle
+
+% available scheduling policies -> man 7 sched
+% - SCHED_FIFO
+% - SCHED_RR
+% - SCHED_DEADLINE
+% - sched other
+% - sched batch
+% - sched idle
 
 \subsection{Scheduling in Zircon}
-
+% - scheduler is an evolution of the LK scheduler (minimal sched)
+%
+% - per cpu scheduling
+% - each cpu has its own set of priority queues, one for each pio level in the system (currently 32) -> fifo queues
+% -> Multi Level scheduling -> with time slices, each job gets the same timeslice, if not finished, it is enqueued again
+%
+% - if there are not jobs in any queue, the scheduler runs the idle thread
+% -> runs if no other thread is active, not held in any prio queue -> used to track idle times, may used by platform implementations for a low power wait mode
+%
+% - if a thread/job blocks, it is removed from the scheduling queue and added to a distinct waitqueue until the resource is available
+% -> then it is inserted in a cpus queue again (in the right prio), if the job was blocked before its timeslice was finished, it is added in the front of the queue to resume as soon as possible
+%
+%
+% - the priority is calculated from 3 factors
+    % - the base prio (32 level, 0 - 31)
+    % - the priority boost
+        % -> given when a thread in unblocked after waiting on a resource or sleeping ++1
+        % -> if a job voluntary give up the control, its boost is decremented (--) (wont go negative)
+        % -> when a thread is preempted and has used up its entire time slice, its boost is decremented by one -> may go negative
+    % - priority inheritance, if the thread controls a resource another with a higher prio needs (and blocks the other one), it is temporary boosted up to the prio of the higher thread -> see prio inversion
+%
+    % effective prio : the inherit one or the base plus boost, when the prio changes the scheduler will move a job to another queue and reschedule the cpu
+%
+% -> serve interactive tasks quickly -> ui tasks do little work, are often blocked by user events -> get a priority boost from unblocking
+% background processes get a priority penality for using the entire timeslice
+%
+%
+% - zircon supports also special real time threads (THREAD\_FLAG\_REAL\_TIME)
+% -> they are allowed to run without preemption until they block. yield or manually reschedule
 
 \section{Memory Management} %TODO label
 %    Linux Concept -> LFD430 pic

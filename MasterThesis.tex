@@ -17,20 +17,20 @@
 %\usepackage{microtype}
 \usepackage{amsmath}
 \usepackage{geometry}
-\usepackage{pgfplots}
+% \usepackage{pgfplots}
 \usepackage{pdfpages}
 \geometry{a4paper, top=35mm, left=30mm, right=25mm, bottom=35mm, headsep=10mm, footskip=12mm}
 \usepackage[backend=biber, style=numeric, citestyle=numeric]{biblatex}
 
-\apptocmd{\UrlBreaks}{\do\f\do\m}{}{}
+% \apptocmd{\UrlBreaks}{\do\f\do\m}{}{}
 \setcounter{biburllcpenalty}{9000}% Kleinbuchstaben
 \setcounter{biburlucpenalty}{9000}% Großbuchstaben
 
-\addbibresource{tex/Literature.bib}
+\addbibresource{Literature.bib}
 
 \newenvironment{code}{\captionsetup{type=listing}}{}
 
-\pgfplotsset{compat=1.16}
+% \pgfplotsset{compat=1.16}
 
 \begin{document}
 
@@ -38,7 +38,6 @@
 %maketitel
 
 \begin{titlepage}
-{
 \centering
 \textsc{\LARGE University of Pforzheim} \par 
 \vspace{0.3cm}
@@ -51,11 +50,10 @@
 \huge\textbf{The Zircon Kernel \\ A Consideration of a Microkernel Approach and its Effects on Driver Development} \par 
 \vspace{4.3cm}
 \Large 
-}
 
 % TODO inovex, inovex supervisors
-\textbf{Examiner} \hfill Prof. Dr.-Ing. Rainer Dietz \par %Name
-\textbf{Second Supervisor} \hfill Prof. Dr.-Ing. Martin Pfeiffer \par %Name
+\textbf{Examiner} \hfill Prof.~Dr.-Ing. Rainer Dietz \par %Name
+\textbf{Second Supervisor} \hfill Prof.~Dr.-Ing. Martin Pfeiffer \par %Name
 \textbf{Author} \hfill B.Sc. Anna-Lena Marx \par 
 \textbf{Matriculation Number} \hfill 317593 \par
 \vspace{2.0cm}
@@ -72,14 +70,14 @@
 
 
 
-\pagestyle {headings}
+\pagestyle{headings}
 \quad
 \newpage
-\input{tex/Declaration}
+\input{Declaration}
 \newpage
 \quad
 \newpage
-\input{tex/Abstract}
+\input{Abstract}
 
 
 \tableofcontents
@@ -89,13 +87,13 @@
 \mainmatter
 
 
-\input{tex/Introduction}
-\input{tex/ModernOSConcepts}
-\input{tex/CSLinux}
-\input{tex/CSZircon}
-\input{tex/CSEvaluation}
-\input{tex/Conclusion}
-\input{tex/Outlook}
+\input{Introduction}
+\input{ModernOSConcepts}
+\input{CSLinux}
+\input{CSZircon}
+\input{CSEvaluation}
+\input{Conclusion}
+\input{Outlook}
 
 
 \newpage \appendix
@@ -106,7 +104,7 @@
 %addcontentsline?
 \printbibliography
 
-\input{tex/Abbreviations}
+\input{Abbreviations}
 \listoflistings
 \listoffigures
 \listoftables
