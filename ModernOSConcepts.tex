@@ -1,21 +1,6 @@
 % !TEX root = MasterThesis.tex
 
 \chapter{Modern Operating System Concepts}\label{ch:modern-os-concepts}
-%
-%https://groups.google.com/forum/#!topic/comp.os.minix/wlhw16QWltI%5B1-25%5D
- % 2: your job is being a professor and researcher: That's one hell of a
-% good excuse for some of the brain-damages of minix. I can only hope (and
-% assume) that Amoeba doesn't suck like minix does.
-% >1. MICROKERNEL VS MONOLITHIC SYSTEM
-% True, linux is monolithic, and I agree that microkernels are nicer. With
-% a less argumentative subject, I'd probably have agreed with most of what
-% you said. From a theoretical (and aesthetical) standpoint linux looses.
-% If the GNU kernel had been ready last spring, I'd not have bothered to
-% even start my project: the fact is that it wasn't and still isn't. Linux
-% wins heavily on points of being available now.
-%
-
-Hallo
 This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by refering to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992.
 Besides the discussion is quite interessting from todays view on different operating systems, the forecasts on their future and the actual development, are both, \textsc{Tanenbaum} and \textsc{Torvalds} underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
 And roughly spoken are exactly such different problems which needs to be solved with an operating system one reason for their diversity. 
@@ -25,17 +10,6 @@ Nevertheless, it is a reasonable question why a majority of the operating system
 In 2009, the official statement of the Linux kernel developer \textsc{Richard Gooch} was still that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
 So the question remains what changed during the last ten years to promote this change, and especially for this work, how this affects on device driver development.
 For this reason, this chapter is dedicted to the basic components and functionallities of operating system kernels and how they are implemented in the real world examples \textit{Linux} and \textit{Zircon}.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Links
-%
-% Some notes to Linux design decisions: \url{http://vger.kernel.org/lkml/#s15-3}
-% Memory management in Linux -> Files from LFD 430
-% 
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 \section{Operating System Architectures}\label{sec:kernel-arch-concepts}
 
@@ -1470,18 +1444,63 @@ It lives besides the normal \ac{fifo} queues and is runned by the scheduler if t
 The purpose of the idle thread is to keep track of idle times, but some platform implementions may use it to implement a low power consumption wait mode\cite{zircon-scheduling}.
 
 
-\section{Memory Management} %TODO label
-%    Linux Concept -> LFD430 pic
-%TODO find sections
-%TODO how is it done in Linux and Zircon
+\section{Memory Management}\label{sec:memory-management}
+Memory managment is an essential part within an operating system.
+Without going into detail, some terms and principles belonging to this topic were already part of previous sections.
+For example, the topics \textit{process isolation} or \textit{\ac{ipc} via shared memory} involved sophisticated concepts for the use of the main memory in particular.
+The concepts of \textit{virtual memory} and private \textit{address spaces} had a special significance in this context.
+Thus, this section will focus on them.
+
+
+\cite{mandl2014Grundkurs}
+- memory hierachy ?
+    - register
+    - cache
+    - main mem (ram)
+    - hard drives
+
+-> most times we speak about main memory
+
+- locality of reference
+    - temporal locality
+    - spartial/memory locality
+
+
 \subsection{Address Spaces}
+
+\cite{mandl2014Grundkurs}
+- definition address space -> summary of all possible addresses 0 to 2^32 -1 for 4GB
+- layout is defined for each operating system within a address space layout
+    - reserved parts for applications, \ldots
+    - size of a machine word -> 32/64 bit depending on the processor (or may less)
+    -> alignment to addresses which are divideble by 4 -> faster access
+    -> byte ordering
+
+- address space of programs is specified by the compiler/runtime according to conventions 
+    -> they have different subspaces within their address space example for C/C++:
+        - program code
+        - constants, initialised data, static variable
+        - not initialised data (static vars too)
+        - dynamically section for runtime allocated data -> heap
+        - dynamically section for stack
+
 \subsection{Virtual Memory}
-\subsection{Page Replacement/Paging}
+
+\cite{mandl2014Grundkurs}
+%TODO
+
+
+
+% \subsection{Page Replacement/Paging}
+
+
+
 \subsection{Memory Management in Linux}
-\subsection{Memory Management in Zircon}
+%    Linux Concept -> LFD430 pic
+\subsection{Memory Management in Zircon} 
 
 
-\section{I/O} %TODO label
+\section{I/O}\label{sec:io} 
 %TODO review sections, how is it done in Linux/Zircon
 \subsection{I/O Hardware}
 \subsection{Memory Mapped IO}
