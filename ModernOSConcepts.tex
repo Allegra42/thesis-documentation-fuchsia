@@ -1487,7 +1487,35 @@ Thus, this section will focus on them.
 \subsection{Virtual Memory}
 
 \cite{mandl2014Grundkurs}
-%TODO
+% idea
+- a process should be executed even if its memory range is not completely in ram
+- the memory consumption at all may become greater than the available physical memory
+- a programmer should see a contiguous memory region beginning with address 0 but not the real fragmentated ram used by multiple users
+
+-> the os holds the actually needed pages in ram and the rest at hard drives 
+-> a big program does not use all of its memory at once -> take usage of locality effects (on runtime, similar code memory and data regions are needed)
+
+% virtual address space
+-> a process memory is named virtual address space or virtual memory
+-> not physical available
+-> memory manager virtualizes it for each process
+
+- virtual memory is logical memory used by a process and mapped to real one during runtime
+-> management is done by the os -> memory manager
+    implements:
+        - fetch policy
+        - placement policy speicherzuteilungsstrategie
+        - replacement policy
+        - cleaning policy
+
+fetching policy: when must a memory region be present in the ram 
+placement -> where are new added memory pages placed within the ram
+replacement -> which page must be removed if there is no more free mem and a new one should come in
+cleaning -> tries to hold a piece in ram free at any time
+
+
+
+%TODO paging
 
 
 
