@@ -1473,31 +1473,45 @@ The last kind of memory which is important as a part of this thesis are common h
 As a result of this hierachy, there is often not enough space, even not in the main memory, to store the data of all running applications. 
 But there is a desire for allowing processes to use more memory than physically available and for a unified contiguous view of the memory area of each process together with the needs of processes, i.e.\ the isolation between the address spaces of distinct processes but also a way to share memory for \ac{ipc} (see~\ref{sec:processes} for the details)\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
 A pure static and direct memory management would not be sufficient for these purposes.
+In current systems, this is mostly realized using the mechanisms of \textit{address spaces} and \textit{virtual memory}, which already have been mentioned several times.
+The following sections explain what this implies.
 
-%TODO überleitung zu address spaces und virtual mem
+
+\subsection{Address Space}
+The term \textit{address space} covers the summary of all possible memory addresses within the main memory from 0 to $2^{32}-1$ on a 32-bit system or $2^{64}-1$ on a 64-bit one. 
+The address space is divided into reserved parts for the system, applications and others.
+How this division is done is defined by the operating system in an \textit{address space layout}\cite{mandl2014Grundkurs}.
+Distinct parts within this layout are protected against each other on base of such a layout, especially the system kernel itself\cite{brause2017betriebssysteme}.
+
+But this term is also used for the memory region of applications which is effectively located within the main memory's address space.
+Their layout is specified by the compiler or a runtime based on language conventions or standards.
+A C application is for example divided into different sections like the program code itself, constants, static variables and initialised data, not initialised data, and dynamic sections for heap (data which is allocated at runtime) and stack\cite{mandl2014Grundkurs}.
+
+However, the pure implementation of address spaces does not yet solve all of the needs named above.
+Although the address space at its whole is now subdiveded into various regions, it is not ensured that the address space of a process within is always contiguous.
+From a technical point of view, this is not always possible because the size of process address spaces differs and as a result, gaps which have to be filled as well arise\cite{mandl2014Grundkurs}.
+Furthermore, data should be aligned to addresses which are divisible by four to make accessing main memory from the \ac{cpu} more efficient\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
 
 
-\subsection{Address Spaces}
-
-\cite{mandl2014Grundkurs}
-- definition address space -> summary of all possible addresses 0 to 2^32 -1 for 4GB
-- layout is defined for each operating system within a address space layout
-    - reserved parts for applications, \ldots
-    - size of a machine word -> 32/64 bit depending on the processor (or may less)
-    -> alignment to addresses which are divideble by 4 -> faster access
-    -> byte ordering
-
-- address space of programs is specified by the compiler/runtime according to conventions 
-    -> they have different subspaces within their address space example for C/C++:
-        - program code
-        - constants, initialised data, static variable
-        - not initialised data (static vars too)
-        - dynamically section for runtime allocated data -> heap
-        - dynamically section for stack
-
-\cite{brause2017betriebssysteme}
-memory protection
-
+% \cite{mandl2014Grundkurs}
+% - definition address space -> summary of all possible addresses 0 to 2^32 -1 for 4GB
+% - layout is defined for each operating system within a address space layout
+    % - reserved parts for applications, \ldots
+    % - size of a machine word -> 32/64 bit depending on the processor (or may less)
+    % -> alignment to addresses which are divideble by 4 -> faster access
+    % -> byte ordering
+%
+% - address space of programs is specified by the compiler/runtime according to conventions
+    % -> they have different subspaces within their address space example for C/C++:
+        % - program code
+        % - constants, initialised data, static variable
+        % - not initialised data (static vars too)
+        % - dynamically section for runtime allocated data -> heap
+        % - dynamically section for stack
+%
+% \cite{brause2017betriebssysteme}
+% memory protection
+%
 
  
 \subsection{Virtual Memory}
