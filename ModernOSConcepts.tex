@@ -1429,7 +1429,7 @@ The priority of jobs in Zircon is determined on the basis of three criteria:
             \item A job is penalized with an one level downgrade if it voluntary give up the control. The minimum priority value in this situation is 0.
             \item A job is penalized with an one level downgrade if it is preempted after using up its entire time slice. In this situation, the prioity value may become negative.
         \end{itemize}
-    \item Priority inheritance is a special criteria. If a job controls a resource which is needed by one with a higher priority, the job's priority is temporary boosted up to the priority level of the other job to prevent priority inversion (see \ref{sec:priority-inversion}). 
+    \item Priority inheritance is a special criteria. If a job controls a resource which is needed by one with a higher priority, the job's priority is temporary boosted up to the priority level of the other job to prevent priority inversion (see~\ref{sec:priority-inversion}). 
 \end{itemize}
 As a result, the effective priority is either calculated from the base value in combination with the boost or it is the inherit one\cite{zircon-scheduling}.
 This policy is designed for an interactive system.
@@ -1441,7 +1441,12 @@ Such a job is allowed to run within its priority level without beein preempted u
 
 A special role belongs to the \textit{idle thread}.
 It lives besides the normal \ac{fifo} queues and is runned by the scheduler if there are not any other jobs ready to be assigned.
-The purpose of the idle thread is to keep track of idle times, but some platform implementions may use it to implement a low power consumption wait mode\cite{zircon-scheduling}.
+The purpose of the idle thread is to keep track of idle times, but some platform implementions may use it to implement a low power consumption wait mode\cite{zircon-scheduling}.\\
+\\
+At the time of writing, an additional \ac{cfs} is in work.
+Its \ac{api} is compatible to the one Linux uses.
+Is is not merged into the standalone Zircon repository yet, but to the development master branch of the Zircon kernel within Fuchsia.
+Further information is available in the according documentation within this repository\footnote{Zircon Fair Scheduler, visited on 11.04.2019 \url{https://fuchsia.googlesource.com/fuchsia/+/refs/heads/master/zircon/docs/fair_scheduler.md}}.
 
 
 \section{Memory Management}\label{sec:memory-management}
@@ -1451,19 +1456,25 @@ For example, the topics \textit{process isolation} or \textit{\ac{ipc} via share
 The concepts of \textit{virtual memory} and private \textit{address spaces} had a special significance in this context.
 Thus, this section will focus on them.
 
+The reason for the use of such sophisticated memory management mechanisms over direct memory allocation is motivated by the need for process isolation, shared memory and similar approaches but also by the nature of a computer's memory.
+In common, the memory is a hierachical system with \ac{cpu} registers at its top.
+Registers are implemented in the same technology as the \ac{cpu} itself. 
+As a result, they are very limited and expensive but also very fast.
+The next layer are caches.
+Current systems use a hierachical cache system itself.
+The topmost layer is nearly equivalent to registers in terms of access time and costs, and thus, very small.
+After two to four cache levels follows by main memory or \ac{ram}.
+If it is spoken about memory within this work, the main memory is meant in the majority of cases.
+In common, the main memory is implemented as \textit{Dynamic} \ac{ram}.
+Accessing the main memory is 10 to 50 times slower than accessing caches, but the capacity is significantly larger (e.g. Intel Core i7-7820HQ; L1 caches are divided into data and instruction caches with 32 kilobyte each, while the total main memory installed is 16 gigabyte\footnote{Benchmarks from an Intel Core i7, 7th Generation.}\cite{mandl2014Grundkurs}.
+The data of running processes and the system itself is generally held in the main memory.
+The last kind of memory which is important as a part of this thesis are common hard drives and newer \acp{ssd}, used for files, not running applications and miscellaneous other data.
 
-\cite{mandl2014Grundkurs}
-- memory hierachy ?
-    - register
-    - cache
-    - main mem (ram)
-    - hard drives
+As a result of this hierachy, there is often not enough space, even not in the main memory, to store the data of all running applications. 
+But there is a desire for allowing processes to use more memory than physically available and for a unified contiguous view of the memory area of each process together with the needs of processes, i.e.\ the isolation between the address spaces of distinct processes but also a way to share memory for \ac{ipc} (see~\ref{sec:processes} for the details)\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
+A pure static and direct memory management would not be sufficient for these purposes.
 
--> most times we speak about main memory
-
-- locality of reference
-    - temporal locality
-    - spartial/memory locality
+%TODO überleitung zu address spaces und virtual mem
 
 
 \subsection{Address Spaces}
@@ -1484,6 +1495,11 @@ Thus, this section will focus on them.
         - dynamically section for runtime allocated data -> heap
         - dynamically section for stack
 
+\cite{brause2017betriebssysteme}
+memory protection
+
+
+ 
 \subsection{Virtual Memory}
 
 \cite{mandl2014Grundkurs}
@@ -1513,18 +1529,71 @@ placement -> where are new added memory pages placed within the ram
 replacement -> which page must be removed if there is no more free mem and a new one should come in
 cleaning -> tries to hold a piece in ram free at any time
 
+- locality of reference
+    - temporal locality
+    - spartial/memory locality
+
+
+\cite{brause2017betriebssysteme}
+abstraction to physical memory
+groups distict physical parts together to on contiguous area starting with address 0
+enables a programm using more memory than physically available -> swapping inactive parts to disks
 
 
 %TODO paging
+memory areas of virtual and physical memory are divided to blocks
+-> blocks from the virtual address space are referred as pages
+-> blocks from the physical address space are referred as page frames
+
+- transportation of data between ram/main memory and hard drives
+-> demand paging -> just done if there is need for a page 
+-> prepaging -> use of locality effects - if a page is needed, its useful to load neighbouring pages to main mem too (with respect to certain algorithms)
+
+- paging area -> disk region for outsourced pages
+- os is responsible for which pages can be outsourced so the system can still work efficiently
+-> need strategies (not a topic in this place)
+
+\cite{brause2017betriebssysteme}
+mechanism to implement a virtual address space -> divide the memory in blocks of the same size 
+address and state of each page are managed in a page table. 
+a distinct pagetable for each program is available in ram
+
+the physical memory is also divided in pages, but size and location is distinct from the virtual memory -> named page frame
 
 
+%MMU
+virtual addressing is supported by a hardware mechanism in modern application cpus
+-> mmu
+is a part of the processor and maps virtual addresses to physical ones 
+cpu sends the virtual address, mmu calculates the physical one (defined algorithm) and sends them to the main memory via the address bus
 
-% \subsection{Page Replacement/Paging}
+is a needed page not in the main memory, the mmu raises a page fault -> running process is interrupted -> kernel tries to load the frame 
+- process is rescheduled if the resource is available
+
+%tlb
+translation lookaside buffer is a fast cache for the assignment between virtual and physical addresses -> is a part of the mmu
+should have faster access times than main memory
+-> holds references to the most used pages
+if an address is already in the tlb, no further main memory acceess is needed, if not, the mmu itself is needed
+
+one tlb for each cpu
+replacement strategy is needed 
+
+\cite{brause2017betriebssysteme}
+just one mechanims for address conversation and speeding it up is tlb
 
 
+\cite{brause2017betriebssysteme}
+virtual memory enables process isolation but also shared memory for shared libs or ipc
 
+
+ 
 \subsection{Memory Management in Linux}
-%    Linux Concept -> LFD430 pic
+%     Linux Concept -> LFD430 pic
+
+\cite{mandl2014Grundkurs}
+\cite{brause}
+
 \subsection{Memory Management in Zircon} 
 
 
@@ -1537,11 +1606,12 @@ cleaning -> tries to hold a piece in ram free at any time
 \subsection{Power Management}
 
    
-\section{Security Concepts} %TODO label
-\subsection{Access Control} %Domains, Capabilities
-%DAC, MAC, ..
-\subsection{Security Concepts in Linux}
-\subsection{Security Concepts in Zircon}
+% \section{Security Concepts} %TODO label
+% \subsection{Access Control} %Domains, Capabilities
+% %DAC, MAC, ..
+% \subsection{Security Concepts in Linux}
+% \subsection{Security Concepts in Zircon}
 
 
+%TODO own chapter
 \section{Driver Models} %TODO label
