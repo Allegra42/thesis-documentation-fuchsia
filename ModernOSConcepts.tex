@@ -1483,7 +1483,7 @@ The address space is divided into reserved parts for the system, applications an
 How this division is done is defined by the operating system in an \textit{address space layout}\cite{mandl2014Grundkurs}.
 Distinct parts within this layout are protected against each other, especially the system kernel itself\cite{brause2017betriebssysteme}.
 But the layout distinction does not provide process isolation. 
-The system is indeed divided from application processes, however those are not separated from each other within their sections\cite{mandl2014Grundkurs}.
+The system is indeed divided from application processes using such a layout, however those are not separated from each other within their sections\cite{mandl2014Grundkurs}.
 
 The term \textit{address space} is used for the memory region of applications, through, which is effectively located within the main memory's address space.
 Their intern layout is specified by the compiler or a runtime based on language conventions or standards.
@@ -1493,8 +1493,6 @@ However, the pure implementation of address spaces does not yet solve all the ne
 Although the address space at its whole is now subdivided into various regions, it is not ensured that the address space of a process within is always contiguous.
 From a technical point of view, this is not always possible because the size of process address spaces differs and as a result, gaps which have to be filled as well arise\cite{mandl2014Grundkurs}.
 Furthermore, data should be aligned to addresses which are divisible by four to make accessing main memory from the \ac{cpu} more efficient\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
-
-
 % \cite{mandl2014Grundkurs}
 % - definition address space -> summary of all possible addresses 0 to 2^32 -1 for 4GB
 % - layout is defined for each operating system within a address space layout
@@ -1513,95 +1511,62 @@ Furthermore, data should be aligned to addresses which are divisible by four to 
 %
 % \cite{brause2017betriebssysteme}
 % memory protection
-%
-
  
 \subsection{Virtual Memory}
+The abstraction needed to reach the named requirements for the physical main memory is called \textit{virtual memory} or \textit{virtual address space}.
+Its basic idea is to provide abstracted, contiguous views on the actual memory to processes, which was one of the goals.
+A process respectively a programmer only see a contiguous memory region starting with the address 0 but not the actual fragmentated main memory used by various processes from distinct users\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
+Such a virtual view to the actual main memory also enables pretending to a program that more memory is available than is actually present.
+Since the entire memory region of a program is rarely needed in main memory at a time, the concept of virtual memory together with a sophisticated mechanism to load certain memory regions from disk which enables the execution of processes, even if they can not be completely loaded into the main memory.
+The operating system holds needed data in the main memory while the others are stored in hard drives.
+As a result, the overall memory consumption may become greater than the physical available main memory and virtual memory is not neccessarly mapped to physical memory\cite{mandl2014Grundkurs}.
+An operating system unit called \textit{memory manager} virtualizes each process for itself.
+Virtual memory is only logical until the memory manager maps it to physical available one during runtime.
+The purpose of this unit is, besides the already mentioned, implementing
+\begin{itemize}
+    \item a \textit{fetching policy}, which describes a strategy to ensure a certain memory region is present in the main memory when needed,
+    \item a \textit{placement policy}, which manages where newly added regions are placed within the memory,
+    \item a \textit{replacement policy}, i.e.\ the strategy that comes in when there is no more free memory available and data must be removed to load the current needed ones, and
+    \item a \textit{cleaning policy} trying to keep some main memory free at any time\cite{mandl2014Grundkurs}.
+\end{itemize}
+% Strategies used within the memory management take advantage from the so-called \textit{locality effects}.
+% The two most important ones are the \textit{temporal locality} and the \textit{spartial} or \textit{memory locality}.
+% They state that memory regions that were often needed in a temporal proximity in the past will continue to be needed together with a high probability in the future, respectively that virtual memory regions located close to each other are often used together\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
+%
+For the use within the memory management and the actual implementation of virtual memory are virtual as well as physical main memory regions divided into fixed size blocks.
+The blocks in the virtual address space are referred as \textit{pages} while the ones within the physical address space are named \textit{page frames}.
+Size and location from virtual pages and physically available page frames differ from each other. 
+The addresses of the virtual pages are managed in so-called \textit{page tables}.
+One distinct page table represents a program which is available in the main memory\cite{brause2017betriebssysteme}.
+A physically available page frame can be mapped into several virtual page tables.
+Shared libraries and shared memory \ac{ipc} mechanisms are implemented in this way\cite{brause2017betriebssysteme}.
 
-\cite{mandl2014Grundkurs}
-% idea
-- a process should be executed even if its memory range is not completely in ram
-- the memory consumption at all may become greater than the available physical memory
-- a programmer should see a contiguous memory region beginning with address 0 but not the real fragmentated ram used by multiple users
+Pages, respectively page frames, represent the memory blocks which are transported between hard drives and the main memory by the \textit{memory manager}.
+The policies implemented the memory management take advantage from sophisticated concepts like \textit{demand paging}, i.e.\ a page is only loaded if there is a need for, and \textit{prepaging} with use of the so-called \textit{locality effects}.
+The two most important ones are the \textit{temporal locality} and the \textit{spartial} or \textit{memory locality}.
+They state that pages which were often needed in a temporal proximity in the past will continue to be needed together with a high probability in the future, respectively that virtual pages located close to each other are often used together.
+In accordance, the memory manager tries to load pages which are needed with a high probability in near future in advance\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
 
--> the os holds the actually needed pages in ram and the rest at hard drives 
--> a big program does not use all of its memory at once -> take usage of locality effects (on runtime, similar code memory and data regions are needed)
+Above all, virtual memory enables the sophisticated memory management requirements needed for a efficient and secure operating system with process isolation, shared memory and a contiguous view to a program's address space for example. 
+Memory protection mechanisms like process isolation and access rights to a process's address space are implemented based on virtual memory, too (refer to \textsc{Brause}\cite{brause2017betriebssysteme} for more details).
+But thus, a translation between virtual addresses and the physical equivalents which considers the fact that a physical memory region may be mapped into several virtual address spaces, is needed. 
+To speed up this costly translations, current application-oriented \acp{cpu} are supported by two on-chip hardware mechanisms, the \acf{mmu} and the \acf{tlb}.
 
-% virtual address space
--> a process memory is named virtual address space or virtual memory
--> not physical available
--> memory manager virtualizes it for each process
+The \ac{mmu} is a part of the processor itself and responsible to map virtual addresses to physical ones. 
+Thus, accessing the raw main memory and regions with a special meaning is in common a privileged action done within the operating system kernel. 
+The \ac{cpu} sends a virtual address to the \ac{mmu} which calculates the physical one according a defined algorithm and sends the result via the address bus to the main memory.
+If a needed page is not available there, the \ac{mmu} raises a special interrupt named \textit{page fault}.
+It interrupts the running process so the \ac{cpu} can try to fetch the needed address from disk.
+Even if only a single address is missing, the memory manager always loads whole pages to the main memory.
+If the virtual memory address as a resource is available, the interrupted process is rescheduled according the currently used policy\cite{mandl2014Grundkurs}.
 
-- virtual memory is logical memory used by a process and mapped to real one during runtime
--> management is done by the os -> memory manager
-    implements:
-        - fetch policy
-        - placement policy speicherzuteilungsstrategie
-        - replacement policy
-        - cleaning policy
-
-fetching policy: when must a memory region be present in the ram 
-placement -> where are new added memory pages placed within the ram
-replacement -> which page must be removed if there is no more free mem and a new one should come in
-cleaning -> tries to hold a piece in ram free at any time
-
-- locality of reference
-    - temporal locality
-    - spartial/memory locality
-
-
-\cite{brause2017betriebssysteme}
-abstraction to physical memory
-groups distict physical parts together to on contiguous area starting with address 0
-enables a programm using more memory than physically available -> swapping inactive parts to disks
-
-
-%TODO paging
-memory areas of virtual and physical memory are divided to blocks
--> blocks from the virtual address space are referred as pages
--> blocks from the physical address space are referred as page frames
-
-- transportation of data between ram/main memory and hard drives
--> demand paging -> just done if there is need for a page 
--> prepaging -> use of locality effects - if a page is needed, its useful to load neighbouring pages to main mem too (with respect to certain algorithms)
-
-- paging area -> disk region for outsourced pages
-- os is responsible for which pages can be outsourced so the system can still work efficiently
--> need strategies (not a topic in this place)
-
-\cite{brause2017betriebssysteme}
-mechanism to implement a virtual address space -> divide the memory in blocks of the same size 
-address and state of each page are managed in a page table. 
-a distinct pagetable for each program is available in ram
-
-the physical memory is also divided in pages, but size and location is distinct from the virtual memory -> named page frame
-
-
-%MMU
-virtual addressing is supported by a hardware mechanism in modern application cpus
--> mmu
-is a part of the processor and maps virtual addresses to physical ones 
-cpu sends the virtual address, mmu calculates the physical one (defined algorithm) and sends them to the main memory via the address bus
-
-is a needed page not in the main memory, the mmu raises a page fault -> running process is interrupted -> kernel tries to load the frame 
-- process is rescheduled if the resource is available
-
-%tlb
-translation lookaside buffer is a fast cache for the assignment between virtual and physical addresses -> is a part of the mmu
-should have faster access times than main memory
--> holds references to the most used pages
-if an address is already in the tlb, no further main memory acceess is needed, if not, the mmu itself is needed
-
-one tlb for each cpu
-replacement strategy is needed 
-
-\cite{brause2017betriebssysteme}
-just one mechanims for address conversation and speeding it up is tlb
-
-
-\cite{brause2017betriebssysteme}
-virtual memory enables process isolation but also shared memory for shared libs or ipc
-
+The \ac{tlb} works together with the \ac{mmu}.
+It is an additional fast cache to speed up the assignment between virtual and physical memory addresses. 
+As described previously is accessing a cache still considerably faster than accessing the main memory itself.
+Similar to common L1 and L2 \ac{cpu} caches is there an own \ac{tlb} per \ac{cpu}.
+If the needed address translation is already stored in the \ac{tlb}, no further access to the main memory is needed, if not must the \ac{mmu} be invoked.
+Just like caches and the main memory, a replacement strategy for the \ac{tlb} is needed to ensure its efficient use.
+A more detailed introduction to these hardware support mechanisms and related strategies can be consulted at \textsc{Mandl}\cite{mandl2014Grundkurs} or \textsc{Brause}\cite{brause2017betriebssysteme}.
 
  
 \subsection{Memory Management in Linux}
