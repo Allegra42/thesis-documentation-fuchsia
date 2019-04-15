@@ -1571,9 +1571,93 @@ A more detailed introduction to these hardware support mechanisms and related st
  
 \subsection{Memory Management in Linux}
 %     Linux Concept -> LFD430 pic
+Linux also uses a virtual memory system, on modern \ac{mmu}-enabled \acp{cpu}, but there is also a Linux kernel variant for \ac{mmu}-less architectures used for very small embedded systems, called \textit{uCLinux}.
+While a usual Linux kernel with virtual memory system needs an address translation uses \textit{uCLinux} raw physical memory addresses without further protection or other sophisticated mechanisms.
+But more common and focused in this work is the use of virtual memory enabled systems\cite{lfd430}.
+In general is (virtual) memory management in Linux a very complex and highly architectural dependent matter.
+As \textit{32-bit x86} was the most common architecture for a long time, it is often used to describe the mechanisms, but it is also very specific in a way that even the memory management for \textit{64-bit x86} architectures differs a lot.
+Nevertheless, this work focuses on \textit{32-bit x86} due to the spread of the correspond terms and mentions important differences in 64-bit x86 and ARM architectures.
 
-\cite{mandl2014Grundkurs}
-\cite{brause}
+The Linux virtual memory management mechanism divides the available memory in various different sections.
+The most basic and wide-spread terms in this context are \textit{high memory} and \textit{low memory}.
+Both do only matter on 32-bit systems.
+There is no such division in 64-bit systems at all.
+And in fact, the meaning of the terms is not complicated.
+The whole available address space in Linux is divided into virtual kernel and user addresses.
+\textit{Low memory} is a term for a physical memory region in the main memory, which corresponds to the high virtual addresses used for the kernel. 
+Kernel virtual addresses differ from common virtual addresses as further described in the next section.
+\textit{High memory} describes the higher physical memory addresses which maps to the virtual addresses used within user applications.
+As described in the general section, Linux provides an own protected address space with virtual addresses for each process, too, which are generally mapped into high memory\cite{lfd430}.
+Figure~\ref{pic:high-low-mem} illustrates the context.
+
+\begin{figure} [ht]
+	\centering
+	\includegraphics[scale=0.15]{HighLowMem}
+	\caption{The relation between virtual and physical memory in 32-bit x86 architectures\cite{lfd430}}\label{pic:high-low-mem}
+    %TODO own picture!
+\end{figure} \ \\
+%
+Actually, the division in high and low memory just one from several. 
+Linux uses additionally a \textit{zone allocator} memory algorithm to partition its address space more fine granular.
+Each zone differs in its usage and comes with own methods to perform basic memory operations like allocate and free memory pages\cite{lfd430}.
+On 32-bit x86 architectures, the zones are:
+\begin{itemize}
+    \item the \textbf{\ac{dma} zone} is located from 0 to 16 MB in both, 32-bit and 64-bit x86 architectures. It must be used for \ac{dma} data transfers on devices with 24-bit addresses.
+    \item the \textbf{\ac{dma}32 zone} is also on both variants located from 16 MB up to 4 GB. It must be used for \ac{dma} transfers on devices with 32-bit addresses as suggested by its name.
+    \item the \textbf{normal zone} is from 16 MB to 896 MB on 32-bit systems respectively it fills the whole remaining \ac{ram} on 64-bit systems and overlaps with the \ac{dma}32 zone. The normal zone is used for kernel and user data, but kernel addresses in this zone are calculated divergent from user addresses.
+    \item the \textbf{high zone} is a 32-bit only facility. It starts from 896 MB and fills the remaining \ac{ram} up to 64 GB. This is also the reason for this special zone: it enables 32-bit x86 systems running on Linux to access more than the usually addressable 4 GB of physical main memory\cite{lfd430}.
+\end{itemize}
+
+As suggested, Linux combines its memory management with different types of addresses.
+They available types depend on the architecture, too.
+This work will focus on 32-bit x86, as usual.
+The types are:
+\begin{itemize}
+    \item \textbf{user virtual addresses} as seen by user space applications. They can be 32 or 64-bit long, even on 32-bit systems and each process has its own virtual address space. As a result, two identical virtual addresses may refer to distinct addresses in the physical memory.
+    \item \textbf{physical addresses}, i.e.\ the actual physical memory addresses which are used between the \ac{cpu} and the main memory. Also on this place, the addresses may be 64-bit long, even on a 32-bit system.
+    \item \textbf{bus addresses}, which are physical addresses used between the main memory and peripheral buses in x86 architectures. In other architectures or even newer variants, this fact may change.
+    \item \textbf{kernel logical addresses}, which are actual physical addresses shifted by an offset. They are always stored in low memory and only used within the Linux kernel itself.
+    \item \textbf{kernel virtual addresses}, which are kernel addresses with no need for a direct mapping to physical memory addresses. It is a 32-bit x86 architectural anomaly and not available on 64-bit systems. Kernel virtual addresses which are not logical addresses, too, reside in high memory\cite{lfd430}.
+\end{itemize}
+
+\begin{figure} [ht]
+	\centering
+	\includegraphics[scale=0.45]{Chapter6-5}
+	\caption{Linux memory management overview\cite{lfd430}}\label{pic:linux-mem}
+    %TODO own picture!
+\end{figure}
+
+As also described in the general section, Linux uses fixed sized pages within memory management.
+The actual size of a page depends on the \ac{cpu} architecture.
+Pages in x86 are in common 4 KB sized while ARM based architectures may use 4, 16 or 32 KB sized ones. 
+Thus, application code should never depend on page sizes.
+Linux manages the pages using page tables, too.
+For the kernel related pages is the virtual or logical address decoded to the offset and a \textit{virtual \ac{pfn}}.
+This \ac{pfn} is stored in the page table together with access control information and a valid flag.
+At this point, it becomes apparent that the entire memory handling in Linux and also the protection of memory regions, e.g.\ against writing and/or code execution, is done on page level.
+The valid flag indicates if a virtual page is effectively available in main memory. 
+If a page is not valid, i.e.\ swapped out to disk or not even yet loaded to the main memory, a \textit{page fault} is raised if the page is requested.
+The kernel is invoked to loaded the proper page into main memory using demand paging and the hardware facilities \textit{\ac{mmu}} and \textit{\ac{tlb}}\cite{lfd430}.
+
+Figure~\ref{pic:linux-mem} illustrates the most important terms and concepts of memory management in Linux at a glance.
+The graphic is inspired by the one done by \textsc{John Bonesio} during the \textit{Developing Linux Device Drivers} Linux foundation training class.
+On the left hand side of the graphic, the view to the (virtual) memory from two distinct applications A and B is pictured.
+Both see their own virtual address space using \textit{user virtual addresses}, marked in blue and red.
+The view on the kernel's address space is the same for both of them.
+On the right hand side, the graphic pictures the connection between \ac{cpu} and \ac{mmu} (including but not pictured the \ac{tlb}),  the physical main memory divided into \textit{low} and \textit{high memory} and the peripherals as well as the address types used in between.
+The physical memory is divided into the known memory zones, the \textit{\ac{dma}} zone in green, the \textit{\ac{dma}32 zone} in orange, the \textit{normal zone} or low memory in grey and the \textit{high zone} or high memory in \textit{purple}.
+Additionally, the graphic symbolizes how pages in different contexts are mapped into the physical main memory.
+Both user processes have numbered pages which can also be found in the right hand side \ac{ram} representation.
+Furthermore are some kernel pages marked in grey with the characters \textit{z, y and x} which are 1:1 mapped into the normal memory (kernel logical addresses) and a page in purple (kernel virtual address), mapped into the high memory zone. 
+
+Linux memory management is, as already named, a very complex topic.
+This section is only an introduction to the most important terms and concepts.
+It is not possible to give a complete and detailed summary on this topic as part of this work.
+Thus, a very good and detailed resource to memory management in Linux on different architectures and the effects on kernel programming is the \textit{LFD430 Developing Linux Device Drivers} course script\cite{lfd430} respectively the according Linux foundation training class, which was also used as main source for this section. 
+% memory allocation
+% in common, a linux (kernel) programmer allocated whole pages of memory
+% if less is needed or multiple of the page size does not fit without wasting pages, linux provides the SLAB/SLUB/SLOB allocator scheme
+%
 
 \subsection{Memory Management in Zircon} 
 
