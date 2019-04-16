@@ -643,7 +643,7 @@ In contrast to the process lifecycle presented in the generic section, Linux tas
 %TODO deamons in linux?
 
 
-\subsection{Processes and Threads in Zircon}
+\subsection{Processes and Threads in Zircon}\label{sec:processes-zircon}
 Similar to Linux, runnable entities of the Zircon kernel are called \textit{tasks} objects.
 This term includes the kernel objects \textit{jobs}, \textit{processes} and \textit{threads}.
 As the whole Zircon kernel is object-based, the user interacts with kernel objects like the ones mentioned above via handles.
@@ -1660,18 +1660,123 @@ Thus, a very good and detailed resource to memory management in Linux on differe
 %
 
 \subsection{Memory Management in Zircon} 
+The memory management in Zircon is eighter less complex than in Linux, or the available documentation provides just a little insight.
+All available documentation on this topic includes the terms \textit{\acf{vmar}} and \textit{\acf{vmo}} which already were part of the section~\ref{sec:processes-zircon} about processes and threads in Zircon.
+As seen in this section, but also in the documentation, both terms are interlocked and belongs together in most cases.
+
+The basic object for virtual memory management in Zircon is the \acl{vmar}.
+It is an abstraction to manage a process's address space, more accurate a contiguous region of a virtual memory address space and the allocation of an address space.
+A distinction between the handling of kernel and user processes is not done at all.
+\acp{vmar} are per process objects.
+Along with the creation of a process, a root \ac{vmar} is created to span the entire virtual address space for this process.
+This root \ac{vmar} can be divided into a number of non-overlapping subareas, e.g.\ to group related parts together in a sub-\ac{vmar}.
+Altogether, a subsection of the origin root \ac{vmar} can also represent a virtual memory mapping or a gap as well as a child \ac{vmar} such as mentioned above.
+\acp{vmar} support a hierarchical permission model to regulated allowed mappings.
+Thus, it is impossible that a child \ac{vmar} has more permissions than its parent.
+In Zircon, the address space spanned by \acp{vmar} and all allocations there are randomized by default.
+It is an additional security mechanism which is also available and enabled per default in Linux but not mentioned explicitly in the previous section due to the scope of Linux' memory management.
+On creation, the caller can choose a certain randomization algorithm for a process, otherwise the default algorithm is chosen.
+It tries to spread the allocations widely across the available size of the \ac{vmar}.
+Additionally, \acp{vmar} support an optional fixed offset mapping mode, comparable with kernel logical addresses in Linux, which is called \textit{specific mapping}\cite{zircon-concepts},~\cite{zircon-vmar}.
+
+The second part in Zircon's memory management are \acfp{vmo}.
+They represent a set of physical memory pages or the potential for pages, i.e.\ a contiguous region of virtual memory that may can be mapped into one or multiple process address spaces (\acp{vmar}.
+\acp{vmo} are used from both, kernel and userspace and represent virtual memory pages as well as physical memory.
+A \ac{vmo} is created as needed on demand, i.e.\ virtual pages are also allocated on demand.
+As this object is based on pages, its size is only given in whole pages.
+Permissions of mapped pages within a \ac{vmo} can be adjusted on page level, too.
+\acp{vmo} are the standard method to share memory between processes in Zircon.
+Thus, they support basic \ac{io} operations on the memory, e.g.\ a \ac{vmo} can directly read and written.
+For the use within device drivers or other processes with special purposes is it possible to set specific cache policies for a \ac{vmo}\cite{zircon-concepts},~\cite{zircon-vmo}.
+
 
 
 \section{I/O}\label{sec:io} 
-%TODO review sections, how is it done in Linux/Zircon
-\subsection{I/O Hardware}
-\subsection{Memory Mapped IO}
-\subsection{Direct Memory Access}
-\subsection{Interrupts}
-\subsection{Power Management}
+The term \acf{io} is commonly used to describe the interactions between a computer itself and several devices types such as disks, keyboards, displays, clocks and much more which are usually referred as \textit{peripheral devices}.
+Thus, it enters the actual topic of this work: device driver development.
+The majority of device driver development deals with \ac{io} devices and related issues, such as control the device via a defined interface, catch and process interrupts from a device and handle interrupts.
+Finally, an \ac{io} system, respectively device drivers for \ac{io} devices as part of an operating system, have to provide simple and consistent abstractions between the actual device and the user\cite{tanenbaum-modern-operating-systems}.
+Nevertheless, this section will focus on the communication mechanisms between \ac{io} devices and operating systems.
+The actual implementation of \ac{io} drivers in both considered systems follows in the next chapter of this work.
 
+%TODO section is about mechanisms, not about physical connection standards between system and peripheral nor about protocols spoken in between
+
+\cite{tanenbaum-modern-operating-systems}
+- divided into two categories
+    - block devices -> stores information in fixed size blocks, each one with its own address, hard disks, usb, \ldots
+    - character devices -> deliveres or accepts a stream of characters without regard to any block structure, not addressable, does not have any seek operations -> printers, network interfaces, mice, keyboard, \ldots
+
+    - some devices does not fit in this scheme (clocks (just raise interrupts in certain intervals), memory mapped screens, \ldots)
+
+- io devices in common contain an electric device controller which enables the communication with the actual device but provide a defined interface to interact with
+
+
+- goals:
+    - device independence
+        -> same interface for user to controll different devices from the same kind
+    - uniform naming 
+
+\cite{glatz2015betriebssysteme}
+peripheral devices are mostly controlled via controllers -> via registers controlable/programmable chips /primitive processor
+controller manages communication with the devices control and state registers/buffers -> controller are attached to the bus system, mostly controlled/accessed via processor address space
+
+
+\subsection{Memory Mapped I/O}
+\cite{tanenbaum-modern-operating-systems}
+- each controller has a few registers that are used for communication with the cpu
+- writing into these registers, the os can provide commands to the device, e.g. to deliver data, accept data, switch itself on/off, perform an action \ldots
+- reading these registers, the os can find out the device state, read action results \ldots
+- in addition a device may have  data buffers which can be read/written from the os, e.g. as framebuffer for video devices
+
+- using memory mapped io as a mechanism to communicate between cpu and registers on the device, each control register on the device is mapped into the cpu's address space -> each register is mapped to a unique memory address to which no memory is assigned
+
+- as a result, the registers can be used just like common memory and can be read and written -> can be written in C, no special instructions in assembly needed 
+- no special protection needed, memory operations are already privileged -> address space needs to be mapped to user
+
+\cite{brause2017betriebssysteme}
+a controller within the computer mapps internal memory areas (registers/buffer) used for device control into the address space (main mem) of the system
+
+
+\subsection{Direct Memory Access}
+\cite{tanenbaum-modern-operating-systems}
+- memory mapped io is not available for each cpu (but for most modern ones)
+- cpu can request data from memory mapped io device -> one byte at a time -> wastes cpu time
+
+-> DMA direct memory access as a solution
+- dma needs a special dma controller -> has access to the system bus independently of the cpu -> contains several register that can be writen and read by the cpu (memory address register, byte count register, one or more control registers specifiy which io port to use, transfer direction, transfer unit (byte, ..) and the number of bytes to transfer in one burst)
+
+- the cpu programs the dma controller by setting its registers so it knows what to transfer where, also send a command to device controller, e.g. read from disk to internal buffer
+- the dma controller inits the transfer (issuing a read request over the bus to the disk controler (instead of cpu)
+- disk controller gets memory address to write on
+- write to memory 
+- if write is complete, the disk controller sends an ack to the dma controller over the bus
+- dma controller increments memory address to use and decrements the byte count
+- repeat steps until byte count is 0
+- if this is the case, the dma controller interrupts the cpu to inform the operation is done
+- mostly use physical memory addresses for the transfers, otherwise the mmu must be involved
+
+- not used on all computers, e.g. if normal cpu is faster
+- needs sync with cpu
+
+\cite{glatz2015betriebssysteme}
+%TODO glatz p 331 (real page size)
+
+
+\subsection{Interrupts in I/O Devices}
+\cite{tanenbaum-modern-operating-systems}
+- when a io device finished a action given to it, it raises an interrupt (interrupts need to be enabled on system) 
+-> done by asserting a signal on a bus line that is has been assigned 
+signal is detected by interrupt controller chip on main system -> decides to to handle the interrupt
+
+
+\subsection{I/O in Linux}
+\subsection{I/O in Zircon}
    
-% \section{Security Concepts} %TODO label
+
+
+
+
+% \section{Security Concepts}
 % \subsection{Access Control} %Domains, Capabilities
 % %DAC, MAC, ..
 % \subsection{Security Concepts in Linux}
@@ -1680,3 +1785,5 @@ Thus, a very good and detailed resource to memory management in Linux on differe
 
 %TODO own chapter
 \section{Driver Models} %TODO label
+
+tanenbaum 5.3.2
