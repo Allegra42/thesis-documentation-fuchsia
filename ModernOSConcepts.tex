@@ -1696,94 +1696,91 @@ The term \acf{io} is commonly used to describe the interactions between a comput
 Thus, it enters the actual topic of this work: device driver development.
 The majority of device driver development deals with \ac{io} devices and related issues, such as control the device via a defined interface, catch and process interrupts from a device and handle interrupts.
 Finally, an \ac{io} system, respectively device drivers for \ac{io} devices as part of an operating system, have to provide simple and consistent abstractions between the actual device and the user\cite{tanenbaum-modern-operating-systems}.
-Nevertheless, this section will focus on the communication mechanisms between \ac{io} devices and operating systems.
+Nevertheless, this section will focus on the communication mechanisms between \ac{io} devices and operating systems, but not about the physical connection between computer and peripherals or protocols.
 The actual implementation of \ac{io} drivers in both considered systems follows in the next chapter of this work.
+But goals for \ac{io} hardware itself and drivers are often the same or similar, e.g.\ reaching a certain degree of decoupling the exact device and the corresponding control interface in order that different devices from the same type, for example a few different mices, can be controlled in a uniform way\cite{tanenbaum-modern-operating-systems}.
 
-%TODO section is about mechanisms, not about physical connection standards between system and peripheral nor about protocols spoken in between
+Peripheral devices are divided into two categories all in all.
+\textit{Block devices} are in common used to store information in fixed size blocks.
+Like internal memory has each location within such a device its own address.
+Specific addresses are accessable and seek operations are feasible.
+Examples for such a peripheral type are hard disks or USB memory sticks\cite{tanenbaum-modern-operating-systems}.
+But the majority of peripheral devices belongs to the category of \textit{character devices}.
+Those are rather stream data oriented, i.e.\ they deliver or accept information without consider any block structure.
+The data is not precise addressable and seek operations on the device's data are not possible.
+Peripheral devices in this category are very manifold.
+Their types range from printers over network interfaces to sensors\cite{tanenbaum-modern-operating-systems}.
+But some devices does not fit in the schema at all.
+A hardware clock is also a peripheral device for example, but it just raises interrupts in cetain intervals instead of exchanging data.
 
-\cite{tanenbaum-modern-operating-systems}
-- divided into two categories
-    - block devices -> stores information in fixed size blocks, each one with its own address, hard disks, usb, \ldots
-    - character devices -> deliveres or accepts a stream of characters without regard to any block structure, not addressable, does not have any seek operations -> printers, network interfaces, mice, keyboard, \ldots
-
-    - some devices does not fit in this scheme (clocks (just raise interrupts in certain intervals), memory mapped screens, \ldots)
-
-- io devices in common contain an electric device controller which enables the communication with the actual device but provide a defined interface to interact with
-
-
-- goals:
-    - device independence
-        -> same interface for user to controll different devices from the same kind
-    - uniform naming 
-
-\cite{glatz2015betriebssysteme}
-peripheral devices are mostly controlled via controllers -> via registers controlable/programmable chips /primitive processor
-controller manages communication with the devices control and state registers/buffers -> controller are attached to the bus system, mostly controlled/accessed via processor address space
-
+All types of peripheral \ac{io} devices are in common equipped with an electrical controller in form of a chip or primitive processor.
+These are basically programmable or  controlable via special purpose registers.
+The purpose of such a controller is managing and abstraction the communication with the actual peripheral device and the computer it is attached on.
+In common, the actual device is managed via control and state registers and in some cases data buffers on the controller.
+In general, this means writing certain values into defined control registers on the controller triggers actions of the peripheral devices while reading them give a state informations but also results, e.g.\ sensor values after a measurement was triggered previously via the registers.
+The \ac{io} device controller is attached to the computer's bus system, which finally provides various ways to access the peripheral device's control registers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}. 
 
 \subsection{Memory Mapped I/O}
-\cite{tanenbaum-modern-operating-systems}
-- each controller has a few registers that are used for communication with the cpu
-- writing into these registers, the os can provide commands to the device, e.g. to deliver data, accept data, switch itself on/off, perform an action \ldots
-- reading these registers, the os can find out the device state, read action results \ldots
-- in addition a device may have  data buffers which can be read/written from the os, e.g. as framebuffer for video devices
-
-- using memory mapped io as a mechanism to communicate between cpu and registers on the device, each control register on the device is mapped into the cpu's address space -> each register is mapped to a unique memory address to which no memory is assigned
-
-- as a result, the registers can be used just like common memory and can be read and written -> can be written in C, no special instructions in assembly needed 
-- no special protection needed, memory operations are already privileged -> address space needs to be mapped to user
-
-\cite{brause2017betriebssysteme}
-a controller within the computer mapps internal memory areas (registers/buffer) used for device control into the address space (main mem) of the system
-
+The first and also wide-spread method to interact with the peripheral device's control or data registers, mostly from \texit{character devices}, is mapping these few registers into the address space of the actual computer, i.e.\ into the main memory of the system.
+This results in accessing a address, mapped to a control register of a peripheral \ac{io} device, is not longer accessing a storage location within the main memory but the control register outside.
+From a programmer's view is accessing such a control register nothing special using \textit{memory mapped \ac{io}}.
+It is a common memory operation which can be written in C or another high-level language without a need for specialized and architecture dependent assembly instructions.
+Beside the simple and transparent use of \textit{memory mapped \ac{io}} to access a peripheral device, it can also score by the fact that a basic protection is already given.
+Accessing the main memory directly is already a privileged operation within the most systems but also mapping \ac{io} regions to a user process invokes the operating system itself and the \ac{mmu} to check the needed permissions\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}.  
 
 \subsection{Direct Memory Access}
-\cite{tanenbaum-modern-operating-systems}
-- memory mapped io is not available for each cpu (but for most modern ones)
-- cpu can request data from memory mapped io device -> one byte at a time -> wastes cpu time
-
--> DMA direct memory access as a solution
-- dma needs a special dma controller -> has access to the system bus independently of the cpu -> contains several register that can be writen and read by the cpu (memory address register, byte count register, one or more control registers specifiy which io port to use, transfer direction, transfer unit (byte, ..) and the number of bytes to transfer in one burst)
-
-- the cpu programs the dma controller by setting its registers so it knows what to transfer where, also send a command to device controller, e.g. read from disk to internal buffer
-- the dma controller inits the transfer (issuing a read request over the bus to the disk controler (instead of cpu)
-- disk controller gets memory address to write on
-- write to memory 
-- if write is complete, the disk controller sends an ack to the dma controller over the bus
-- dma controller increments memory address to use and decrements the byte count
-- repeat steps until byte count is 0
-- if this is the case, the dma controller interrupts the cpu to inform the operation is done
-- mostly use physical memory addresses for the transfers, otherwise the mmu must be involved
-
-- not used on all computers, e.g. if normal cpu is faster
-- needs sync with cpu
-
-\cite{glatz2015betriebssysteme}
-%TODO glatz p 331 (real page size)
-
+Another way to interact with a peripheral \ac{io} device is \acf{dma}.
+In earlier days, it was used on \acp{cpu} where \textit{memory mapped \ac{io}} were not available.
+Today, the purpose of \ac{dma} is rather speeding up large data transfers between a peripheral device and the systems main memory.
+Thus, \ac{dma} is more often used for \textit{block-oriented} \ac{io} devices.
+The idea behind is moving the rather costly \ac{io} transfers from the \ac{cpu} to a distinct but specialized controller, which allows direct interaction between external device and memory.
+As a prequisit needs this controller direct access to the processor bus, i.e.\ it must be able to take the control over this bus from the \ac{cpu}.
+In the first step, the \ac{cpu} is still needed.
+It must setup the \ac{dma} controller's internal registers which specify the start address of the data to transfer, a byte count and the transfer direction amongst other things.
+The controller takes over the control and initalizes and executes the data transfer by issuing requests to the \ac{io} device instead of the \ac{cpu}.
+After a single partial request, e.g.\ the write of a memory address, is done, the \ac{dma} controller increments the address, decrements the byte count and re-executes the transfer until the byte count is 0.
+If the whole transfer is done sends the controller an interrupt to the \ac{cpu} and return the control over the bus.
+The \ac{dma} controller may work on physical or virtual addresses.
+For the latter ones, the \ac{mmu} must be involved.
+As the \ac{cpu} is bypassed during \ac{dma} transfers, caches may become inconsistent and require additional handling to prevent inconsistent data between them and the main memory\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 
 \subsection{Interrupts in I/O Devices}
-\cite{tanenbaum-modern-operating-systems}
-- when a io device finished a action given to it, it raises an interrupt (interrupts need to be enabled on system) 
--> done by asserting a signal on a bus line that is has been assigned 
-signal is detected by interrupt controller chip on main system -> decides to to handle the interrupt
-
+Interrupts were already part of this work in different places.
+Within \ac{io} operations, they are commonly used by the \ac{io} peripheral devices to signal a given action is finished.
+To do so, the \ac{io} device asserts a signal on the assigned bus line.
+The signal is detected by an interrupt controller chip within the computer itself respectively the \ac{cpu} which decides how to handle it, e.g.\ by activating the right interrupt handler routine.
+In the context of \ac{io} devices are interrupts popular for keyboards or hardware clocks\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 
 \subsection{I/O in Linux}
+%TODO
+
 \subsection{I/O in Zircon}
-   
 
+%DMA
+Bus Transaction Initiator
+- a dma configuration capability
+- represents the bus mastering/DMA capability of a device, can be used for granting a device access to memory
+- used within device drivers
+- a bti can be used to pin memory used in a vmo  -> if a caller pins memory from a vmo, they are given device physical addresses that can be used to issue memory transactions to the vmo (provided the transaction has the correct bus transaction id)
+(teisenberg)
 
+Pinned Memory Token
+- representation of a device DMA grant -> outstanding access grant to a device for performing DMA
+- obtained by pinning memory with a bti object 
+- it is valid for the device associated with the bti to access the memory represented by the pmt for as long as the pmt object is around 
 
+see iommu
+write to teisenberg
+
+%Interrupt
+- usermode io interrupt delivery
+- allows userspace to wait on hardware interrupts
+-> ask teisenberg?
+
+\section{Summary - Concepts in Linux and Zircon}
 
 % \section{Security Concepts}
 % \subsection{Access Control} %Domains, Capabilities
 % %DAC, MAC, ..
 % \subsection{Security Concepts in Linux}
 % \subsection{Security Concepts in Zircon}
-
-
-%TODO own chapter
-\section{Driver Models} %TODO label
-
-tanenbaum 5.3.2
