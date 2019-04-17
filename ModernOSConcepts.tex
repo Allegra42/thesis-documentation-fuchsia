@@ -1751,33 +1751,28 @@ To do so, the \ac{io} device asserts a signal on the assigned bus line.
 The signal is detected by an interrupt controller chip within the computer itself respectively the \ac{cpu} which decides how to handle it, e.g.\ by activating the right interrupt handler routine.
 In the context of \ac{io} devices are interrupts popular for keyboards or hardware clocks\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 
-\subsection{I/O in Linux}
-%TODO
 
-\subsection{I/O in Zircon}
+\subsection{I/O in Linux and Zircon}
+\ac{io} operations at the level described in this section are very hardware dependent and less influenced by the system. 
+Mappings, e.g.\ used for memory mapped \ac{io} are in fact the same as known from mapping a shared memory region into a process's address space.
+Both, Linux and Zircon have their own \acp{api} to perform this actions, but these are, especially on Zircon, on a system level even a driver developer does not or rarely enter.  
+Thus, rather the Zircon side of \ac{dma} is of interest because of the object-based kernel approach, while \ac{dma} but also memory mapped \ac{io} in Linux is pretty much as described in general.
 
-%DMA
-Bus Transaction Initiator
-- a dma configuration capability
-- represents the bus mastering/DMA capability of a device, can be used for granting a device access to memory
-- used within device drivers
-- a bti can be used to pin memory used in a vmo  -> if a caller pins memory from a vmo, they are given device physical addresses that can be used to issue memory transactions to the vmo (provided the transaction has the correct bus transaction id)
-(teisenberg)
+Memory mapped \ac{io} in Zircon does only differ by using \acp{vmo} to represent memory.
+It is possible to create a special kind of \ac{vmo}, a physical \ac{vmo}, representing physical memory regions for the \ac{io} device registers.
+This \ac{vmo} type can be mapped into process \acp{vmar} just like any other common \ac{vmo}.
+However, the rights to create a \textit{physical \ac{vmo}} are very limited.
+After all, only the bus driver should create such an object and hand it over to ordinary device drivers\cite{zircon-irc-io}.
 
-Pinned Memory Token
-- representation of a device DMA grant -> outstanding access grant to a device for performing DMA
-- obtained by pinning memory with a bti object 
-- it is valid for the device associated with the bti to access the memory represented by the pmt for as long as the pmt object is around 
+\ac{dma} in Zircon is controlled via a \ac{bti} object.
+It represents the ability of a device to take the control over the bus and with this to perform \ac{dma} operations.
+A \ac{bti} object can also be used to granting a device access to memory.
+It can pin memory used in \acp{vmo} and the given physical device addresses can be used to initiate memory transactions, i.e.\ \ac{dma} transactions which is proceeded as described in the general part\cite{zircon-bti}.
 
-see iommu
-write to teisenberg
-
-%Interrupt
-- usermode io interrupt delivery
-- allows userspace to wait on hardware interrupts
--> ask teisenberg?
 
 \section{Summary - Concepts in Linux and Zircon}
+%TODO
+
 
 % \section{Security Concepts}
 % \subsection{Access Control} %Domains, Capabilities
