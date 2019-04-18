@@ -1465,13 +1465,14 @@ Current systems use a hierarchical cache system itself.
 The topmost layer is nearly equivalent to registers in terms of access time and costs, and thus, very small.
 After two to four cache levels follows by main memory or \ac{ram}.
 If it is spoken about memory within this work, the main memory is meant in the majority of cases.
-In common, the main memory is implemented as \textit{Dynamic} \ac{ram}.
-Accessing the main memory is 10 to 50 times slower than accessing caches, but the capacity is significantly larger (e.g. Intel Core i7-7820HQ; L1 caches are divided into data and instruction caches with 32 kilobyte each, while the total main memory installed is 16 gigabyte\footnote{Benchmarks from an Intel Core i7, 7th Generation.}\cite{mandl2014Grundkurs}.
+In common, it is implemented as \textit{Dynamic} \ac{ram}.
+Accessing the main memory is 10 to 50 times slower than accessing caches, but the capacity is significantly larger (e.g. Intel Core i7-7820HQ; L1 caches are divided into data and instruction caches with 32 kilobytes each, while the total main memory installed is 16 gigabyte\footnote{Benchmarks from an Intel Core i7, 7th Generation.}\cite{mandl2014Grundkurs}.
 The data of running processes and the system itself is generally held in the main memory.
 The last kind of memory which is important as a part of this thesis are common hard drives and newer \acp{ssd}, used for files, not running applications and miscellaneous other data.
 
-As a result of this hierarchy, there is often not enough space, even not in the main memory, to store the data of all running applications. 
-But there is a desire for allowing processes to use more memory than physically available and for a unified contiguous view of the memory area of each process together with the needs of processes, i.e.\ the isolation between the address spaces of distinct processes but also a way to share memory for \ac{ipc} (see~\ref{sec:processes} for the details)\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
+The memory hierarchy is a result of often not having enough space.
+Not even the main memory is always capable to store the data of all running applications. 
+But there is a desire for allowing processes to use more memory than physically available and for a unified contiguous view of the memory area of each process together with the needs of processes, i.e.\ the isolation between the address spaces of distinct processes but also a way to share memory for \ac{ipc} (see~\ref{sec:processes-threads} for the details)\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}
 A pure static and direct memory management would not be sufficient for these purposes.
 In current systems, this is mostly realized by using the mechanisms of \textit{address spaces} and \textit{virtual memory}, which already have been mentioned several times.
 % The following sections explain what this implies.
@@ -1479,7 +1480,7 @@ In current systems, this is mostly realized by using the mechanisms of \textit{a
 
 \subsection{Address Space}
 The term \textit{address space} covers the summary of all possible memory addresses within the main memory from 0 to $2^{32}-1$ on a 32-bit system or $2^{64}-1$ on a 64-bit one. 
-The address space is divided into reserved parts for the system, applications and others.
+It is divided into reserved parts for the system, applications and others.
 How this division is done is defined by the operating system in an \textit{address space layout}\cite{mandl2014Grundkurs}.
 Distinct parts within this layout are protected against each other, especially the system kernel itself\cite{brause2017betriebssysteme}.
 But the layout distinction does not provide process isolation. 
@@ -1489,7 +1490,7 @@ The term \textit{address space} is used for the memory region of applications, t
 Their intern layout is specified by the compiler or a runtime based on language conventions or standards.
 A C application for example, is divided into different sections like the program code itself, constants, static variables and initialized data, not initialized data, and dynamic sections for heap (data which is allocated at runtime) and stack\cite{mandl2014Grundkurs}.
 
-However, the pure implementation of address spaces does not yet solve all the needs named above.
+However, the pure implementation of divided address spaces does not yet solve all the needs to be named above.
 Although the address space at its whole is now subdivided into various regions, it is not ensured that the address space of a process within is always contiguous.
 From a technical point of view, this is not always possible because the size of process address spaces differs and as a result, gaps which have to be filled as well arise\cite{mandl2014Grundkurs}.
 Furthermore, data should be aligned to addresses which are divisible by four to make accessing main memory from the \ac{cpu} more efficient\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
@@ -1515,13 +1516,13 @@ Furthermore, data should be aligned to addresses which are divisible by four to 
 \subsection{Virtual Memory}
 The abstraction needed to reach the named requirements for the physical main memory is called \textit{virtual memory} or \textit{virtual address space}.
 Its basic idea is to provide abstracted, contiguous views on the actual memory to processes, which was one of the goals.
-A process respectively a programmer only see a contiguous memory region starting with the address 0 but not the actual fragmentated main memory used by various processes from distinct users\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
-Such a virtual view to the actual main memory also enables pretending to a program that more memory is available than is actually present.
+A process, respectively a programmer, only see a contiguous memory region starting with the address 0 but not the actual fragmented main memory used by various processes from distinct users\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
+Such a virtual view to the actual main memory also enables pretending more available memory than actually present to an application.
 Since the entire memory region of a program is rarely needed in main memory at a time, the concept of virtual memory together with a sophisticated mechanism to load certain memory regions from disk which enables the execution of processes, even if they can not be completely loaded into the main memory.
-The operating system holds needed data in the main memory while the others are stored in hard drives.
-As a result, the overall memory consumption may become greater than the physical available main memory and virtual memory is not neccessarly mapped to physical memory\cite{mandl2014Grundkurs}.
-An operating system unit called \textit{memory manager} virtualizes each process for itself.
-Virtual memory is only logical until the memory manager maps it to physical available one during runtime.
+The operating system tries to hold currently needed data in the main memory while the other information is stored in hard drives.
+As a result, the overall memory consumption may become greater than the physical available main memory and virtual memory is not neccessarily mapped to physical memory\cite{mandl2014Grundkurs}.
+An operating system unit called \textit{memory manager} visualizes each process for itself.
+Virtual memory is only a logical construct until the memory manager maps it to physical available one during runtime.
 The purpose of this unit is, besides the already mentioned, implementing
 \begin{itemize}
     \item a \textit{fetching policy}, which describes a strategy to ensure a certain memory region is present in the main memory when needed,
@@ -1538,7 +1539,7 @@ The blocks in the virtual address space are referred as \textit{pages} while the
 Size and location from virtual pages and physically available page frames differ from each other. 
 The addresses of the virtual pages are managed in so-called \textit{page tables}.
 One distinct page table represents a program which is available in the main memory\cite{brause2017betriebssysteme}.
-A physically available page frame can be mapped into several virtual page tables.
+A physically available page frame can be mapped into several virtual page tables, that means into several applications.
 Shared libraries and shared memory \ac{ipc} mechanisms are implemented in this way\cite{brause2017betriebssysteme}.
 
 Pages, respectively page frames, represent the memory blocks which are transported between hard drives and the main memory by the \textit{memory manager}.
@@ -1571,8 +1572,8 @@ A more detailed introduction to these hardware support mechanisms and related st
  
 \subsection{Memory Management in Linux}
 %     Linux Concept -> LFD430 pic
-Linux also uses a virtual memory system, on modern \ac{mmu}-enabled \acp{cpu}, but there is also a Linux kernel variant for \ac{mmu}-less architectures used for very small embedded systems, called \textit{uCLinux}.
-While a usual Linux kernel with virtual memory system needs an address translation uses \textit{uCLinux} raw physical memory addresses without further protection or other sophisticated mechanisms.
+Linux also uses a virtual memory system, on modern \ac{mmu}-enabled \acp{cpu}, but there is a Linux kernel variant for \ac{mmu}-less architectures used for very small embedded systems, called \textit{uCLinux}.
+While a usual Linux kernel with virtual memory system needs an address translation, \textit{uCLinux} uses raw physical memory addresses without further protection or other sophisticated mechanisms.
 But more common and focused in this work is the use of virtual memory enabled systems\cite{lfd430}.
 In general is (virtual) memory management in Linux a very complex and highly architectural dependent matter.
 As \textit{32-bit x86} was the most common architecture for a long time, it is often used to describe the mechanisms, but it is also very specific in a way that even the memory management for \textit{64-bit x86} architectures differs a lot.
@@ -1585,7 +1586,7 @@ There is no such division in 64-bit systems at all.
 And in fact, the meaning of the terms is not complicated.
 The whole available address space in Linux is divided into virtual kernel and user addresses.
 \textit{Low memory} is a term for a physical memory region in the main memory, which corresponds to the high virtual addresses used for the kernel. 
-Kernel virtual addresses differ from common virtual addresses as further described in the next section.
+Kernel virtual addresses differ from common virtual addresses and will be considered in the next section.
 \textit{High memory} describes the higher physical memory addresses which maps to the virtual addresses used within user applications.
 As described in the general section, Linux provides an own protected address space with virtual addresses for each process, too, which are generally mapped into high memory\cite{lfd430}.
 Figure~\ref{pic:high-low-mem} illustrates the context.
@@ -1597,24 +1598,24 @@ Figure~\ref{pic:high-low-mem} illustrates the context.
     %TODO own picture!
 \end{figure} \ \\
 %
-Actually, the division in high and low memory just one from several. 
+Actually, the division in high and low memory just one from several ones. 
 Linux uses additionally a \textit{zone allocator} memory algorithm to partition its address space more fine granular.
 Each zone differs in its usage and comes with own methods to perform basic memory operations like allocate and free memory pages\cite{lfd430}.
 On 32-bit x86 architectures, the zones are:
 \begin{itemize}
     \item the \textbf{\ac{dma} zone} is located from 0 to 16 MB in both, 32-bit and 64-bit x86 architectures. It must be used for \ac{dma} data transfers on devices with 24-bit addresses.
-    \item the \textbf{\ac{dma}32 zone} is also on both variants located from 16 MB up to 4 GB. It must be used for \ac{dma} transfers on devices with 32-bit addresses as suggested by its name.
+    \item the \textbf{\ac{dma}32 zone} is also on both variants located from 16 MB up to 4 GB\@. It must be used for \ac{dma} transfers on devices with 32-bit addresses as suggested by its name.
     \item the \textbf{normal zone} is from 16 MB to 896 MB on 32-bit systems respectively it fills the whole remaining \ac{ram} on 64-bit systems and overlaps with the \ac{dma}32 zone. The normal zone is used for kernel and user data, but kernel addresses in this zone are calculated divergent from user addresses.
-    \item the \textbf{high zone} is a 32-bit only facility. It starts from 896 MB and fills the remaining \ac{ram} up to 64 GB. This is also the reason for this special zone: it enables 32-bit x86 systems running on Linux to access more than the usually addressable 4 GB of physical main memory\cite{lfd430}.
+    \item the \textbf{high zone} is a 32-bit only facility. It starts from 896 MB and fills the remaining \ac{ram} up to 64 GB\@. This is also the reason for this special zone: it enables 32-bit x86 systems running on Linux to access more than the usually addressable 4 GB of physical main memory\cite{lfd430}.
 \end{itemize}
 
 As suggested, Linux combines its memory management with different types of addresses.
-They available types depend on the architecture, too.
+The available types depend on the architecture, too.
 This work will focus on 32-bit x86, as usual.
 The types are:
 \begin{itemize}
-    \item \textbf{user virtual addresses} as seen by user space applications. They can be 32 or 64-bit long, even on 32-bit systems and each process has its own virtual address space. As a result, two identical virtual addresses may refer to distinct addresses in the physical memory.
-    \item \textbf{physical addresses}, i.e.\ the actual physical memory addresses which are used between the \ac{cpu} and the main memory. Also on this place, the addresses may be 64-bit long, even on a 32-bit system.
+    \item \textbf{user virtual addresses} as seen by user space applications. They can be 32 or 64-bit long, even on 32-bit systems. Each process has its own virtual address space. As a result, two identical virtual addresses may refer to distinct addresses in the physical memory.
+    \item \textbf{physical addresses}, i.e.\ the actual physical memory addresses which are used between the \ac{cpu} and the main memory. Also, on this place, the addresses may be 64-bit long, even on a 32-bit system.
     \item \textbf{bus addresses}, which are physical addresses used between the main memory and peripheral buses in x86 architectures. In other architectures or even newer variants, this fact may change.
     \item \textbf{kernel logical addresses}, which are actual physical addresses shifted by an offset. They are always stored in low memory and only used within the Linux kernel itself.
     \item \textbf{kernel virtual addresses}, which are kernel addresses with no need for a direct mapping to physical memory addresses. It is a 32-bit x86 architectural anomaly and not available on 64-bit systems. Kernel virtual addresses which are not logical addresses, too, reside in high memory\cite{lfd430}.
@@ -1637,10 +1638,10 @@ This \ac{pfn} is stored in the page table together with access control informati
 At this point, it becomes apparent that the entire memory handling in Linux and also the protection of memory regions, e.g.\ against writing and/or code execution, is done on page level.
 The valid flag indicates if a virtual page is effectively available in main memory. 
 If a page is not valid, i.e.\ swapped out to disk or not even yet loaded to the main memory, a \textit{page fault} is raised if the page is requested.
-The kernel is invoked to loaded the proper page into main memory using demand paging and the hardware facilities \textit{\ac{mmu}} and \textit{\ac{tlb}}\cite{lfd430}.
+The kernel is invoked to load the proper page into main memory using demand paging and the hardware facilities \textit{\ac{mmu}} and \textit{\ac{tlb}}\cite{lfd430}.
 
 Figure~\ref{pic:linux-mem} illustrates the most important terms and concepts of memory management in Linux at a glance.
-The graphic is inspired by the one done by \textsc{John Bonesio} during the \textit{Developing Linux Device Drivers} Linux foundation training class.
+The graphic is inspired by the one done by \textsc{John Bonesio} during a \textit{Developing Linux Device Drivers} Linux foundation training class.
 On the left hand side of the graphic, the view to the (virtual) memory from two distinct applications A and B is pictured.
 Both see their own virtual address space using \textit{user virtual addresses}, marked in blue and red.
 The view on the kernel's address space is the same for both of them.
@@ -1660,12 +1661,13 @@ Thus, a very good and detailed resource to memory management in Linux on differe
 %
 
 \subsection{Memory Management in Zircon} 
-The memory management in Zircon is eighter less complex than in Linux, or the available documentation provides just a little insight.
-All available documentation on this topic includes the terms \textit{\acf{vmar}} and \textit{\acf{vmo}} which already were part of the section~\ref{sec:processes-zircon} about processes and threads in Zircon.
+The memory management in Zircon is eighter less complex than in Linux, even if the implemented concept itself is basically the same, or the available documentation provides just a little insight.
+All available texts on this topic includes the terms \textit{\acf{vmar}} and \textit{\acf{vmo}} which already were part of the section~\ref{sec:processes-zircon} about processes and threads in Zircon.
 As seen in this section, but also in the documentation, both terms are interlocked and belongs together in most cases.
 
 The basic object for virtual memory management in Zircon is the \acl{vmar}.
-It is an abstraction to manage a process's address space, more accurate a contiguous region of a virtual memory address space and the allocation of an address space.
+A partitioning of the physical address space as done in Linux is not described for Zircon at all.
+The \ac{vmar} is an abstraction to manage a process's address space, more accurate a contiguous region of a virtual memory address space and the allocation of an address space.
 A distinction between the handling of kernel and user processes is not done at all.
 \acp{vmar} are per process objects.
 Along with the creation of a process, a root \ac{vmar} is created to span the entire virtual address space for this process.
@@ -1698,31 +1700,31 @@ The majority of device driver development deals with \ac{io} devices and related
 Finally, an \ac{io} system, respectively device drivers for \ac{io} devices as part of an operating system, have to provide simple and consistent abstractions between the actual device and the user\cite{tanenbaum-modern-operating-systems}.
 Nevertheless, this section will focus on the communication mechanisms between \ac{io} devices and operating systems, but not about the physical connection between computer and peripherals or protocols.
 The actual implementation of \ac{io} drivers in both considered systems follows in the next chapter of this work.
-But goals for \ac{io} hardware itself and drivers are often the same or similar, e.g.\ reaching a certain degree of decoupling the exact device and the corresponding control interface in order that different devices from the same type, for example a few different mices, can be controlled in a uniform way\cite{tanenbaum-modern-operating-systems}.
+But goals for \ac{io} hardware itself and drivers are often the same or similar, e.g.\ reaching a certain degree of decoupling the exact device and the corresponding control interface in order that different devices from the same type, for example a few different mices, can be controlled in an uniform way\cite{tanenbaum-modern-operating-systems}.
 
 Peripheral devices are divided into two categories all in all.
 \textit{Block devices} are in common used to store information in fixed size blocks.
 Like internal memory has each location within such a device its own address.
-Specific addresses are accessable and seek operations are feasible.
+Specific addresses are accessible and seek operations are feasible.
 Examples for such a peripheral type are hard disks or USB memory sticks\cite{tanenbaum-modern-operating-systems}.
 But the majority of peripheral devices belongs to the category of \textit{character devices}.
 Those are rather stream data oriented, i.e.\ they deliver or accept information without consider any block structure.
 The data is not precise addressable and seek operations on the device's data are not possible.
-Peripheral devices in this category are very manifold.
+Peripheral devices in this category are manifold.
 Their types range from printers over network interfaces to sensors\cite{tanenbaum-modern-operating-systems}.
-But some devices does not fit in the schema at all.
-A hardware clock is also a peripheral device for example, but it just raises interrupts in cetain intervals instead of exchanging data.
+But some devices does not fit in the scheme at all.
+A hardware clock is also a peripheral device for example, but it just raises interrupts in certain intervals instead of exchanging data.
 
 All types of peripheral \ac{io} devices are in common equipped with an electrical controller in form of a chip or primitive processor.
-These are basically programmable or  controlable via special purpose registers.
-The purpose of such a controller is managing and abstraction the communication with the actual peripheral device and the computer it is attached on.
+These are basically programmable or controllable via special purpose registers.
+The purpose of such a controller is managing and abstract the communication with the actual peripheral device and the computer it is attached on.
 In common, the actual device is managed via control and state registers and in some cases data buffers on the controller.
-In general, this means writing certain values into defined control registers on the controller triggers actions of the peripheral devices while reading them give a state informations but also results, e.g.\ sensor values after a measurement was triggered previously via the registers.
+This means in general writing certain values into defined control registers on the controller triggers actions of the peripheral devices while reading them give a state information but also results, e.g.\ sensor values after a measurement was triggered previously via the registers.
 The \ac{io} device controller is attached to the computer's bus system, which finally provides various ways to access the peripheral device's control registers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}. 
 
 \subsection{Memory Mapped I/O}
 The first and also wide-spread method to interact with the peripheral device's control or data registers, mostly from \texit{character devices}, is mapping these few registers into the address space of the actual computer, i.e.\ into the main memory of the system.
-This results in accessing a address, mapped to a control register of a peripheral \ac{io} device, is not longer accessing a storage location within the main memory but the control register outside.
+This results in accessing an address, mapped to a control register of a peripheral \ac{io} device, is not longer accessing a storage location within the main memory but the control register outside.
 From a programmer's view is accessing such a control register nothing special using \textit{memory mapped \ac{io}}.
 It is a common memory operation which can be written in C or another high-level language without a need for specialized and architecture dependent assembly instructions.
 Beside the simple and transparent use of \textit{memory mapped \ac{io}} to access a peripheral device, it can also score by the fact that a basic protection is already given.
@@ -1732,12 +1734,12 @@ Accessing the main memory directly is already a privileged operation within the 
 Another way to interact with a peripheral \ac{io} device is \acf{dma}.
 In earlier days, it was used on \acp{cpu} where \textit{memory mapped \ac{io}} were not available.
 Today, the purpose of \ac{dma} is rather speeding up large data transfers between a peripheral device and the systems main memory.
-Thus, \ac{dma} is more often used for \textit{block-oriented} \ac{io} devices.
+% Thus, \ac{dma} is more often used for \textit{block-oriented} \ac{io} devices.
 The idea behind is moving the rather costly \ac{io} transfers from the \ac{cpu} to a distinct but specialized controller, which allows direct interaction between external device and memory.
 As a prequisit needs this controller direct access to the processor bus, i.e.\ it must be able to take the control over this bus from the \ac{cpu}.
 In the first step, the \ac{cpu} is still needed.
 It must setup the \ac{dma} controller's internal registers which specify the start address of the data to transfer, a byte count and the transfer direction amongst other things.
-The controller takes over the control and initalizes and executes the data transfer by issuing requests to the \ac{io} device instead of the \ac{cpu}.
+The controller takes over the control and initializes and executes the data transfer by issuing requests to the \ac{io} device instead of the \ac{cpu}.
 After a single partial request, e.g.\ the write of a memory address, is done, the \ac{dma} controller increments the address, decrements the byte count and re-executes the transfer until the byte count is 0.
 If the whole transfer is done sends the controller an interrupt to the \ac{cpu} and return the control over the bus.
 The \ac{dma} controller may work on physical or virtual addresses.
@@ -1770,8 +1772,23 @@ A \ac{bti} object can also be used to granting a device access to memory.
 It can pin memory used in \acp{vmo} and the given physical device addresses can be used to initiate memory transactions, i.e.\ \ac{dma} transactions which is proceeded as described in the general part\cite{zircon-bti}.
 
 
-\section{Summary - Concepts in Linux and Zircon}
-%TODO
+\section{Summary~-~Concepts in Linux and Zircon}
+The main difference between Linux and Zircon remains the basic architecture and about 25 years passed time.
+A lot of general concepts stay largely the same on both systems but the implementation differs due to architectural concepts, used programming languages, but also due to different design goals.
+Linux is a grown kernel which implements nearly every operating system theoretical concept.
+It is a very open and passable environment.
+If anyone is in need for a certain concept can it be integrated into the Linux kernel or an own fork.
+Beside the very basic kernel itself, Linux is highly configurable to specific needs.
+As a result, there is not \textit{one} single Linux kernel but a number of variants depending on the chosen configuration.
+Zircon is more radical in many aspects.
+It is developed in public by a team from a large company for a certain, but at the moment not further specified purpose, but not open to receive contributions from outside.
+Even if the concepts used do not differ that much, the implementation does.
+This is justified on the microkernel architecture and its effects but also with the used programming languages and above all with learnings from concurring operating system, especially the ones used in Google's environment like Android or Chromeium OS which are based on Linux.
+Zircon is considerable less broadly positioned than Linux but the fewer concepts used and their implementation are very well selected and executed to suit the needs and design goals of the overlying Fuchsia system. 
+It is basically one resulting kernel with only a few configurations but the focus is on modularity, security, safety and stability anyway\cite{chat-zircon-arch}.
+Thus, the Zircon kernel is designed from scratch for the use in an interactive or realtime operating system, probable for a new mobile OS, where exactly these design goals predominate the advantages of a Linux kernel. 
+However, the focus on the few carefully selected concepts offers the opportunity to optimize them to a high degree.
+
 
 
 % \section{Security Concepts}
