@@ -1,15 +1,43 @@
 % !TEX root = MasterThesis.tex
 
 \chapter{Case Study: Driver Development in Linux and Zircon}\label{ch:case-study}
+Device drivers are an integral part of operating systems and require a good knownledge about the peripheral device and its controller, the hardware interface between device and computer and the target operating system from the programmer.
+The fundamental operating system principles and their realization were already established in the previous chapter.
+But the question of what a device driver actually is and its responsibility was not discussed so far.
+Therefore, answering this questions is a valid entry point to the actual case study about the driver models in Linux and Zircon and the exemplarily device driver development.
 
-\section{Device Driver}
+A device driver's main purpose is providing an abstraction between user applications and peripheral devices\cite{glatz2015betriebssysteme}.
+A common programmer should not have to think about the way a specific device is controlled.
+Especially as even devices from the same type differ in the exact way the are managed, it would require too much knowledge in applications and make them very error-prone.
+Thus, it is the task of a driver as a part of an operating system to 
+\begin{itemize}
+    \item define an abstraction of a device to the system,
+    \item do the connection between applications and a certain peripherals, 
+    \item initialize the peripheral controler and the device if it is needed,
+    \item query the device state from the controller,
+    \item log events,
+    \item provide a consistent \ac{api} for all devices from the same type to the user,
+    \item receive abstract application requests and translate them to commands which can be submitted to the device and
+    \item transfer data from and to the device\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+\end{itemize}
+%
+Driver development is very operating system dependent and has wide-ranging consequeces.
+While the decision if drivers are located in user or kernel space goes alongside with the choice for an architecture, remain some further questions.
+Some of them are about the way and point in time a driver is attached to the operating system.
+For example if the driver must be known at compile time or if it is possible to attach it later, e.g.\ during runtime\cite{tanenbaum-modern-operating-systems}.
+In any case, each system should provide a unified but extensible device driver interface which supports various device types, even for those that were non-existing at the time the operating system was designed\cite{glatz2015betriebssysteme}.
+Furthermore, in almost every operating system specific driver model, it has to be ensured a driver is \textit{reentrant}, which means a running driver must be safe if it is called from several processes at the same time, and also still safe if peripheral devices become added or removed while the computer is still running\cite{tanenbaum-modern-operating-systems}.
+In order to avoid re-developing or duplicating driver parts that remain the same for devices of the same type are device drivers often modelled and implemented as a hierarchical or layered model.
+A possibility is to split into a logical and a physical layer.
+The logical one contains driver functionality which remains consistent between same typed devices while the physical layer only takes care of device specific functionality\cite{tanenbaum-modern-operating-systems} 
 
-\section{Driver Models} %TODO label
+% \section{Driver Models} %TODO label
   
-\subsection {Linux Driver Model}
+\section {Linux Driver Model}
   tanenbaum 5.3.2
+  glatz s 329
 
-\subsection{Zircon Driver Model}
+\ection{Zircon Driver Model}
 
 \section{Test Setup}
 
