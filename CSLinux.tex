@@ -26,18 +26,146 @@ While the decision if drivers are located in user or kernel space goes alongside
 Some of them are about the way and point in time a driver is attached to the operating system.
 For example if the driver must be known at compile time or if it is possible to attach it later, e.g.\ during runtime\cite{tanenbaum-modern-operating-systems}.
 In any case, each system should provide a unified but extensible device driver interface which supports various device types, even for those that were non-existing at the time the operating system was designed\cite{glatz2015betriebssysteme}.
+The design of the interface could be specific to each device typ or standardized for all drivers\cite{tanenbaum-modern-operating-systems}.
 Furthermore, in almost every operating system specific driver model, it has to be ensured a driver is \textit{reentrant}, which means a running driver must be safe if it is called from several processes at the same time, and also still safe if peripheral devices become added or removed while the computer is still running\cite{tanenbaum-modern-operating-systems}.
 In order to avoid re-developing or duplicating driver parts that remain the same for devices of the same type are device drivers often modelled and implemented as a hierarchical or layered model.
 A possibility is to split into a logical and a physical layer.
 The logical one contains driver functionality which remains consistent between same typed devices while the physical layer only takes care of device specific functionality\cite{tanenbaum-modern-operating-systems} 
 
-% \section{Driver Models} %TODO label
+% \section{Driver Models}
   
-\section {Linux Driver Model}
-  tanenbaum 5.3.2
-  glatz s 329
+\section{Linux Driver Model}
+\cite{glatz2015betriebssysteme}
 
-\ection{Zircon Driver Model}
+io
+- direct hardware access: application uses hardware without driver, no interrupts available, 
+    needs two syscalls: change io privilege level (iopl) and set port io permissions (ioperm)
+    -> can only done by root user
+    everything else is done in the user's address space (e.g. X server) -> software may has issues with demand paging -> slow
+    \cite{lfd430}
+    video drivers incorporated into X.Org resides in userspace but are privileged to directly access hardware -> ioperm and iopl
+    -> slower than in kernel space but makes more sense in userspace
+
+- minimal os support: the os kernel does not know the exact device but only its io interface. only available for x86 and serial interface on linux
+- extended os support: io driver are in the address space of the kernel -> kernel space
+
+io driver in kernel space
+- io is done via the filesystem (unix/linux)
+- applications can access drivers via common file operations like read write open and close
+    - devices are shown as virtual devices in filesystems (special files) -> dev file system but also proc and sysfs
+    -> catagolizes devices in a structured way -> sub classes for different device types -> unified way to access the devices
+
+kinds of drivers: block devices (smalles possible transmitting unit -> a block of a defined size), character devices (1 byte/char as smallest unit)
+\cite{quade2016Linux}
+- linux divides in the both types but also in subsystems of them like usb (block), network, bluetooth, gpio (char), i2c(char)\ldots
+
+\cite{quade2016Linux}
+-> different driver interfaces
+    - standard api (open, close, read, write, ioctl)
+    - communication api
+    - multimedia interfaces \ldots
+
+    interfaces are realized by using defined datastructures and ioctls to avoid to enhance the systemcall interface
+
+\cite{lfd430}
+- character devices -> read/write a byte a time
+    - are well represented as streams
+    - only sequential access
+    - can be considered as files -> open, read, write, ..
+- block devices
+    - read/written only in block-size multiples, access is usually cached
+    - allow random access
+    - allow to mount a filesystem on the device
+    - in linux: can behave like character devices -> transfer any number of bytes a time
+    - hard drives, usb memory, \ldots
+- network devices
+    - transfer packets of data
+    - most often accesses via bsd socket interface -> not mapped as file
+    - no read/write -> specific socket functions -> other api
+    - not mapped to the filesystem -> identified by name -> eth0, wlan0
+
+
+\cite{quade2016Linux}
+stacked drivers
+- many drivers are made from different layers: low level, core high-level)
+- low level: for control of the internal hardware interface, eg. a usb controller
+- high level: for the device typ: e.g. a web cam
+- core level: enhances the internal interface with device specific functionality -> tries to find the right driver for a device
+
+\cite{lfd430}
+-> not stacked each time, e.g. usb is stacked
+
+
+driver routines
+- integration of driver routines  (standardized io fuctions) via data structures which are declared to the system via special calls
+- the structues are a list of function pointers for the actual implementation of the standardized prototype
+- not used/implemented functions get a null pointer
+
+
+static vs dynamic driver integration
+- older unix/linux systems used only a static integration -> all (may) needed drivers must be present -> size
+    - no new drivers during a system is running
+    - crashing driver is down
+- dynamic modules (additionally) 
+    - dynamic loadable kernel modules with optional parameters -> allow starting and stopping from drivers without reboot
+    - needs two (additional) functions for proper starting and stopping of the module
+    - load via insmod/modprobe, unload via rmmod -> does a dynamic binding to the kernel symbol table -> only public kernel apis available
+
+\cite{quade2016Linux}
+    static built-> built-in or kernel driver -> regenerate kernel each time a new driver is needed
+    dynamic : load a module to an active kernel -> module driver -> better for driver tests, just compile a new module instead a new whole kernel, no need for reboots, may spread as a module -> needs to match the exact kernel version
+    not each driver is realizable as a module, e.g. the disk driver is needed to early after system start to be a module
+
+\cite{lfd430}
+directly in kernel or as a module -> does require little or no change of the source
+
+\cite{quade2016Linux}
+needed driver functionalities: 
+- functions to include itself into the system (init/ deinit functions)
+- application triggered functions (open, close, read, ..)
+- os triggered functions: ISR, \ldots
+
+\cite{lfd430}
+unified device model
+- all devices handled under this scheme are handled in one framework with similar data structures and functional methods
+- the framework is represented as a device tree rooted on the system buses
+- drivers mostly do not need directly with the model but register under the type of bus they are connected, e.g. pci, usb\ldots
+- information about the device is exposed in sysfs
+- drivers can optionally export additional data for view/modify -> modern alternative to procfs and ioctl
+
+%interrupts?
+
+% hotplugging
+% - linux supports dynamic driver loading for devices attached/removed during runtime
+% - a device manager listens for hotplug events and loads if possible the matching driver
+
+data exchange between kernel and userspace
+- functions like write / read / (ioctl, sysfs, procfs) may need to copy data between user and kernel
+- copy between user and kernel address space -> special system function: copy_from_user, copy_to_user, put_user, get_user
+- driver buffers are alway in main mem, user buffer may are swapped out to sidk
+\cite{lfd430}
+- different address spaces between user and kernel -> addresses are not meaningful in another address space
+-> use built in functions
+-> use memory mapping (mmap), standard posix system call -> user is given direct access to kernel memory buffers (may be memory regions directly on a device) -> avoid buffering or caching data -> longer time to setup and shutdown than copy_to_user
+->> do never access normal files from kernelspace
+
+
+driver software must be reentrant!
+
+\cite{lfd430}
+mechanism vs policy -> mechanism in kernel, policy in userspace
+
+% \cite{lfd430}
+% char drivers
+%
+% - char & block devices have filesystem entries associated with them -> node is used by user level to communicate with the device
+% - such a file is a special entry, not a real file -> needs no diskspace, just the record for the inode
+% - device is identified by a device number (major and minor before)
+% - major: device, minor: different instances of the device
+% - in common dynamically allocated by the udev mechanism
+% - dev node is accessed from user with file operations: open, close, read, write, ioctl, mmap, poll -> for all of them is default behaviour available
+
+\section{Zircon Driver Model}
 
 \section{Test Setup}
 
