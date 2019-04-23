@@ -265,7 +265,8 @@ If the application has to invoke the operating system kernel, e.g.\ to perform a
 As switching the \ac{cpu}'s execution mode also means a new context, a system call to the kernel differs from a common procedure call.
 In user mode, the so-called entry code stores the system call's parameters in a defined way.
 One is to store the parameters and the call's number in defined registers (see~\ref{pic:syscalls}), another one is to store them on stack, according the C/C++ calling in reverse order\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.
-The exact one depends on the actual \ac{cpu} architecture.
+The exact one depends on the actual \ac{cpu} architecture but also on the operating system kernel itself.
+Linux, for example, has in general an other convention for system calls than Windows. 
 The following instruction triggers a special software interrupt containing the order to switch the context.
 It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch.
@@ -452,10 +453,11 @@ The following sections take a closer look at these concepts and answer the remai
 
 
 The term \textit{process} describes an instance of a program in execution, including all its required resources to enable a model for the pseudoparallel execution of multiple programs based thereon\cite{silberschatz2009operating},~\cite{tanenbaum-modern-operating-systems}.
-Each program in execution is modeled as a separate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, above all the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems}.~\cite{glatz2015betriebssysteme}.
+Each program in execution is modeled as a separate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, above all the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
+%TODO virtual private CPU
 Especially by using virtual private memory, processes are not only modeled individually, but are also isolated from each other in reality in order to prevent errors or deliberate attacks between programs\cite{brause2017betriebssysteme}.
 But since in reality more processes, respectively programs, have to be executed than \acp{cpu} exists, a mechanism is needed to switch between processes and allow the execution of all them.
-This mechanism behind, the \textit{multiprogramming model}, and the policies called \textit{process scheduling} will be considered hereafter.
+This mechanism behind, the \textit{multiprogramming model} (formerly also known as \textit{time-sharing model}), and the policies called \textit{process scheduling} will be considered hereafter.
 
 However, for a change between the execution of programs to succeed, a process must contain information about its state at the moment it is interrupted to run another one.
 Which information need to be stored and the way it is done slightly depends on an effective system's design and its implementation.
@@ -463,12 +465,12 @@ In general, these informations are stored in a structure called \textit{process 
 Depending on the implementation, it contains for example
 \begin{itemize}
     \item a process id, 
-    \item the process's state,
+    \item the process's state in the process lifecycle (described in the following section),
     \item the \ac{cpu}'s register contents, especially the program counter (PC), the stack pointer (SP) and the processor status word (PSW),
     \item the process's address space including the program code, its stack and heap and data segments, 
     \item information about resources allocated by the process like open files, or \ac{io} devices,
     \item \ac{cpu} scheduling and accounting information like a priority, the maximum and actual computing time for this process,
-    \item the parent process and
+    \item a reference to the parent process and
     \item the process's rights\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme},~\cite{achilles2006betriebssysteme},~\cite{silberschatz2009operating}.
 \end{itemize}
 
@@ -495,9 +497,10 @@ The operating system destroys the process and frees related resources\cite{silbe
 \end{figure}
 
 The model described applies to each individual process.
-For the coordination of the entirety of processes, the schedule, an operating system kernel's component is responsible.
+For the coordination of the entirety of processes, the scheduler, an operating system kernel's component is responsible.
 It is a good example for the separation of mechanism and policy.
 The mechanism behind is based on the \textit{multiprogramming} model as the switching of the \ac{cpu} between programs is called.
+The policy, that is the strategy to decide which process should run next, should be specified apart from the mechanism. 
 It not only allows the impression of parallelism on a single processing core, but also increases its utilization, as many processes spend a lot of time waiting for external events such as keyboard inputs\cite{tanenbaum-modern-operating-systems}.
 
 Principally, the mechanism behind scheduling does not differ fundamentally from the treatment of an ordinary interrupt.
@@ -518,7 +521,7 @@ The last option, that a process is started to execute a batch job is rare today 
 
 Also, for the way how a new process can be started there are several options.
 Using \textit{process chaining}, a running process starts an independent new one, a new \ac{pcb}, and destroys itself\cite{achilles2006betriebssysteme}.
-An example is the Unix implementation of \texttt{exec()}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+An example in Unix-like systems is calling \texttt{exec()} on an already running process to replace the current program with another one\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 By \textit{forking a process}, a second one that is, at least in the beginning, a copy of the original one.
 Both remains exiting and share the same environment such as program code, address space and resources\cite{tanenbaum-modern-operating-systems}.
 As a result, both processes have access to the exactly same resources like opened files or \ac{io} devices\cite{achilles2006betriebssysteme}.
@@ -527,7 +530,9 @@ Process \textit{forking} and \textit{chaining} are usually used combined in Unix
 In contrast, Windows offers a third way the \textit{process creation} which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
 
 Are the newly created process and its parent share the same program code, the new one can simply inherit all needed data from its parent like it is done by \textit{process forking}\cite{achilles2006betriebssysteme}.
-Since each process has its own virtual address space if not shared through inheritance, so the data cannot be copied there without further ado.
+Each process has its own virtual address space if it is not shared through inheritance.
+
+As a result, the data cannot be copied between processes without further ado.
 This is not only necessary for the multiprogramming model, but also a security mechanism that encapsulates and protects applications in execution against each other, called \textit{process isolation}.
 Is it the case, e.g.\ for the once created via \textit{process creation}, an operating system needs a mechanism to pass data to the created process.
 As a solution, a mechanism for the communication between processes with which the parent process communicated the new data to the child one via a buffer is just as conceivable as the use of initial parameters which are transmitted during the process creation, e.g.\ via a system call\cite{glatz2015betriebssysteme}.
@@ -615,8 +620,9 @@ To take advantage of this fact to actually use the new created process independe
 As copying the process data is quite costly and needless if an exec follows directly, modern Linux systems use a \textit{copy-on-write} strategy for process forking.
 Childs get own page tables pointing to the parent ones.
 The child still can read the parent's environment data without a copy operation needed. 
-Only when the child tries a write access on this data, a \textit{protection fault} is thrown and the page to modify is copied to the child process\cite{tanenbaum-modern-operating-systems}.
+Only when the child or the parent tries a write access on this data, a \textit{protection fault} is thrown and the page to modify is copied to the child process\cite{tanenbaum-modern-operating-systems}.
 Such a fork is known as \textit{vfork()} and used especially in situations an \textit{exec()} follows directly to avoid the expensive and needless copy of the parent process's environment\cite{mandl2014Grundkurs}.
+%TODO stefan means hard to understand
 
 Within the Linux kernel, the difference between processes and threads (or heavy-weight and light-weight processes) is not as important as described in the general section about processes.
 It is rather spoken of \textit{tasks}.
@@ -674,7 +680,7 @@ Each process starts an own \ac{vmar} to built up its address space.
 
 The lifetime of Zircon processes differs from the general but also from the Linux model.
 In Zircon, a new process is created via \texttt{zx\_process\_create()} but the execution starts not before \texttt{zx\_process\_start()} is called.
-Once a process started and exits its last thread, it is impossible to add a new thread.
+Was a process already started and its last running thread thread exits, it is impossible to create a new thread within this process.
 Processes which are composed to a job are threatened as a single entity from a lifetime control's point of view.
 The lifetime of Zircon processes (or jobs) ends if 
 \begin{itemize}
@@ -750,19 +756,19 @@ A competitive situation can occur for both variants.
 The threads of one process rather rival regarding a shared variable while the threads of different processes rather compete for resources such as a printer.
 
 Race conditions are a topic each time several processes or threads work on the same data in any way.
-This also applies to an operating system's kernel, except for non-preemptive  kernels which can guarantee that only one thread is active at a time\cite{silberschatz2009operating}.
+This also applies to an operating system's kernel, except for non-preemptive kernels which can guarantee that only one thread is active at a time on a single-core system\cite{silberschatz2009operating}.
 In contrast to preemptive kernels, non-preemptive ones do not allow a thread running in kernel mode to be interrupted. 
 The thread runs until it exits kernel mode, blocks or yields the control of the \ac{cpu} voluntary\cite{silberschatz2009operating}.
-Only in such a case can be guaranteed that a kernel and its data structures are free of race conditions.
+In such a case can be guaranteed that a kernel and its data structures are free of race conditions.
 However, preemptive kernels are more common because they are more responsive and better suited for real-time tasks due to their interruptibility\cite{silberschatz2009operating}.
 Furthermore, with today's multicore systems is it rather unlikely to fulfill the requirement of only one active thread in kernel space.
 
 For this reason, a mechanism to prevent race conditions on both, user and kernelspace, is needed.
-The basic idea behind is to exclude the chance that a thread trying to change a shared resource is interrupted by another one trying to work on the same resource\cite{tanenbaum-modern-operating-systems}.
+The basic idea behind is to exclude the chance that two threads try to change a shared resource at the same time\cite{tanenbaum-modern-operating-systems}.
 But only certain areas in the program code are critical, the ones a shared resource is processed.
 They are called \textit{critical regions} or \textit{critical section}\cite{tanenbaum-modern-operating-systems}.
 Other regions do not harm if they are interrupted.
-If only one thread at a time is allowed in critical sections and another one is not allowed to enter the region until the competing access is completed, this is called \textit{mutual exclusion}\cite{tanenbaum-modern-operating-systems}, \cite{glatz2015betriebssysteme}.
+If only one thread at a time is allowed in critical sections and another one is not allowed to enter the region until the competing access is completed, this is called \textit{mutual exclusion}\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 
 The easiest way to achieve \textit{mutual exclusion} is to completely disable the system's interrupts immediately after entering a critical region and re-enable them just before leaving it.
 In the meantime, all incoming interrupts are collected and processed as soon as they become re-enabled\cite{achilles2006betriebssysteme}.
@@ -810,7 +816,7 @@ In these cases, its is potentially more efficient to use busy waiting with spinl
 
 \subsubsection*{Futexes}
 Another variant of semaphores is the \ac{futex}. 
-It targets the issue that neighter busy waiting nor block and reschedule another thread is very efficient on modern multicore \acp{cpu}.
+It targets the issue that neither busy waiting nor block and reschedule another thread is very efficient on modern multicore \acp{cpu}.
 On a very parallel system, there are many contentions for resources which would require frequent switching of the active threads, but scheduling another thread respectively process requires as well expensive switches to the kernel\cite{tanenbaum-modern-operating-systems}.
 \acp{futex} are not a pure userspace construct even if the name suggests. 
 They still need a wait queue in kernel to manage the contenting threads waiting on a lock, schedule another thread (futexes are blocking by design) and putting a thread into the queue requires a system call as well.
@@ -927,7 +933,9 @@ One example for connection-oriented communication is a telephone call.
 But there are also good reasons for \textit{connectionless} communication.
 For example if the overhead of the connection setup is too costly for little data to be transferred or rather few data is sent to a large amount of receivers.
 A real world example for \textit{connectionless} communication is radio.
-The order of messages cannot be guaranteed for this connection type and also the loss of them is possible, but this has no further impact on the application\cite{glatz2015betriebssysteme},~\cite{brause2017betriebssysteme}.
+The order of messages cannot be guaranteed for this connection type and also the loss of them is possible, but this has not neccessarily further impact on the application.
+For a multimedia application, a retry could be a greater damage than the package loss.
+But for other application purposes, a retry is maybe needed and must be triggered from the application itself\cite{glatz2015betriebssysteme},~\cite{brause2017betriebssysteme}.
 Nevertheless, the recipient must be addressed anew in every single message.
 
 \paragraph{Receiver Addressing}
@@ -992,17 +1000,19 @@ The underlying implementation in Linux versions starting from 2.6 is based the c
 While in userspace the grown structure of Linux, its openness, but also standards like \ac{posix} allows finding nearly every variant of basic synchronization mechanisms, the kernel itself is much more limited.
 
 Within the actual Linux kernel, only \textit{spinlocks} and \textit{mutexes} are available besides \textit{atomic data operations} like \texttt{atomic\_set()}, \texttt{atomic\_inc()}, \texttt{atomic\_dec()} and others\cite{achilles2006betriebssysteme}.
-As mentioned in the general section~\ref{sec:synchro}, a spinlock uses busy waiting while the kernel's implementation of mutexes is a blocking one.
-Both are binary semaphore versions that only differ in terms of waiting behavior\cite{linux-locking}.
-Linux versions compiled for single processing core systems and without preemption support do not provide any locking mechanism at all.
-It is not needed in this case.
+As mentioned in the general section~\ref{sec:synchro}, a spinlock uses busy waiting while the kernel's implementation of mutexes allows to schedule another task.
+Both are blocking binary semaphore versions that only differ in terms of waiting behavior\cite{linux-locking}.
+Linux versions compiled for single processing core systems and without preemption support do not provide spinlocks.
+They are not needed in this case.
+Mutexes are still available to ensure a shared resource is only accessed from one process at a time.
 Preemptive single core systems provide spinlocks but they only disable preemption during a critical region\cite{linux-locking}.
 
 \subsubsection*{Signals}
 \textit{Signals} are a special concept of UNIX and Unix-like operating systems, located somewhere between process synchronization and \ac{ipc}.
-They are used to transmitting events or information between processes similar to hardware interrupts\cite{glatz2015betriebssysteme}.
+They are used to transmitting events or information between the kernel and processes similar to hardware interrupts\cite{glatz2015betriebssysteme}.
 The most known usecase of signals is to interrupt or terminate one processes from another one, but actually they are also used for signaling and handling errors, \ac{io} events or to trigger even user-defined actions\cite{achilles2006betriebssysteme}.
-Signals are in common send between processes, e.g.\ to indicate illegal instructions or memory access, arithmetic errors, expiring timers and much more.
+Signals are in common send between the kernel and a procces, e.g.\ to indicate illegal instructions or memory access, arithmetic errors, expiring timers and much more.
+Only \texttt{SIGUSR1} and \texttt{SIGTERM} are send between processes.
 The most of them are ignorable and/or handable by the receiving process, except from the \texttt{SIGKILL} and \texttt{SIGSTOP} signals\cite{achilles2006betriebssysteme}.
 
 Signal handlers are commonly used to grateful terminate a process or handle the indicated situation.
@@ -1013,11 +1023,11 @@ Each Linux process is aware to receive signals, but if a signal is ignored, the 
 \subsubsection*{Inter Process Communication}
 \paragraph{Pipes}
 Pipes were one of the first \ac{ipc} mechanisms in Unix-like systems besides shared memory between threads within a process and additional memory regions shared between processes.
-They provide a message-based communication mechanism using datagram-typed messages.
+They provide a stream-based communication mechanism using datagram-typed messages.
 Pipes are also in Linux wide-spread and especially known for process chaining like it is done in the command line instruction \texttt{ps -A | sort | more}.
-This instruction takes the output of the first command, \texttt{ps -A} (show all processes), and uses it as input to the second one, \texttt{sort}, which is used as input for the last one, \texttt{more}, again.
+This shell command takes the output of the first command, \texttt{ps -A} (show all processes), and uses it as input to the second one, \texttt{sort}, which is used as input for the last one, \texttt{more}, again.
 In general, pipes can provide unidirectional or bidirectional communication between processes but ordinary Linux pipes provide only a unidirectional but buffered communication between the \textit{write-end} to the \textit{read-end} of a pipe\cite{glatz2015betriebssysteme},~\cite{silberschatz2009operating}.
-A bidirectional communication requires two inverse pipes\cite{silberschatz2009operating}.
+A bidirectional communication requires two inverse pipes on Linux\cite{silberschatz2009operating}.
 As a pipe is buffered, both processes are decoupled to some degree, which is influenced by the actual buffer size, a system and architecture dependent value.
 Using a pipe synchronizes the involved processes implicitly.
 A reading process is blocked on an empty pipe, a writing one on a full pipe\cite{glatz2015betriebssysteme}.
@@ -1033,7 +1043,7 @@ Several writers or readers on a single pipe are possible.
 Indeed, named pipes are capable for a bidirectional communication in half-duplex mode, too.
 But in fact, bidirectional \ac{ipc} is done via two distinct pipes\cite{silberschatz2009operating}.
 Named pipes are a special type of file which can be created with a freely selectable name at any point in a filesystem.
-A writing as well as a reading process can open and use a pipe by its given name just like an ordinary file or pipe\cite{glatz2015betriebssysteme}.
+A writing as well as a reading process can open and use a named pipe by its given name just like an ordinary file\cite{glatz2015betriebssysteme}.
 Once, a named pipe was created, it exists until it is explicitly deleted. 
 The termination of the process which created influences the pipe just as little as a system reboot\cite{silberschatz2009operating}.
 That is not the fact for ordinary pipes as they are bounded to the creating process and its childs.
