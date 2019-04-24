@@ -12,7 +12,7 @@
 
   - https://www.linux.com/blog/2018/9/redefining-security-technology-zephyr-and-fuchsia
 
-    ​
+    
 
 ## Normal Media
 
@@ -103,7 +103,8 @@ Fuchsia SDK & Fuchsia as a Part of the AOSP
   - Operations that do not check rights
   - Unimplemented rights
 
-####Fuchsia: Resource Handles
+#### Fuchsia: Resource Handles
+
 - Variant of handles for platform resources
   - memory mapped I/O, I/O port, IRQ, hypervisor guests
   - specify allowed resource kind and optionally range

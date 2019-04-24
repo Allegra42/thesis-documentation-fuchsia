@@ -453,8 +453,7 @@ The following sections take a closer look at these concepts and answer the remai
 
 
 The term \textit{process} describes an instance of a program in execution, including all its required resources to enable a model for the pseudoparallel execution of multiple programs based thereon\cite{silberschatz2009operating},~\cite{tanenbaum-modern-operating-systems}.
-Each program in execution is modeled as a separate process which is assigned to a virtual private \ac{cpu} including \ac{cpu} registers, above all the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
-%TODO virtual private CPU
+Each program in execution is modeled as a separate process which is assigned to a, from its point of view, private \ac{cpu} including \ac{cpu} registers, above all the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 Especially by using virtual private memory, processes are not only modeled individually, but are also isolated from each other in reality in order to prevent errors or deliberate attacks between programs\cite{brause2017betriebssysteme}.
 But since in reality more processes, respectively programs, have to be executed than \acp{cpu} exists, a mechanism is needed to switch between processes and allow the execution of all them.
 This mechanism behind, the \textit{multiprogramming model} (formerly also known as \textit{time-sharing model}), and the policies called \textit{process scheduling} will be considered hereafter.

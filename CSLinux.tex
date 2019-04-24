@@ -35,37 +35,28 @@ The logical one contains driver functionality which remains consistent between s
 % \section{Driver Models}
   
 \section{Linux Driver Model}
-\cite{glatz2015betriebssysteme}
+As already mentioned, drivers do most of all an abstraction of the communication with \ac{io} peripherals.
+To do so, Linux provides more ways than widely known.
+The first one is via \textit{direct hardware access} as \textit{user-space driver}.
+As known from the previous sections are the most \ac{io} respectively driver related operations privileged.
+But Linux offers a way for common user applications (userspace) to access hardware without a classical driver using this possibility.
+It is, above all, used for video drivers which are incorporated into the \textit{X.Org display server}.
+In order to obtain the neccessary rights are two systemcalls needed: \texttt{iopl()} to change the privileged level and \texttt{ioperm()} to set the \ac{io} port permissions.
+These calls can only be done by a privileged Linux user, the \textit{root} user.
+Compared to other options to access peripheral hardware, this one has the disadvantage that interrupts are to available at all and the user software may run into issues with demand paging.
+So this way is maybe slower than a device driver in kernelspace, but for some tasks, like the already named \textit{X.Org server} is it more meaningful than a kernel driver\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 
-io
-- direct hardware access: application uses hardware without driver, no interrupts available, 
-    needs two syscalls: change io privilege level (iopl) and set port io permissions (ioperm)
-    -> can only done by root user
-    everything else is done in the user's address space (e.g. X server) -> software may has issues with demand paging -> slow
-    \cite{lfd430}
-    video drivers incorporated into X.Org resides in userspace but are privileged to directly access hardware -> ioperm and iopl
-    -> slower than in kernel space but makes more sense in userspace
+Another widely unknown and \ac{cpu} specific way to perform \ac{io} operations is using \textit{minimal operating system support} to access serial interfaces on x86-based \acp{cpu}.
+In doing so, the kernel does not know anything about the exact device but about its \ac{io} interface\cite{glatz2015betriebssysteme}.
+Thus, this variant is not handled further.
+Instead, this work will focus on \ac{io} drivers in \textit{kernel-space}, the most common way device drivers in Linux are written.
+This kind of driver is a part of the kernel's address space, running in the \ac{cpu}'s kernel mode and thus privileged.
+User applications can access kernel drivers and thus the devices via common file operations like \texttt{open()}, \texttt{close()}, \texttt{read()} or \texttt{write()} as they are shown virtually as \textit{special files} in the device filesystem \texttt{/dev/}.
+Together with the optional entries in the \texttt{/sys/} filesystem and the older ones in \texttt{/proc/} are devices in those filesystems categorized in a structured way, according their types\cite{glatz2015betriebssysteme}.
+Linux differentiates drivers in the already known block devices, character devices and network devices, but internally are drivers structured in \textit{subsystems} of similar device functionality like usb, network, bluetooth, gpio and many others\cite{quade2016Linux}. 
 
-- minimal os support: the os kernel does not know the exact device but only its io interface. only available for x86 and serial interface on linux
-- extended os support: io driver are in the address space of the kernel -> kernel space
 
-io driver in kernel space
-- io is done via the filesystem (unix/linux)
-- applications can access drivers via common file operations like read write open and close
-    - devices are shown as virtual devices in filesystems (special files) -> dev file system but also proc and sysfs
-    -> catagolizes devices in a structured way -> sub classes for different device types -> unified way to access the devices
 
-kinds of drivers: block devices (smalles possible transmitting unit -> a block of a defined size), character devices (1 byte/char as smallest unit)
-\cite{quade2016Linux}
-- linux divides in the both types but also in subsystems of them like usb (block), network, bluetooth, gpio (char), i2c(char)\ldots
-
-\cite{quade2016Linux}
--> different driver interfaces
-    - standard api (open, close, read, write, ioctl)
-    - communication api
-    - multimedia interfaces \ldots
-
-    interfaces are realized by using defined datastructures and ioctls to avoid to enhance the systemcall interface
 
 \cite{lfd430}
 - character devices -> read/write a byte a time
@@ -96,10 +87,44 @@ stacked drivers
 -> not stacked each time, e.g. usb is stacked
 
 
+\cite{quade2016Linux}
+needed driver functionalities: 
+- functions to include itself into the system (init/ deinit functions)
+- application triggered functions (open, close, read, ..)
+- os triggered functions: ISR, \ldots
+
+
 driver routines
 - integration of driver routines  (standardized io fuctions) via data structures which are declared to the system via special calls
 - the structues are a list of function pointers for the actual implementation of the standardized prototype
 - not used/implemented functions get a null pointer
+
+\cite{quade2016Linux}
+-> different driver interfaces
+    - standard api (open, close, read, write, ioctl)
+    - communication api
+    - multimedia interfaces \ldots
+
+    interfaces are realized by using defined datastructures and ioctls to avoid to enhance the systemcall interface
+
+data exchange between kernel and userspace
+- functions like write / read / (ioctl, sysfs, procfs) may need to copy data between user and kernel
+- copy between user and kernel address space -> special system function: copy_from_user, copy_to_user, put_user, get_user
+- driver buffers are alway in main mem, user buffer may are swapped out to sidk
+\cite{lfd430}
+- different address spaces between user and kernel -> addresses are not meaningful in another address space
+-> use built in functions
+-> use memory mapping (mmap), standard posix system call -> user is given direct access to kernel memory buffers (may be memory regions directly on a device) -> avoid buffering or caching data -> longer time to setup and shutdown than copy_to_user
+->> do never access normal files from kernelspace
+
+\cite{lfd430}
+unified device model
+- all devices handled under this scheme are handled in one framework with similar data structures and functional methods
+- the framework is represented as a device tree rooted on the system buses
+- drivers mostly do not need directly with the model but register under the type of bus they are connected, e.g. pci, usb\ldots
+- information about the device is exposed in sysfs
+- drivers can optionally export additional data for view/modify -> modern alternative to procfs and ioctl
+
 
 
 static vs dynamic driver integration
@@ -118,36 +143,6 @@ static vs dynamic driver integration
 
 \cite{lfd430}
 directly in kernel or as a module -> does require little or no change of the source
-
-\cite{quade2016Linux}
-needed driver functionalities: 
-- functions to include itself into the system (init/ deinit functions)
-- application triggered functions (open, close, read, ..)
-- os triggered functions: ISR, \ldots
-
-\cite{lfd430}
-unified device model
-- all devices handled under this scheme are handled in one framework with similar data structures and functional methods
-- the framework is represented as a device tree rooted on the system buses
-- drivers mostly do not need directly with the model but register under the type of bus they are connected, e.g. pci, usb\ldots
-- information about the device is exposed in sysfs
-- drivers can optionally export additional data for view/modify -> modern alternative to procfs and ioctl
-
-%interrupts?
-
-% hotplugging
-% - linux supports dynamic driver loading for devices attached/removed during runtime
-% - a device manager listens for hotplug events and loads if possible the matching driver
-
-data exchange between kernel and userspace
-- functions like write / read / (ioctl, sysfs, procfs) may need to copy data between user and kernel
-- copy between user and kernel address space -> special system function: copy_from_user, copy_to_user, put_user, get_user
-- driver buffers are alway in main mem, user buffer may are swapped out to sidk
-\cite{lfd430}
-- different address spaces between user and kernel -> addresses are not meaningful in another address space
--> use built in functions
--> use memory mapping (mmap), standard posix system call -> user is given direct access to kernel memory buffers (may be memory regions directly on a device) -> avoid buffering or caching data -> longer time to setup and shutdown than copy_to_user
-->> do never access normal files from kernelspace
 
 
 driver software must be reentrant!
