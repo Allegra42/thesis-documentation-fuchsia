@@ -55,36 +55,29 @@ User applications can access kernel drivers and thus the devices via common file
 Together with the optional entries in the \texttt{/sys/} filesystem and the older ones in \texttt{/proc/} are devices in those filesystems categorized in a structured way, according their types\cite{glatz2015betriebssysteme}.
 Linux differentiates drivers in the already known block devices, character devices and network devices, but internally are drivers structured in \textit{subsystems} of similar device functionality like usb, network, bluetooth, gpio and many others\cite{quade2016Linux}. 
 
+As indicated above do \textit{character} and \textit{block device drivers} in Linux have filesystem entries which are associated with them.
+Such a file node is the basic way to communicate with the driver from userspace.
+The fundamental \texttt{/dev/} directory but also the \texttt{/sys/} and \texttt{/proc/} are virtual.
+They require not more disk space than the needed inodes.
+A device is identified by a \textit{device number} which is composed of a \textit{major number} to identify the device itself and the \textit{minor number} to count the existing device instances\cite{lfd430}.
+Device numbers are in the most cases assigned by the \textit{udev} mechanism today.
+A closer look to it and its relation to the \texttt{/sys/} filesystem follows.
+
+\textit{Character devices}, no matter in which subsystem they are arranged, have in common that they are well represented as data streams.
+They provide only sequential access to their data and can be considered as file including the standard file operations\cite{lfd430}.
+The same applies to \textit{block devices}.
+In contrast to character devices are block devices read and written only in multiples of their block-size.
+Linux enables devices of these type to behave similar to character devices and transfer any number of bytes per time, too\cite{lfd430}.
+Random data access is also allowed and the access to their data is usually cached.
+One characteristic of block devices is the fact a \textit{filesystem} can be mount on the device.
+Thus, file operations are of course available on them.
+Examples are hard drives or USB memory sticks\cite{lfd430}.
+The third device class, \textit{network devices}, are different at all.
+They transfer \textit{packets} of data.
+Network devices are not mapped as files or provide file operations.
+Instead, they are most often identified by name (\texttt{eth0}, \texttt{wlan0}) and accessed via the \textit{Berkeley socket} interface\cite{lfd430}.
 
 
-
-\cite{lfd430}
-- character devices -> read/write a byte a time
-    - are well represented as streams
-    - only sequential access
-    - can be considered as files -> open, read, write, ..
-- block devices
-    - read/written only in block-size multiples, access is usually cached
-    - allow random access
-    - allow to mount a filesystem on the device
-    - in linux: can behave like character devices -> transfer any number of bytes a time
-    - hard drives, usb memory, \ldots
-- network devices
-    - transfer packets of data
-    - most often accesses via bsd socket interface -> not mapped as file
-    - no read/write -> specific socket functions -> other api
-    - not mapped to the filesystem -> identified by name -> eth0, wlan0
-
-
-\cite{quade2016Linux}
-stacked drivers
-- many drivers are made from different layers: low level, core high-level)
-- low level: for control of the internal hardware interface, eg. a usb controller
-- high level: for the device typ: e.g. a web cam
-- core level: enhances the internal interface with device specific functionality -> tries to find the right driver for a device
-
-\cite{lfd430}
--> not stacked each time, e.g. usb is stacked
 
 
 \cite{quade2016Linux}
@@ -159,6 +152,17 @@ mechanism vs policy -> mechanism in kernel, policy in userspace
 % - major: device, minor: different instances of the device
 % - in common dynamically allocated by the udev mechanism
 % - dev node is accessed from user with file operations: open, close, read, write, ioctl, mmap, poll -> for all of them is default behaviour available
+
+% \cite{quade2016Linux}
+% stacked drivers
+% - many drivers are made from different layers: low level, core high-level)
+% - low level: for control of the internal hardware interface, eg. a usb controller
+% - high level: for the device typ: e.g. a web cam
+% - core level: enhances the internal interface with device specific functionality -> tries to find the right driver for a device
+%
+% \cite{lfd430}
+% -> not stacked each time, e.g. usb is stacked
+
 
 \section{Zircon Driver Model}
 
