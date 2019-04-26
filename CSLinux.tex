@@ -35,6 +35,7 @@ The logical one contains driver functionality which remains consistent between s
 % \section{Driver Models}
   
 \section{Linux Driver Model}
+\subsubsection*{Driver Types}
 As already mentioned, drivers do most of all an abstraction of the communication with \ac{io} peripherals.
 To do so, Linux provides more ways than widely known.
 The first one is via \textit{direct hardware access} as \textit{user-space driver}.
@@ -77,28 +78,47 @@ They transfer \textit{packets} of data.
 Network devices are not mapped as files or provide file operations.
 Instead, they are most often identified by name (\texttt{eth0}, \texttt{wlan0}) and accessed via the \textit{Berkeley socket} interface\cite{lfd430}.
 
+\subsubsection*{Driver Build Types}
+Device drivers in Linux can be a static part of the kernel or a dynamically loadable \textit{module}.
+In older version, only a static integration was possible. That means all may needed drivers must be present at compile time.
+Thus, the kernel size increases but some drivers will not be used at all and to add a new driver is it needed to recompile and reboot the kernel.
+Current Linux kernels allow additionally the dynamically loadable modules with optional parameters.
+Reload a driver during runtime without a reboot does not only saves space, it is also useful for development.
+It is only needed to recompile and reload a single module instead of the entire kernel including a system reboot\cite{quade2016Linux}.
+However, the module has to be built to exactly the same kernel module as running in order to be loaded.
+A module which is dynamically loaded via \texttt{insmod} respectively \texttt{modprobe} is, like built-in drivers, a part of the kernel's address space and running in kernel mode.
+But as a module does a dynamic binding to the kernel's symbol table, it is only allowed to use a, in comparison to built-in drivers, restricted \ac{api}\cite{glatz2015betriebssysteme}.
+However, beeing a part of the kernel's address space brings drivers into a special responsibility.
+There is no isolation between parts of the kernel, an errornous implemented driver may crash the entire system as a result.
+For the implementation of a driver, the fact of it should be used as built-in driver or as module has just little impact.
+It does require little or no changes on the source at all to switch between them as it is most of all a build configuration\cite{lfd430}.
 
+Module driver are indeed useful, but not realizable for each device type.
+Some drivers, e.g.\ disk drivers, must be present at a very early system stage to enable Linux to read from hard drives.
+Writing such a disk driver as a module which needs to be read from a hard drive to be loaded into the system is not realizable accordingly\cite{quade2016Linux}.
 
+\subsubsection*{Driver Interfaces}
+As for device drivers in general need the ones in Linux functions to include themself into the system, i.e.\ methods to initialize respectively deinitialize the driver and the associated device, operating system triggered functions, e.g.\ interrupt handler functions, as well as user application tiggered routines to enable the communication between user and device\cite{quade2016Linux}.
+The latter ones also include the driver-side implementations for the standard \ac{io} \ac{api}, the file operations.
+It should be implemented in a device-specific way for the operations that are meaningful for the device.
+If there is no such behaviour a device, it is preferred to implement only the meaningful operations, leave the default behaviour for the others one and switch to a better suited interface for the device.
+Besides the standard \ac{io} \ac{api}, there are e.g.\ communication or multimedia specific \acp{api} which suits better to devices of these kinds.
+Often, these interfaces are defined in Linux but built on basis of the \texttt{ioctl()} call which is technically a part of the file operationsi\cite{quade2016Linux}.
+\ac{io} control is a universal interface to define own, device specific commands.
+An \texttt{ioctl()} command is usually made from a made from a number and the type of optional arguments.
+However, the preferred way is to utilize the macros Linux provide to define beside the number and the arument types also the size of the transfered data and their transfer direction\cite{quade2016Linux}.
+This is the best way to verify \texttt{ioctl()} calls to a certain extent.
+The calls defined for the use in \texttt{ioctl()}'s must be known in both, kernel and userspace.
+Thus, this interface descriptions and corresponding datastructure definitions must be accessible from both sides.
+Typically, they are found in \texttt{linux/include/uapi/linux/}\cite{quade2016Linux}.
 
-\cite{quade2016Linux}
-needed driver functionalities: 
-- functions to include itself into the system (init/ deinit functions)
-- application triggered functions (open, close, read, ..)
-- os triggered functions: ISR, \ldots
+%TODO
 
 
 driver routines
 - integration of driver routines  (standardized io fuctions) via data structures which are declared to the system via special calls
 - the structues are a list of function pointers for the actual implementation of the standardized prototype
 - not used/implemented functions get a null pointer
-
-\cite{quade2016Linux}
--> different driver interfaces
-    - standard api (open, close, read, write, ioctl)
-    - communication api
-    - multimedia interfaces \ldots
-
-    interfaces are realized by using defined datastructures and ioctls to avoid to enhance the systemcall interface
 
 data exchange between kernel and userspace
 - functions like write / read / (ioctl, sysfs, procfs) may need to copy data between user and kernel
@@ -117,25 +137,6 @@ unified device model
 - drivers mostly do not need directly with the model but register under the type of bus they are connected, e.g. pci, usb\ldots
 - information about the device is exposed in sysfs
 - drivers can optionally export additional data for view/modify -> modern alternative to procfs and ioctl
-
-
-
-static vs dynamic driver integration
-- older unix/linux systems used only a static integration -> all (may) needed drivers must be present -> size
-    - no new drivers during a system is running
-    - crashing driver is down
-- dynamic modules (additionally) 
-    - dynamic loadable kernel modules with optional parameters -> allow starting and stopping from drivers without reboot
-    - needs two (additional) functions for proper starting and stopping of the module
-    - load via insmod/modprobe, unload via rmmod -> does a dynamic binding to the kernel symbol table -> only public kernel apis available
-
-\cite{quade2016Linux}
-    static built-> built-in or kernel driver -> regenerate kernel each time a new driver is needed
-    dynamic : load a module to an active kernel -> module driver -> better for driver tests, just compile a new module instead a new whole kernel, no need for reboots, may spread as a module -> needs to match the exact kernel version
-    not each driver is realizable as a module, e.g. the disk driver is needed to early after system start to be a module
-
-\cite{lfd430}
-directly in kernel or as a module -> does require little or no change of the source
 
 
 driver software must be reentrant!
