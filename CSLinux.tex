@@ -112,23 +112,25 @@ The calls defined for the use in \texttt{ioctl()}'s must be known in both, kerne
 Thus, this interface descriptions and corresponding datastructure definitions must be accessible from both sides.
 Typically, they are found in \texttt{linux/include/uapi/linux/}\cite{quade2016Linux}.
 
-%TODO
+To make the drivers implementations of these standard \ac{io} functions callable for the system and users, it is needed to declared them to the operating system kernel via specific calls.
+They take structures with function pointers to the driver implementations as an argument.
+Functions that do not have a meaning for a specific driver are denoted with a null pointer\cite{glatz2015betriebssysteme},\cite{quade2016Linux}.
 
 
-driver routines
-- integration of driver routines  (standardized io fuctions) via data structures which are declared to the system via special calls
-- the structues are a list of function pointers for the actual implementation of the standardized prototype
-- not used/implemented functions get a null pointer
+\subsubsection*{Data Exchange}
+Besides controlling the actual device is the communication with the user a main task of a driver and done as part of common calls like \texttt{read()}, \texttt{write()} or \texttt{ioctl()}.
+This requires data exchange between processes.
+\ac{ipc} was already a topic of this work, also the way it is done in Linux, but the communication between driver and user application is different.
+It is not an exchange between processes in userspace but between kernel and userspace, with different address spaces, different virtual memory addresses types and different rights.
+Addresses in the one address space are not neccessary meaningful in the other and additionally are user space buffers may swapped out from \ac{ram} to disk.
+The Linux kernel helps in this situation with the built-in functions \texttt{copy\_from\_user()} and \texttt{copy\_to\_user()} which do the transition between the address spaces\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 
-data exchange between kernel and userspace
-- functions like write / read / (ioctl, sysfs, procfs) may need to copy data between user and kernel
-- copy between user and kernel address space -> special system function: copy_from_user, copy_to_user, put_user, get_user
-- driver buffers are alway in main mem, user buffer may are swapped out to sidk
-\cite{lfd430}
-- different address spaces between user and kernel -> addresses are not meaningful in another address space
--> use built in functions
--> use memory mapping (mmap), standard posix system call -> user is given direct access to kernel memory buffers (may be memory regions directly on a device) -> avoid buffering or caching data -> longer time to setup and shutdown than copy_to_user
-->> do never access normal files from kernelspace
+Another way to exchange data between both worlds is the use of \textit{memory mapping} via the \texttt{mmap()} call, a standard \ac{posix} systemcall.
+It enables user applications direct access to kernel memory buffers which may also include memory regions of a device controller, by mapping it into the application's address space.
+Memory mapping affords a longer setup time than \texttt{copy\_to/from\_user()}, but once the mapping is ready, the access is faster and does not need further systemcalls\cite{lfd430},~\cite{glatz2015betriebssysteme}.
+Normal files should never been accessed from kernelspace.
+Thus, they are not suitable for data exchange between kernel and userspace\cite{lfd430}.
+
 
 \cite{lfd430}
 unified device model
@@ -143,26 +145,6 @@ driver software must be reentrant!
 
 \cite{lfd430}
 mechanism vs policy -> mechanism in kernel, policy in userspace
-
-% \cite{lfd430}
-% char drivers
-%
-% - char & block devices have filesystem entries associated with them -> node is used by user level to communicate with the device
-% - such a file is a special entry, not a real file -> needs no diskspace, just the record for the inode
-% - device is identified by a device number (major and minor before)
-% - major: device, minor: different instances of the device
-% - in common dynamically allocated by the udev mechanism
-% - dev node is accessed from user with file operations: open, close, read, write, ioctl, mmap, poll -> for all of them is default behaviour available
-
-% \cite{quade2016Linux}
-% stacked drivers
-% - many drivers are made from different layers: low level, core high-level)
-% - low level: for control of the internal hardware interface, eg. a usb controller
-% - high level: for the device typ: e.g. a web cam
-% - core level: enhances the internal interface with device specific functionality -> tries to find the right driver for a device
-%
-% \cite{lfd430}
-% -> not stacked each time, e.g. usb is stacked
 
 
 \section{Zircon Driver Model}
