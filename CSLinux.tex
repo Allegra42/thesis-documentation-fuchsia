@@ -131,20 +131,37 @@ Memory mapping affords a longer setup time than \texttt{copy\_to/from\_user()}, 
 Normal files should never been accessed from kernelspace.
 Thus, they are not suitable for data exchange between kernel and userspace\cite{lfd430}.
 
+File operations are not the only option for an user interface to drivers.
+Another one, the \textit{system filesystem (sysfs, /sys/)} is closely tied to the \textit{unified device model}.
+It is a framework to handle all devices attached to a computer system in a unified scheme with similar data structures and functions.
+The representation of this model in a running Linux system is the virtual sysfs.
+It generated during runtime and spans a tree of devices with the system bus on its root as a system representation.
+A driver's interaction with the model itself is most often limited.
+It is only needed to register the driver on bus type the corresponding device is physically attached, like \ac{pci} or USB.
+%TODO read corresponding to udev
+Thus, the \textit{udev} mechanism is invoked.
+It is a mechanism to create entries for devices in the \textit{/dev/} directory.
+Without udev, it would be neccessary to create a corresponding node there manually using a device number consisting of a major number for the device type and a minor number to enumerate the device instance.
+Drivers match on defined devices and it is rather a common situation than an exception one driver instance has to manage more than one fitting physical device.
+The minor number is used to map exactly this situation without any mix-ups between the devices.
+To comply, the driver implementation must also be designed to handle this purpose.
+It must be \textit{reentrant}, i.e.\ one implementation must be able to handle a number of matching physical devices without mix-ups\cite{lfd430},~\cite{quade2016Linux}.
 
-\cite{lfd430}
-unified device model
-- all devices handled under this scheme are handled in one framework with similar data structures and functional methods
-- the framework is represented as a device tree rooted on the system buses
-- drivers mostly do not need directly with the model but register under the type of bus they are connected, e.g. pci, usb\ldots
-- information about the device is exposed in sysfs
-- drivers can optionally export additional data for view/modify -> modern alternative to procfs and ioctl
+For drivers registered in the sysfs, this neccessary step there, the allocation of a correct device number, is done by udev using information exported there.
+Besides the basically needed information which are exposed just by register the driver within sysfs is a driver allowed to expose further \textit{virtual files} underneath the devices node entry.
+Those files provide an interface to the driver and can be made readable to expose information, writeable, e.g.\ to change device buffers or enter a defined command.
+It is also possible to combine both operations or make the file not accessable at all.
+The access permissions for a sysfs file entry are fine granular, based on \textit{group permissions}.
+As the implementation for reading or writing of such a file with a freely selectable name is not further limited and a possible alternative to \textit{ioctl()}.
+In contrast to \textit{ioctl()} calls, it is easier to access driver information via \textit{sysfs} as it only requires \textit{read()} or \textit{write()} calls and these can also be issued from a terminal\cite{lfd430},~\cite{quade2016Linux}.
+%TODO verify with quade
 
 
-driver software must be reentrant!
+\subsubsection*{Driver Lifecycle}
 
-\cite{lfd430}
-mechanism vs policy -> mechanism in kernel, policy in userspace
+%TODO picture
+
+
 
 
 \section{Zircon Driver Model}
