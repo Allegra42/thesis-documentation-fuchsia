@@ -134,11 +134,10 @@ Thus, they are not suitable for data exchange between kernel and userspace\cite{
 File operations are not the only option for an user interface to drivers.
 Another one, the \textit{system filesystem (sysfs, /sys/)} is closely tied to the \textit{unified device model}.
 It is a framework to handle all devices attached to a computer system in a unified scheme with similar data structures and functions.
-The representation of this model in a running Linux system is the virtual sysfs.
-It generated during runtime and spans a tree of devices with the system bus on its root as a system representation.
+The representation of this model, of the current state of devices and corresponding drivers in a running Linux system, is the virtual sysfs.
+It generated during runtime as a virtual filesystem and spans a tree of device objects with the system bus on its root as a system representation.
 A driver's interaction with the model itself is most often limited.
-It is only needed to register the driver on bus type the corresponding device is physically attached, like \ac{pci} or USB.
-%TODO read corresponding to udev
+It is only needed to register the driver on bus type the corresponding device is physically attached, like \ac{pci} or \ac{usb}.
 Thus, the \textit{udev} mechanism is invoked.
 It is a mechanism to create entries for devices in the \textit{/dev/} directory.
 Without udev, it would be neccessary to create a corresponding node there manually using a device number consisting of a major number for the device type and a minor number to enumerate the device instance.
@@ -154,17 +153,172 @@ It is also possible to combine both operations or make the file not accessable a
 The access permissions for a sysfs file entry are fine granular, based on \textit{group permissions}.
 As the implementation for reading or writing of such a file with a freely selectable name is not further limited and a possible alternative to \textit{ioctl()}.
 In contrast to \textit{ioctl()} calls, it is easier to access driver information via \textit{sysfs} as it only requires \textit{read()} or \textit{write()} calls and these can also be issued from a terminal\cite{lfd430},~\cite{quade2016Linux}.
-%TODO verify with quade
 
 
 \subsubsection*{Driver Lifecycle}
+The sequence of a Linux device driver differs marginally depending on its build variant.
+The driver entry points \texttt{init()} and its corresponding \texttt{exit()} function are only neccessary for drivers built as a module, but also allowed when compiling as a built-in driver.
+Thus, the most driver implementations does not require any code changes and the decision which variant is built depends only on a value in a configuration file.
+This additional functions do specific initializations which are only needed on modules.
+In common, the \texttt{init()} function itself and corresponding init data are specially marked to be discarded after initialization.
+While, especially the \texttt{exit()} to clean up initializations is not needed for built-in drivers because they are not unloaded at all\cite{lfd430}.
+The \texttt{init()} function of a module is called as soon as a privileged user loads it to the kernel using \texttt{insmod} or \texttt{modprobe}.
+This will add and initialize the module but neigher the driver is initialized and ready nor is a device connected at this point.
+Figure~\ref{pic:linux-lifecycle} pictures these in a drivers sequence context.
+As the implementations of \texttt{init()} and \texttt{exit()} often only consists of registering the actual driver and thus abstractable boilerplate code, are they often replaced by a macro, e.g.\ \texttt{module\_i2c\_driver(<driver\_struct\_name>)} for an \ac{i2c} driver.
+Regardless of whether \texttt{init()} or a corresponding macro is used, the initialization consists mostly of publishing a driver structure to the kernel.
+In common this struct contains at least function pointers to neccessary driver entry points like \texttt{probe()} and \texttt{remove()} and to a sub-structure which covers driver specific data as its name and a table with specifications of matching devices\cite{quade2016Linux},~\cite{lfd430}. 
 
-%TODO picture
+Using this specification, a sophisticated mechanism within the Linux kernel calls the given \texttt{probe()} of the matching driver as soon as such a device appears.
+The \texttt{probe()} function is used by the driver to test if the device given by the system really matches the driver and if it is the case, to initialize the device's controller and register itself properly at all needed kernel facilities as illustrated by figure~\ref{pic:linux-lifecycle}.
+The signature of \texttt{probe()} is not unified for all drivers.
+It depends on the device type, e.g.\ if the device is \ac{pci}, \ac{usb} or an \ac{i2c} typed\cite{lfd430},~\cite{quade2016Linux},~\cite{corbet2005linux}.
+Also, \texttt{probe()} is the first driver function that must be \textit{reentrant}.
+It is called each time a matching device is detected and there should not be a artifical limit how much devices a driver can handle. 
+Thus, the information needed for each distinct device should be stored in a private per-device datastructure.
+Allocate the memory for this structure and fill it with relevant information is also a part of \texttt{probe()}\cite{lfd430},~\cite{quade2016Linux}.
 
+The \texttt{probe()} function's counterpart is \texttt{remove()}.
+It is called if a device is to be removed from the system or already was removed without announcement, e.g.\ due to an electrical error.
+Additionally, \texttt{remove()} is called for all devices that are controlled by a module driver at the time an user wishes to unload the module.
+Only afterwards, the \texttt{exit()} function can be called.
+Within \texttt{exit()}, the device should be putted in a suitable condition prior to the initializations done in \texttt{probe()} are revoked\cite{lfd430},~\cite{quade2016Linux}.
+The \texttt{remove()} function is \textit{reentrant}, too.
+It is called per device.
 
+\begin{figure} [ht]
+    \centering
+    \includegraphics[width=\linewidth]{LinuxDriverLifecycle}
+    \caption{Simplified Lifecycle of a Linux Device Driver}
+    \label{pic:linux-lifecycle}
+\end{figure}
+
+The right information needed to deregister device and the driver's entries for this specific instance should be stored as part of the private per-device datastructure.
+Figure~\ref{pic:linux-lifecycle} illustrates this situation.
+
+After probing the device, the driver for this instance is ready for use.
+Different interfaces to a driver in Linux were already mentioned in an above section.
+Figure~\ref{pic:linux-lifecycle} only pictures the file operations and \texttt{ioctl()} as a special situation within them.
+Regardless of the used interface, all corresponding implementations in the driver must be \textit{reentrant}, but not only in terms of different device instances using the same driver code, but also for a single instance receiving multiple requests, e.g.\ from different users.
+The implementations task is decoding the user's request, translate it in a command for the device controller and take care of the physical transmission to the device.
+Depending on the request, this may includes sending requests for actions, commands and data to the device but also fetching answers, status codes and e.g.\ processed data from it\cite{quade2016Linux}.
 
 
 \section{Zircon Driver Model}
+
+\cite{zircon-ddk-gettingstarted}
+- driver job: provide a uniform interface to a particular device, hiding details specific to the device's implementation
+
+
+\subsubsection*{Device Model}
+%General
+\cite{zircon-devicemodel}
+- drivers are compiled to ELF shared libraries (DSOs)
+- loaded into the device host (devhost) process
+- the device manager process (devmgr) contains the device coordinator 
+    -> keeps track of drivers and devices, manages discovery, creation and direction of device host processes 
+    -> maintains the device filesystem devfs -> mechanism through which userspace services and applications (constraines by their namespaces) gain access to devices
+
+- device coordinator:
+    - views devices as part of a single unified tree
+    - branches (and subbranches) of the tree consist of some number of devices within a device host process
+    -> how the tree is divided into dev host processes is based on a system policy for isolating drivers for security or stability reasons and co-location drivers for performance reasons
+    (current: each device that is able to represent a physical bus master and corresponding children are placed into a seperate devhost process -> will evolve)
+
+    \cite{zircon-ddk-gettingstarted}
+    - linux -> everything in the kernel lives in the same address space -> same process
+    -> fault isolation & exploitation -> bad driver can take out the entire kernel -> because of same address space and privileged access to all kernel mem and resources
+    - put all drivers in an own process -> used by some microkernel systems -> much context switches
+    
+    - zircon: use concept of device host
+        - devhost is a process that contains a protocol stack (one or more protocols that work together)
+        -> devhost loads drivers from elf shared libraries (dsos)
+        -> the protocol stack allows the creation of a complete ``driver'' for a device, consisting of platform dependent and platform independent components -> self contained process container
+    
+%Protocols
+- devices may implement protocols -> C ABIs used by child devices to interact with parent devices in device specific manner (e.g. PCI protocol, usb proto, block core proto, ethermac proto, \ldots)
+- protocols are usually in process interactions between devices in the same devhost, but may be rpc to a higher devhost (via a proxy)
+
+\cite{zircon-ddk-gettingstarted}
+- a protocol is a strict interface definition 
+-> driver must provide a defined set of functions defined for this protocol 
+-> these functions are common to all devices implementing the protocol
+% not a distinction into char/block/network -> rather to protocol device types
+
+%Interfaces
+- devices may implement interfaces -> RPC protocols that clients (services, user apps) use
+- base device interface: posix style open/close/read/write/ioctl io
+- FIDL as interface
+
+%Classes
+- classes represent a promise that a device implements an interface or protocol
+- devices exist in device filesystem unter a topological path e.g. /dev/class/classname\ldots
+- current: names within the class directory are numbers -> change in future
+
+\subsubsection*{Driver Lifecycle}
+\cite{zircon-devicemodel}
+
+%driver lifecycle
+- drivers are loaded into devhost process when it is determined they are needed
+    -> done by the binding program -> description of what a driver can bind to 
+    -> located in an ELF NOTE section in the binary
+    -> can be inspected by the device coordinator without fully load the driver into its process
+    -> bind description contains a structure pointer containing pointers to init create and release methods
+
+    - within devhost process, a device exists as a tree of zx_device_t structures
+
+- init
+    - invoked when a driver is loaded into a device host process and allows for any global initialization
+    - typically none is required
+    - if the method is implemented and failes, driver load fail
+
+- bind
+    - invoked to offer the driver a device to bind to
+    - device is one that matches the bind rules the driver has published
+    - if bind succeeds, the driver MUST create a new device and add it as a child of the device into the bind method
+
+    - device_add() -> creates a new device, adding it as a child to the provided parent device -> must either be the device passed to bind or another device which has been created by the same device driver
+    - newly created device is added to the global device filesystem -> maintained by the device coordinator
+    - can be created with device invisible flag -> device is not accessible in devfs until make visible is called 
+    -> used of long initialization times
+
+    - visible added device -> device ops (read/write/fidl) may be called by the device host
+
+    \cite{zircon-ddk-gettingstarted}
+    tasks in bind:
+    - initialize the driver:
+        - init the device
+        - setup interfaces to the driver
+        - publishing a/more child/s of the device
+
+
+- create 
+    - invoked for platform/system bus drivers or proxy drivers -> not required for the vast majority of drivers
+
+- release
+    - invoked before the driver is unloaded, after all devices it may have created in bind and elsewhere have been destroyed -> currently never invoked 
+    -> once a driver is loaded it remains loaded for the life of a device host process
+
+    only called after the creating driver has called device_remove on the device 
+    -> close all open instances of the device, remove and release all children
+
+    -> called if a parent detects the device is removed, e.g. usb -> calls device_remove
+    -> the childrens unbind method is called because the parent device is removed 
+    -> unbind removes the interface that was created via device_add
+    -> call release on the children
+
+- unbind
+    - if there is still work in progress when unbind is called by the parent device, the child continues
+    - parent should ensure the device is not working anymore to avoid errors
+
+\begin{figure} [ht]
+    \centering
+    \includegraphics[width=\linewidth]{ZirconDriverLifecycle}
+    \caption{Simplified Lifecycle of a Zircon Device Driver}
+    \label{pic:zircon-lifecycle}
+\end{figure}
+
+
 
 \section{Test Setup}
 
