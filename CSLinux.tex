@@ -160,10 +160,9 @@ The sequence of a Linux device driver differs marginally depending on its build 
 The driver entry points \texttt{init()} and its corresponding \texttt{exit()} function are only neccessary for drivers built as a module, but also allowed when compiling as a built-in driver.
 Thus, the most driver implementations does not require any code changes and the decision which variant is built depends only on a value in a configuration file.
 This additional functions do specific initializations which are only needed on modules.
-In common, the \texttt{init()} function itself and corresponding init data are specially marked to be discarded after initialization.
-While, especially the \texttt{exit()} to clean up initializations is not needed for built-in drivers because they are not unloaded at all\cite{lfd430}.
+In common, the \texttt{init()} function itself and corresponding init data are specially marked to be discarded after initialization, while especially the \texttt{exit()} to clean up initializations is not needed for built-in drivers because they are not unloaded at all\cite{lfd430}.
 The \texttt{init()} function of a module is called as soon as a privileged user loads it to the kernel using \texttt{insmod} or \texttt{modprobe}.
-This will add and initialize the module but neigher the driver is initialized and ready nor is a device connected at this point.
+It will add and initialize the module but neigher the driver is initialized and ready nor is a device connected at this point.
 Figure~\ref{pic:linux-lifecycle} pictures these in a drivers sequence context.
 As the implementations of \texttt{init()} and \texttt{exit()} often only consists of registering the actual driver and thus abstractable boilerplate code, are they often replaced by a macro, e.g.\ \texttt{module\_i2c\_driver(<driver\_struct\_name>)} for an \ac{i2c} driver.
 Regardless of whether \texttt{init()} or a corresponding macro is used, the initialization consists mostly of publishing a driver structure to the kernel.
@@ -205,111 +204,86 @@ Depending on the request, this may includes sending requests for actions, comman
 
 
 \section{Zircon Driver Model}
-
-\cite{zircon-ddk-gettingstarted}
-- driver job: provide a uniform interface to a particular device, hiding details specific to the device's implementation
-
+The driver model in Zircon differs a lot compared to Linux due to the influences of the microkernel approach.
+This converns in particular mechanisms and corresponding terms which are used by the system to manage device drivers and enable them in userspace.
+Nevertheless, a driver in Zircon has the same purpose as a Linux one: providing a uniform interface to a specific device while its implementation details are hided\cite{zircon-ddk-gettingstarted}. 
 
 \subsubsection*{Device Model}
-%General
-\cite{zircon-devicemodel}
-- drivers are compiled to ELF shared libraries (DSOs)
-- loaded into the device host (devhost) process
-- the device manager process (devmgr) contains the device coordinator 
-    -> keeps track of drivers and devices, manages discovery, creation and direction of device host processes 
-    -> maintains the device filesystem devfs -> mechanism through which userspace services and applications (constraines by their namespaces) gain access to devices
+Zircon's model for devices and drivers is a direct result of choosing a microkernel approach and at the same time a rejection of the situation in Linux.
+There, device drivers live in the kernel's address space with privileged access to the whole kernel memory and other resources.
+As a result belong each part of the kernel including device drivers to the same process.
+A fault isolation within the Linux kernel is not given and a bad driver may break the entire kernel. 
+In contrast a pure textbook approach for a microkernel would run each single driver in an own process to reach the maximum possible isolation.
+Even if some real-world microkernel implementations do so, it is not an efficient approach as it requires a great amount of context switches and \ac{ipc}\cite{zircon-ddk-gettingstarted}.
+Thus, Zircon's idea differentiate from the textbook approach and group a number of related drivers together in so-called \textit{device host} processes\cite{zircon-ddk-gettingstarted}.
+A driver itself is in Zircon compiled to a \acf{elf} shared library, a \ac{dso}.
 
-- device coordinator:
-    - views devices as part of a single unified tree
-    - branches (and subbranches) of the tree consist of some number of devices within a device host process
-    -> how the tree is divided into dev host processes is based on a system policy for isolating drivers for security or stability reasons and co-location drivers for performance reasons
-    (current: each device that is able to represent a physical bus master and corresponding children are placed into a seperate devhost process -> will evolve)
+Another related mechanism in the Zircon kernel is the \textit{device manager process (devmgr)}.
+It contains the \textit{device coordinator}, a piece of software that keeps track of drivers and devices.
+The device coordinator manages the discovery of drivers and devices and is responsible for the cration of device host processes.
+A \ac{dso} driver is loaded into a \textit{device host (devhost)} process and lives there maybe together with other related drivers to reduce needed context switches without soften the microkernel concept too much.
+In addition, the coordinator maintains the \textit{device filesystem (devfs)} as a mechanism that enables userspace applications to access a driver and thus, the device too.
+Similar to the unified device model in Linux, the Zircon device coordinator views devices as a part of a unified tree structure\cite{zircon-devicemodel},~\cite{zircon-ddk-gettingstarted}.
+Branches of this tree are represented by device host processes which consist of devices.
+At the current state of Zircon, the policy used to decide which drivers are grouped together for performance reasons and which ones should be placed into seperate device host processes is made based on the underlying physical system.
+As a result, each device that is able to represent a physical bus master becomes a device host process and all corresponding child devices are placed into this process.
+In future, this policy will may evolve to a more sophisticated concept\cite{zircon-devicemodel}.
 
-    \cite{zircon-ddk-gettingstarted}
-    - linux -> everything in the kernel lives in the same address space -> same process
-    -> fault isolation & exploitation -> bad driver can take out the entire kernel -> because of same address space and privileged access to all kernel mem and resources
-    - put all drivers in an own process -> used by some microkernel systems -> much context switches
-    
-    - zircon: use concept of device host
-        - devhost is a process that contains a protocol stack (one or more protocols that work together)
-        -> devhost loads drivers from elf shared libraries (dsos)
-        -> the protocol stack allows the creation of a complete ``driver'' for a device, consisting of platform dependent and platform independent components -> self contained process container
-    
-%Protocols
-- devices may implement protocols -> C ABIs used by child devices to interact with parent devices in device specific manner (e.g. PCI protocol, usb proto, block core proto, ethermac proto, \ldots)
-- protocols are usually in process interactions between devices in the same devhost, but may be rpc to a higher devhost (via a proxy)
+In Zircon, device drivers may implement \textit{protocols}, that means C \acp{abi}.
+A protocol is a strict interface definition and defines a set of functions a driver must implement.
+Protocols are specific to classes of devices.
+As a result, all devices from a type, e.g.\ \ac{pci} devices must implement the same protocol and thus, the same functions.
+Zircon differentiates rather in device protocol types such as \textit{\ac{pci}, \ac{usb}, block core or ethermac} than in block, character or network devices.
+A protocol is used by child drivers to interact with its parent drivers in a device specific manner.
+So it is an interface protocol between different driver layers, and thus commonly different device host processes, for a particular device type or between drivers in the same device host process\cite{zircon-ddk-gettingstarted},~\cite{zircon-devicemodel}.
 
-\cite{zircon-ddk-gettingstarted}
-- a protocol is a strict interface definition 
--> driver must provide a defined set of functions defined for this protocol 
--> these functions are common to all devices implementing the protocol
-% not a distinction into char/block/network -> rather to protocol device types
+Additionally, a device can implement \textit{interfaces}.
+They represent \textit{\ac{rpc} protocols} which are used by userspace applications or services.
+Interfaces are for example the \ac{posix} styled \texttt{open()}, \texttt{close()}, \texttt{read()}, \texttt{write()} or \texttt{ioctl()} functions but also own interfaces defined using the Zircon specific \acf{fidl}\cite{zircon-devicemodel}.
 
-%Interfaces
-- devices may implement interfaces -> RPC protocols that clients (services, user apps) use
-- base device interface: posix style open/close/read/write/ioctl io
-- FIDL as interface
+Within the device filesystem (devfs), Zircon devices respectively drivers are grouped in \textit{classes}.
+A class represents in this situation a promise to implement certain protocols and/or interfaces.
+Devices exist in devfs in a structured way under a topological path according to the scheme \texttt{/dev/class/device/drivername}, e.g.\ \\
+\texttt{/dev/pci/00:02:00/intel-ethernet}.
+At the time of writing, the names within the class directories, the device identifiers, are unique numbers in a certain pattern\cite{zircon-devicemodel}.
+%TODO -> check classes in runnin zircon
 
-%Classes
-- classes represent a promise that a device implements an interface or protocol
-- devices exist in device filesystem unter a topological path e.g. /dev/class/classname\ldots
-- current: names within the class directory are numbers -> change in future
-
+% %General
+    % \cite{zircon-ddk-gettingstarted}
+    % - zircon: use concept of device host
+        % - devhost is a process that contains a protocol stack (one or more protocols that work together)
+        % -> devhost loads drivers from elf shared libraries (dsos)
+        % -> the protocol stack allows the creation of a complete ``driver'' for a device, consisting of platform dependent and platform independent components -> self contained process container
+%
 \subsubsection*{Driver Lifecycle}
-\cite{zircon-devicemodel}
+It is currently not possible in Zircon to built drivers in a different way than the built-in \textit{\ac{elf} shared libraries} mentioned before.
+They are not loaded into a device host process until it is determined they are actually needed.
+This is done using \textit{binding program} which is a part of the driver.
+Within the driver, it is defined using system internal macros.
+The compiler moves this program into the \textit{ELF NOTE} section of the binary where it can be inspected by the \textit{device coordinator} without the need to fully load the driver into its own process.
+Besides the bind discription itself, the binding program also contains pointers to the most neccessary driver methods\cite{zircon-devicemodel}.
 
-%driver lifecycle
-- drivers are loaded into devhost process when it is determined they are needed
-    -> done by the binding program -> description of what a driver can bind to 
-    -> located in an ELF NOTE section in the binary
-    -> can be inspected by the device coordinator without fully load the driver into its process
-    -> bind description contains a structure pointer containing pointers to init create and release methods
+The first but less used method in the Zircon device driver lifecycle is \texttt{init()}.
+It is invoked when a driver is loaded into a device host process and used for any global initializations.
+While its pedant in Linux is often replaced using macros to reduce boilerplate code, Zircon makes it optional to implement it.
+Typically, no implementation for \texttt{init()} is required but if the method is implemented and fails, the whole driver fails\cite{zircon-devicemodel}.
+Thus, it is not pictured in the simplified Zircon driver lifecycle in figure~\ref{pic:zircon-lifecycle}.
 
-    - within devhost process, a device exists as a tree of zx_device_t structures
+Similar to Linux' \texttt{probe()} function follows in Zircon the \texttt{bind()} method in a drivers life.
+It is invoked by the device coordinator how offers the driver a device to bind.
+This device matches the rules the driver has published as a part of its bind program.
+Within \texttt{bind()}, the driver has to initialize the device, setup interfaces to itself and publish one or more childs or the device to succeed\cite{zircon-gettingstarted}.
+Adding such a child device is done using \texttt{device\_add()}.
+It creates a new device and adds it as a child to a provided parent device.
+This parent must either be exactly the device which is passed to \texttt{bind()} by the device coordinator or another device which already has been created by the same device driver.
+This method includes adding the newly created device to the device filesystem (devfs) which is maintained by the device coordinator.
+As soon as a device is added to devfs, the device operations, e.g. \texttt{read()}, \texttt{write()} or calls defined using \ac{fidl}, can be called by the device host.
+Figure~\ref{pic:zircon-lifecycle} pictures the simplified situation.
+If a device shall be added but not be accessed already, e.g.\ to do a longer initialization as a background thread, the device can also be added in an invisible mode using a specific flag.
+After the initialization is done, the device must be made visible to be accessed\cite{zircon-devicemodel}.
 
-- init
-    - invoked when a driver is loaded into a device host process and allows for any global initialization
-    - typically none is required
-    - if the method is implemented and failes, driver load fail
-
-- bind
-    - invoked to offer the driver a device to bind to
-    - device is one that matches the bind rules the driver has published
-    - if bind succeeds, the driver MUST create a new device and add it as a child of the device into the bind method
-
-    - device_add() -> creates a new device, adding it as a child to the provided parent device -> must either be the device passed to bind or another device which has been created by the same device driver
-    - newly created device is added to the global device filesystem -> maintained by the device coordinator
-    - can be created with device invisible flag -> device is not accessible in devfs until make visible is called 
-    -> used of long initialization times
-
-    - visible added device -> device ops (read/write/fidl) may be called by the device host
-
-    \cite{zircon-ddk-gettingstarted}
-    tasks in bind:
-    - initialize the driver:
-        - init the device
-        - setup interfaces to the driver
-        - publishing a/more child/s of the device
-
-
-- create 
-    - invoked for platform/system bus drivers or proxy drivers -> not required for the vast majority of drivers
-
-- release
-    - invoked before the driver is unloaded, after all devices it may have created in bind and elsewhere have been destroyed -> currently never invoked 
-    -> once a driver is loaded it remains loaded for the life of a device host process
-
-    only called after the creating driver has called device_remove on the device 
-    -> close all open instances of the device, remove and release all children
-
-    -> called if a parent detects the device is removed, e.g. usb -> calls device_remove
-    -> the childrens unbind method is called because the parent device is removed 
-    -> unbind removes the interface that was created via device_add
-    -> call release on the children
-
-- unbind
-    - if there is still work in progress when unbind is called by the parent device, the child continues
-    - parent should ensure the device is not working anymore to avoid errors
+The device driver method \texttt{create()} is only invoked for platform or system bus drivers or proxy drivers.
+Thus, it concerns only the fewest drivers and is not further considered in this work or the related figure\cite{zircon-devicemodel}.
 
 \begin{figure} [ht]
     \centering
@@ -317,6 +291,18 @@ Depending on the request, this may includes sending requests for actions, comman
     \caption{Simplified Lifecycle of a Zircon Device Driver}
     \label{pic:zircon-lifecycle}
 \end{figure}
+
+
+The driver's \texttt{release()} method is invoked right before the driver is unloaded and after all devices it may have created in \texttt{bind()} using \texttt{device\_add()} have been destroyed.
+The method is never invoked currently because once a driver is loaded, it remains loaded for the lifetime of a device host process.
+Nevertheless, it should be implemented.
+
+In theory, \texttt{release()} and the related \texttt{unbind()} method should be called e.g.\ if a parent device detects the corresponding device is removed and thus, calls \texttt{device\_remove()}.
+In consequence, the \texttt{unbind()} method is called on all child devices because the parent becomes removed.
+Unbind should remove all interfaces that were created in relation to the \texttt{device\_add()} call.
+If a device still has work in progress when \texttt{unbind()} is called by the parent, the child device continues this first.
+Thus, the parent must ensure the device is not working anymore before it also calls \texttt{release()} as a last step in this exemplarily tear down sequence on all children\cite{zircon-devicemodel}.
+%TODO better lifecycle graphic, reference for the last section
 
 
 
