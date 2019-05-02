@@ -13,7 +13,6 @@ For this reason, this chapter is dedicated to the basic components and functiona
 
 \section{Operating System Architectures}\label{sec:kernel-arch-concepts}
 
-% TODO OS design goals see Betriebssysteme Glatz 
 As already pointed out are architectural decisions for operating systems commonly influenced by the issues they are intended to solve.
 By giving priority to some design objectives that are pertinent to the underlying issue, different concepts and architectures are the outcome.
 According to \textsc{Glatz}\cite{glatz2015betriebssysteme} are some of them:
@@ -47,7 +46,19 @@ System calls provide the transition to ring 0, the one with the topmost security
 Actual operating system implementations may not use all of them.
 Linux for example utilize ring 3 for user-space applications, shared libraries and ring 0 for system calls and the kernel.
 As a crucial part of an operating system, system calls will be discussed in more detail later in this work.
-
+%
+\begin{figure} [t]
+	\centering
+	\includegraphics[scale=0.3]{CPUPrivilegeRings}
+	\caption{The Rings of the x86's security concept according to~\cite{glatz2015betriebssysteme}}\label{pic:x86rings}
+\end{figure}
+%
+\begin{figure} [t]
+	\centering
+	\includegraphics[width=\linewidth]{ModeSwitchCallSequence}
+    \caption{A system calls sequence including the mode switches according to~\cite{glatz2015betriebssysteme}}\label{pic:mode-switches}
+\end{figure} %\ \\
+%
 Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
 It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
 Just the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operations or memory mappings\cite{lfd430}.
@@ -55,22 +66,6 @@ User applications in ring 3, running in the \textit{user mode}, are not allowed 
 As named above, they need to use a mechanism called \textit{system calls} to transfer the execution to the \textit{kernel mode} where the privileged actions are performed.
 Lastly, the execution is transferred back to the calling user process and with this, the mode changes back to \textit{user mode}.
 Figure~\ref{pic:mode-switches} pictures the operating flow of a system call including the mode switches between \textit{user} and \textit{kernel mode}.
-
-%
-%
-\begin{figure} [ht]
-	\centering
-	\includegraphics[scale=0.6]{x86Rings}
-	\caption{The Rings of the x86's security concept\cite{glatz2015betriebssysteme}}\label{pic:x86rings}
-    %TODO own picture!
-\end{figure}
-%
-\begin{figure} [ht]
-	\centering
-	\includegraphics[scale=0.6]{mode-switch}
-    \caption{A system calls sequence including the mode switches\cite{glatz2015betriebssysteme}}\label{pic:mode-switches}
-    %TODO own picture!
-\end{figure}
 
 The \ac{cpu}'s operating mode is usually controlled by a specific bit in the \ac{psw}\cite{tanenbaum-modern-operating-systems}.
 \ac{psw} is term on x86 \ac{cpu} architectures. 
@@ -105,6 +100,12 @@ Of course, this leads to some serious disadvantages in this architecture, for ex
 The missing memory protecting within the kernel could also be a source for crashes or attacks.
 But in contrast, this design also enables a very efficient kernel design without any unneeded communication overhead or hardware inefficiencies\cite{lfd430}.
 
+\begin{figure} [ht]
+	\centering
+	\includegraphics[scale=0.3]{MonolithicKernel}
+	\caption{A Monolithic Kernel Architecture according to~\cite{lfd430}}\label{pic:monolith}
+\end{figure} \ \\
+%
 An extension of the monolithic architecture are the so-called \textbf{modular operating systems}.
 They provide additional, defined interfaces for (in common) dynamically loadable and unloadable extensions, e.g.\ for device drivers or filesystems. 
 Sometimes, such extensions or modules are just allowed to use a limited function set of the operating system, but they are still running as a part of the kernel in kernel mode\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}. 
@@ -112,8 +113,8 @@ Just like ordinary kernel functions or procedures, (malicious) programming error
 Contrary, the modular concept provides some advantages over regular monolitic kernels.
 It allows slimming down the actual kernel by providing the chance to reload only the actually needed functionality dynamically and e.g.\ security patches within such an extension is possible without restarting the entire system\cite{brause2017betriebssysteme}.
 As the extensions become a part of the operating system running in kernel mode, no additional communication effort between the actual kernel and the modules is required.
+Figure~\ref{pic:monolith} pictures an exemplarly architecture for an monolithic kernel using optional modules.
 Thus, concept of modules is quite popular for basically monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
-
 
 \subsection{Microkernel Architectures}\label{sec:microkernel-archs}
 The microkernel architecture focuses on very opposite design goals compared to the monolithic one. 
@@ -123,11 +124,18 @@ Thereby, the microkernel architecture is excellently suited to implement a prope
 The kernel provides just the most basic mechanisms needed for an operating system, while the userspace modules implement the policy.
 This decoupling makes it easier to change the policy in userspace for altering requirements without touching the actual kernel\cite{tanenbaum-modern-operating-systems}.
 
+\begin{figure} [t]
+	\centering
+	\includegraphics[scale=0.3]{Microkernel}
+	\caption{A Microkernel Architecture according to~\cite{lfd430}}\label{pic:microkernel}
+\end{figure}
+
 What is part of this core functionality differs between miscellaneous sources, but all considered ones are in agreement that a simple mechanism for process scheduling is as well a core functionality as providing an \ac{ipc} mechanism\cite{lfd430},~\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.  
 In contrast, the sources disagree whether memory management and virtualization, device drivers or synchronization facilities are a part of the actual kernel.
 The \textit{Mach} microkernel, which formed the first generation of microkernels in 1985, named process and thread administration, an extensible and secure \ac{ipc} mechanism, virtual memory management and scheduling as its core tasks, while everything else needed has to run in usermode\cite{rashidMach}.
 Functional enhancements of the system do not require changes to the kernel itself, too.
 This concerns, depending on the exact realization, device drivers, memory management, system call handlers and even more system components\cite{lfd430},~\cite{silberschatz2009operating}.
+Figure~\ref{pic:microkernel} tries to picture this situation.
 In academic microkernel approaches, all components in user mode run within an own userspace process as small, well-defined modules, while the communication is done through copious message passing via the actual kernel\cite{tanenbaum-modern-operating-systems},~\cite{lfd430}.
 Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernel based operating systems is it not allowed to device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
 A device driver has to invoke the actual kernel to perform the needed action substitional.
@@ -152,7 +160,6 @@ Nevertheless, are pure microkernels mainly used for systems with high reliabilit
 Some industry examples are \textit{Integrity}, \textit{QNX} and \textit{seL4}, a mathematically verified version of the \textit{L4} kernel\cite{tanenbaum-modern-operating-systems}. 
 
 %TODO ? reincarnation server : check if all modules are up running and work correctly -> if not it replaces them without user interaction \cite{tanenbaum}
-%TODO picture \cite{microkernels}
 
 
 \subsection{Layered Architectures}
@@ -270,24 +277,23 @@ Linux, for example, has in general an other convention for system calls than Win
 The following instruction triggers a special software interrupt containing the order to switch the context.
 It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch.
-They are \texttt{0\x80} on Linux as pictured in~\ref{pic:syscalls} and \texttt{0\x2e} on Windows systems\cite{glatz2015betriebssysteme}.
+They are \texttt{0x80} on Linux as pictured in~\ref{pic:syscalls} and \texttt{0x2e} on Windows systems\cite{glatz2015betriebssysteme}.
 But right before switching it is needed to save the \acf{psw}, which contains the actual processors state includes the mode bit, to the stack.
-The same number is used in kernel mode as an index within the interrupt vector table (or interrupt descriptor table, IDT) which contains the start address of the system service dispatcher routine (compare to~\ref{pic:syscalls}).
+The same number is used in kernel mode as an index within the interrupt vector table (or \acf{idt}) which contains the start address of the system service dispatcher routine (compare to~\ref{pic:syscalls}).
 This tables content, the system service dispatcher routine, is loaded as next instruction to the new \ac{psw}\cite{brause2017betriebssysteme}.
 Jumping to this routine, the system call's parameters and its number are restored to examine the actual call and invoke the matching service routine from the system service dispatching table which finally fulfills the requested action as simplified pictured in~\ref{pic:syscalls}\cite{glatz2015betriebssysteme}.
 Conclusively, the control flow jumped back to the system service dispatcher which hands the control back to user space including switching back to user mode in the common way to return\cite{glatz2015betriebssysteme}.
 The previous \ac{psw} is restored from stack containing the bit for \ac{cpu}'s user mode execution.
 The user application has to clean up the stack like for each procedure call at the very end\cite{tanenbaum-modern-operating-systems}.
 
-Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86 for Linux kernel before 2.5\cite{decade-linux-syscalls}.
+% Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86\_64 for Linux\cite{decade-linux-syscalls}.
 More modern versions use the special instructions \texttt{SYSENTER} and \texttt{SYSEXIT} (Intel) or \texttt{SYSCALL} and \texttt{SYSRET} (AMD) instead of the slower trap interrupts\cite{decade-linux-syscalls}.
+Figure~\ref{pic:syscalls} uses a x86\_64 like assemby and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number 0x80.
 
-\begin{figure} [ht]
+\begin{figure} [t]
 	\centering
-	\includegraphics[scale=0.4]{syscall-lfd}
-    \caption{System Call Implementation\label{pic:syscalls}\cite{lfd430}}
-    %TODO own picture!
-    %TODO add numbers and a kind of flow sequence with numbers. Add numbers to text.
+	\includegraphics[width=\linewidth]{Systemcalls}
+    \caption{System Call Implementation inspired by~\cite{lfd430}}\label{pic:syscalls}
 \end{figure}
 
 
@@ -488,11 +494,10 @@ The process is prepared to get reassigned to a \ac{cpu}.
 A running process finishing its task during its computing time has reached the end of its life, its state changes to \textit{terminate}.
 The operating system destroys the process and frees related resources\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
 
-\begin{figure} [ht]
+\begin{figure} [t]
 	\centering
-	\includegraphics[scale=0.4]{process-states-silberschatz}
-    \caption{Lifecycle of a process\label{pic:process-lifecycle}\cite{silberschatz2009operating}}
-    %TODO own picture!
+	\includegraphics[width=\linewidth]{ProcessLifecycle}
+    \caption{Lifecycle of a process according to~\label{pic:process-lifecycle}\cite{silberschatz2009operating}}
 \end{figure}
 
 The model described applies to each individual process.
@@ -516,17 +521,23 @@ They are mostly generated from the \textit{init process}, the first one running 
 Foreground processes, the ones a user interacts with, are more often started on behalf of the user.
 Besides, a process can also be started by a system service call from an existing process.
 The last option, that a process is started to execute a batch job is rare today apart from scientific high performance computers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
-%TODO graphic
 
 Also, for the way how a new process can be started there are several options.
 Using \textit{process chaining}, a running process starts an independent new one, a new \ac{pcb}, and destroys itself\cite{achilles2006betriebssysteme}.
+This option is pictured in figure~\ref{pic:processcreation}, a.
 An example in Unix-like systems is calling \texttt{exec()} on an already running process to replace the current program with another one\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
-By \textit{forking a process}, a second one that is, at least in the beginning, a copy of the original one.
+By \textit{forking a process} (figure~\ref{pic:processcreation}, b), a second one that is, at least in the beginning, a copy of the original one.
 Both remains exiting and share the same environment such as program code, address space and resources\cite{tanenbaum-modern-operating-systems}.
 As a result, both processes have access to the exactly same resources like opened files or \ac{io} devices\cite{achilles2006betriebssysteme}.
 The Unix implementation of \texttt{fork()} is an example for this way of process creation.
 Process \textit{forking} and \textit{chaining} are usually used combined in Unix-like systems to create a new, independent process which is running in parallel to the first one\cite{tanenbaum-modern-operating-systems}.
-In contrast, Windows offers a third way the \textit{process creation} which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
+In contrast, Windows offers a third way the \textit{process creation} (figure~\ref{pic:processcreation}, c) which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
+
+\begin{figure} [t]
+	\centering
+	\includegraphics[width=\linewidth]{ProcessCreation}
+	\caption{Ways of Process Creation according to~\cite{glatz2015betriebssysteme}}\label{pic:processcreation}
+\end{figure}
 
 Are the newly created process and its parent share the same program code, the new one can simply inherit all needed data from its parent like it is done by \textit{process forking}\cite{achilles2006betriebssysteme}.
 Each process has its own virtual address space if it is not shared through inheritance.
@@ -1211,7 +1222,7 @@ Since the concept of scheduling is already divided into strategy (policy) and me
 The mechanism of the dispatcher is familiar from context switching.
 Except changing the \ac{cpu}'s operating mode, pure process switching follows the same rules.
 Basically scheduling can refer to processes in the whole or individual threads\cite{mandl2014Grundkurs}.
-The differences and effects of both variants have already been discussed as part of the section~\ref{sec:processes-threads}.
+The differences and effects of both variants have already been discussed as part of the~section~\ref{sec:processes-threads}.
 Scheduling strategies presented as part of this section apply to both, regardless of whether they are applied on processes or threads managed by an operating system or threads managed by a runtime environment.
 Thus, it is often generally referred to as job scheduling\cite{mandl2014Grundkurs}.
 Furthermore, only \textit{dynamic scheduling} is considered in the following.
@@ -1313,8 +1324,8 @@ This time is compared with the actual overall time the \ac{cpu} worked.
 The decision which job is assigned to the \ac{cpu} next is made on basis of the worst ratio between already consumed computing time and the overall available one.
 A job scheduled according this strategy is allowed to stay active until the worst ratio is calculated for another one\cite{mandl2014Grundkurs}.
 
-\paragraph{Earliest Deadline First} \cite{mandl2014Grundkurs}, \cite{brause2017betriebssysteme}
-\acused{edf}(\ac{edf})is a realtime scheduling strategy.
+\paragraph{Earliest Deadline First}
+\acused{edf}(\ac{edf}) is a realtime scheduling strategy.
 Since certain critical tasks have to be completed at a given time to avoid more or less serious consequences, this algorithm uses this deadlines to decide on their basis which job must be executed next.
 The strategy itself is rather complex but useless in situations where several critical jobs must be completed at the same time\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
 Nevertheless, is \ac{edf} a common algorithm for hard realtime systems and an ideal strategy on single core systems with up to 100\% \ac{cpu} utilization\cite{brause2017betriebssysteme}.
@@ -1338,7 +1349,7 @@ It also uses priority based scheduling with three jobs, H (high priority), M (me
 Just as explained for the situation above, the H job becomes waiting for a resource held by the L job. 
 When H blocked, the M job was scheduled and had to finished until the L job had the chance to free the resource needed by H.
 But the high prioritized task of H was to reset a watchdog to prevent a system reset accompanied by the loss of data\cite{glatz2015betriebssysteme},~\cite{silberschatz2009operating}.
-A more detailed description of the situation is given by \textsc{Silberschatz} in \cite{silberschatz2009operating}.
+A more detailed description of the situation is given by \textsc{Silberschatz} in~\cite{silberschatz2009operating}.
 
 The most common technique to prevent dangerous \textit{priority inversion} is \textit{priority inheritance}, a special property of semaphores which needs to be implemented within the operating system.
 If a higher prioritized process or thread is waiting for a resource occupied by a less prioritized, the priority of the second job will be raised to the one of the higher prioritized.
@@ -1426,7 +1437,7 @@ The scheduler starts with the queue with the highest priority and executes the j
 Only when this queue is empty, the next one is considered.
 If a job blocks, it is completely removed from the \ac{cpu}'s queue and added to a distinct waiting queue.
 The stays there until the required resource becomes available and thus its status changes to runnable again.
-The job is put back to ,whenever possible the previous \ac{cpu} core's, queue with the right prioity.
+The job is put back to, whenever possible the previous \ac{cpu} core's, queue with the right prioity.
 Was the job blocked before its time slice was finished, it becomes rewarded by being inserted at the front of the queue to resume as soon as possible\cite{zircon-scheduling}.
 
 The priority of jobs in Zircon is determined on the basis of three criteria:
@@ -1475,7 +1486,7 @@ The topmost layer is nearly equivalent to registers in terms of access time and 
 After two to four cache levels follows by main memory or \ac{ram}.
 If it is spoken about memory within this work, the main memory is meant in the majority of cases.
 In common, it is implemented as \textit{Dynamic} \ac{ram}.
-Accessing the main memory is 10 to 50 times slower than accessing caches, but the capacity is significantly larger (e.g. Intel Core i7-7820HQ; L1 caches are divided into data and instruction caches with 32 kilobytes each, while the total main memory installed is 16 gigabyte\footnote{Benchmarks from an Intel Core i7, 7th Generation.}\cite{mandl2014Grundkurs}.
+Accessing the main memory is 10 to 50 times slower than accessing caches, but the capacity is significantly larger (e.g.\ Intel Core i7-7820HQ; L1 caches are divided into data and instruction caches with 32 kilobytes each, while the total main memory installed is 16 gigabyte\footnote{Benchmarks from an Intel Core i7, 7th Generation.}\cite{mandl2014Grundkurs}.
 The data of running processes and the system itself is generally held in the main memory.
 The last kind of memory which is important as a part of this thesis are common hard drives and newer \acp{ssd}, used for files, not running applications and miscellaneous other data.
 
@@ -1580,7 +1591,6 @@ A more detailed introduction to these hardware support mechanisms and related st
 
  
 \subsection{Memory Management in Linux}
-%     Linux Concept -> LFD430 pic
 Linux also uses a virtual memory system, on modern \ac{mmu}-enabled \acp{cpu}, but there is a Linux kernel variant for \ac{mmu}-less architectures used for very small embedded systems, called \textit{uCLinux}.
 While a usual Linux kernel with virtual memory system needs an address translation, \textit{uCLinux} uses raw physical memory addresses without further protection or other sophisticated mechanisms.
 But more common and focused in this work is the use of virtual memory enabled systems\cite{lfd430}.
@@ -1600,12 +1610,11 @@ Kernel virtual addresses differ from common virtual addresses and will be consid
 As described in the general section, Linux provides an own protected address space with virtual addresses for each process, too, which are generally mapped into high memory\cite{lfd430}.
 Figure~\ref{pic:high-low-mem} illustrates the context.
 
-\begin{figure} [ht]
+\begin{figure} [t]
 	\centering
-	\includegraphics[scale=0.15]{HighLowMem}
-	\caption{The relation between virtual and physical memory in 32-bit x86 architectures\cite{lfd430}}\label{pic:high-low-mem}
-    %TODO own picture!
-\end{figure} \ \\
+	\includegraphics[scale=0.25]{HighLowMem}
+	\caption{The Relation between Virtual and Physical Memory in 32-bit x86 Architectures according to~\cite{lfd430}}\label{pic:high-low-mem}
+\end{figure}
 %
 Actually, the division in high and low memory just one from several ones. 
 Linux uses additionally a \textit{zone allocator} memory algorithm to partition its address space more fine granular.
@@ -1630,11 +1639,10 @@ The types are:
     \item \textbf{kernel virtual addresses}, which are kernel addresses with no need for a direct mapping to physical memory addresses. It is a 32-bit x86 architectural anomaly and not available on 64-bit systems. Kernel virtual addresses which are not logical addresses, too, reside in high memory\cite{lfd430}.
 \end{itemize}
 
-\begin{figure} [ht]
+\begin{figure} [t]
 	\centering
-	\includegraphics[scale=0.45]{Chapter6-5}
-	\caption{Linux memory management overview\cite{lfd430}}\label{pic:linux-mem}
-    %TODO own picture!
+	\includegraphics[width=\linewidth]{LinuxMemoryManagement}
+	\caption{Linux memory management overview according to~\cite{lfd430}}\label{pic:linux-mem}
 \end{figure}
 
 As also described in the general section, Linux uses fixed sized pages within memory management.
@@ -1652,10 +1660,10 @@ The kernel is invoked to load the proper page into main memory using demand pagi
 Figure~\ref{pic:linux-mem} illustrates the most important terms and concepts of memory management in Linux at a glance.
 The graphic is inspired by the one done by \textsc{John Bonesio} during a \textit{Developing Linux Device Drivers} Linux foundation training class.
 On the left hand side of the graphic, the view to the (virtual) memory from two distinct applications A and B is pictured.
-Both see their own virtual address space using \textit{user virtual addresses}, marked in blue and red.
+Both see their own virtual address space using \textit{user virtual addresses}, marked in turquoise and red.
 The view on the kernel's address space is the same for both of them.
 On the right hand side, the graphic pictures the connection between \ac{cpu} and \ac{mmu} (including but not pictured the \ac{tlb}),  the physical main memory divided into \textit{low} and \textit{high memory} and the peripherals as well as the address types used in between.
-The physical memory is divided into the known memory zones, the \textit{\ac{dma}} zone in green, the \textit{\ac{dma}32 zone} in orange, the \textit{normal zone} or low memory in grey and the \textit{high zone} or high memory in \textit{purple}.
+The physical memory is divided into the known memory zones, the \textit{\ac{dma}} zone in green, the \textit{\ac{dma}32 zone} in orange, the \textit{normal zone} or low memory in blue and the \textit{high zone} or high memory in \textit{pink}.
 Additionally, the graphic symbolizes how pages in different contexts are mapped into the physical main memory.
 Both user processes have numbered pages which can also be found in the right hand side \ac{ram} representation.
 Furthermore are some kernel pages marked in grey with the characters \textit{z, y and x} which are 1:1 mapped into the normal memory (kernel logical addresses) and a page in purple (kernel virtual address), mapped into the high memory zone. 
