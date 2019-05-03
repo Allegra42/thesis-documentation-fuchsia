@@ -304,12 +304,14 @@ If a device still has work in progress when \texttt{unbind()} is called by the p
 Thus, the parent must ensure the device is not working anymore before it also calls \texttt{release()} as a last step in this exemplarily tear down sequence on all children\cite{zircon-devicemodel}.
 
 
-\section{Test Setup}
+\section{Development Setup}
+\subsection{Hardware Selection}
 The hardware selection for the driver development case study is limited by the available development platforms for Zircon.
 The best known x86\_64 platform is probably Google's own hardware, the \textit{Pixelbook}, which is currently shipped with \textit{Chrome OS}.
-Unfortunately, there is hardly anything known about suitable hardware for a not too complicated test driver within the Pixelbook.
+Unfortunately, there is hardly anything known about suitable internal hardware for a not too complicated test driver like sensors.
 
-Thus, the decisison was made for an ARM64 based development board with accessable expansion interfaces, the \textbf{HiKey960} which is pictured in figure~\ref{pic:hikey}.
+Thus, the decisison was made for an ARM64 based development board with an accessable expansion interfaces.
+The choosen \textbf{HiKey960} is pictured in figure~\ref{pic:hikey}.
 It is not only a development board for Linux but also officially listed as reference platform for Google's \textit{Android} operating system.
 The HiKey is, amongst other things, equipped with\footnote{96boards.org, visited on 02.05.2019~\url{https://www.96boards.org/product/hikey960/}}
 \begin{itemize}
@@ -335,42 +337,86 @@ The HiKey is, amongst other things, equipped with\footnote{96boards.org, visited
 The peripheral device for which the driver is to be written, should provide a well-known interface that is already supported within the Zircon kernel.
 \ac{i2c} matches this requirement and even in the used Zircon source version are driver examples for C and C++ available.
 Of course, \ac{i2c} support is available in Linux, too.
+As \ac{i2c} is a very common hardware communication interface are manifold devices equipped with this interface available.
+Different sensor types are conceivable as well as actors like displays which is another argument for the decision to use \ac{i2c}.
+To make the driver development more sophisticated, the \textbf{Grove-LCD RGB Backlight} peripheral device (see figure~\ref{pic:grove}) was selected.
+The special thing about it is the fact both parts, the \ac{lcd} and the \acs{rgb} backlight are controlled by distinct controllers on the peripheral device.
+Using \ac{i2c} enables this situation.
+It is a two wired master-slave bus working in a serial tansfer mode.
+Several masters and slaves are allowed, but both roles can also be combined in one.
+A datatransfer is initialized by a master which reaching out for the desired slave using an address.
+For the Grove device, there are two distinct slaves with individual addresses which need to be controlled.
+A device's \ac{i2c} address is usually set by the manufacturer but configurable to avoid conficts on the bus.
+For the Grove device, the default slave addresses are \texttt{0x62} for controlling \ac{rgb} and \texttt{0x3e} for LCD\@.
+Two additional addresses are available on the combined device but they are used on startup and can not be addressed individually\footnote{\url{http://wiki.seeedstudio.com/Grove-LCD_RGB_Backlight/}}.
+Thus, they does not matter for the driver development.
 
-%TODO more i2c, grove \ldots
+\begin{figure} [t]
+    \centering
+    \includegraphics[scale=0.35]{GroveLCD}
+    \caption{The Grove-LCD RGB backlight peripheral device}\label{pic:grove}
+\end{figure} 
 
+\subsubsection*{Hardware Issues}
+The HiKey960 works internally on +1.8V  while the Grove-LCD RGB peripheral device is on +5V.
+As a result of not working at the same voltage level are adjustments needed.
+Unfortunately, common level shifters did not work in this situation, because the level ranges for detecting a logical \textit{0} respectively for a logical \textit{1} on the Grove differs between both \ac{i2c} controllers.
+Thus, a sophisticated level adjustment to match both ranged was needed to solve this issue.
+The final resulting circuit is pictured in figure~\ref{pic:groveadjust}.
 
-
-
-\subsection{Hardware Issues}
-
+The practical part of this thesis was started with the development of the Zircon driver.
+Thus the adjusting circuit was in particular designed for exactly one HiKey960 development board.
+This board was equipped with the neccessary firmware to flash and boot Zircon while two other HiKey960 boards were prepared for booting Linux.
+After switching to Linux development and thus to another HiKey960, there were again issues with level adjustment which were expressed by an unreliable or not at all working LCD while the signals on the \ac{i2c} bus captured by an oscilloscope were fine.
+The error search shows that the output levels for \ac{i2c} at all tree available HiKey960 development boards differs in the range of 0.5V.
+Accordingly, the two HiKey boards running Linux did not get proper levels to detect a logical \textit{0} respectively a \textit{1} depending on the direction of the deviation.
+As an adjustment for another board would may have result in unreliableness on Zircon-side, the decision was made to port the already exiting Linux driver to the Raspberry Pi development board (version 2 or 3).
+It is running on +5V per default which makes any level adjustment obsolete. 
+A dynamically switching between Zircon and Linux on the exactly same HiKey960 board was not possible.
+The diverging firmware needed to boot either Zircon or Linux is too error-prone in the setup.
+Likewise, a complete change to the Raspberry Pi as a development platform is not possible, since Zircon does not support the board (anymore\footnote{\url{https://github.com/Allegra42/zircon/commit/5dc89c3f67808804c0c7d1bd9a0df3703d961ce6#diff-9bd3cb9d38dba050f310f03d18bbb2cf}}).
+The final setups used for Zircon driver development and the remaining Linux development are pictured in figure~\ref{pic:zirconsetup} (Zircon) and figure~\ref{pic:linuxsetup} (Linux).
+This change does not influence the driver development in any manner.
 
 \begin{figure} [t]
     \centering
     \includegraphics[width=\linewidth]{GroveAdjustment}
     \caption{Level Adjustment for the Grove RGB LCD with the HiKey960 Development Board}\label{pic:groveadjust}
-\end{figure}
+\end{figure} 
 
-% 1.8 vs 5V
-%
-% The RGB LCD has 2 chips with 2 different functionalities. One of it drives the LEDs and the other one drives the text that’s printed.
-%
-% The text driver is one and only and has an address of 0x3e.
-%
-% The LED driver has multiple addresses, of which we only need one. As it’s specified on page 8 (annex 7.1.1) in this datasheet (aka PCA9633) 9, there are 3 fixed addresses for our 8-pin chip package (the PCA9633):
-%
-% address 0x70 - LED all call address - it’s on at startup and cannot be addressed individually
-%
-% address 0x03 - Software reset address - it’s on at startup and cannot be addressed individually
-%
-% address 0x62 - Slave address - it’s the one you are communicating with and is addressable
-%
-% https://www.kernel.org/doc/Documentation/i2c/instantiating-devices
-% https://www.kernel.org/doc/Documentation/i2c/writing-clients
-% https://raw.githubusercontent.com/torvalds/linux/v4.20/include/linux/i2c.h
-% https://i2c.wiki.kernel.org/index.php/OF_Modalias
+\begin{figure} [H]
+    \centering
+    \includegraphics[scale=0.3]{ZirconSetup2}
+    \caption{Final Development Setup for Zircon using the HiKey960 Development Board}\label{pic:zirconsetup}
+\end{figure} 
+
+\begin{figure} [ht]
+    \centering
+    \includegraphics[scale=0.35]{LinuxSetup}
+    \caption{Final Development Setup for Linux using the Raspberry Pi Development Board}\label{pic:linuxsetup}
+\end{figure} 
 
 
- 
+\subsection{Software Development Setup}
+\subsubsection*{Linux}
+Initially, the Linux driver development was based on a mainline kernel in version 4.9.
+Due to the needed platform change, the already existing driver was ported to the Raspberry Pi Linux kernel tree in version 5.0.
+For a stable source code base over this thesis' duration, the kernel's source repository was forked and all development done in a branch of the fork.
+The repository is public accessible on GitHub\footnote{\url{https://github.com/Allegra42/linux-rpi}}.
+
+The Raspberry Pi runs a standard Raspbian Linux, just the kernel respectively the driver module need to be changed during development.
+Corresponding scripts to build kernel and modules for a Raspberry 2 or 3 running Raspbian and flash the binaries to a prepared SD card are part of the repository, too.
+By switching to the specific Linux kernel tree for the Raspberry Pi, there is no default support for using \textbf{Clang} as compiler anymore.
+Some device specific changes in this kernel tree impede the Clang build and would need manual adjustments.
+The use of Clang related tools, especially \textit{ClangFormat} is not affected.
+
+Within this work, the Raspberry Pi runs without an attached display besides the Grove-LCD RGB peripheral.
+The development board is accessed using its physical \ac{uart} interface with an \ac{usb} to serial \ac{ttl} adapter which allows the connection to a terminal session.
+
+
+\subsubsection*{Zircon}
+
+  
 \section{General Driver Concept}\label{sec:cs-driver-concept}
 
 
