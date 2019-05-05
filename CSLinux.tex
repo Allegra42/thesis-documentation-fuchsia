@@ -415,12 +415,94 @@ The development board is accessed using its physical \ac{uart} interface with an
 
 
 \subsubsection*{Zircon}
+The Zircon kernel consists of the actual kernel, a bootloader, system modules, third-party modules and scripts.
+\textit{System modules} include neccessary system facilities like the already mentioned device manager, but also the effective device drivers, or system-relevant user applications.
+Zircon is not built in versioned releases, yet.
+To work on a stable code base, nevertheless, the Zircon repository on GitHub was forked in December 2018.
+Today, due to restructurings from Google, the origin repository is not longer available and even the standalone Zircon code moved into the Fuchsia source tree on GoogleSource\footnote{\url{https://fuchsia.googlesource.com/fuchsia/+/refs/heads/master/zircon/}}.
+Accordingly, the driver development but also this work in general refer to the forked Zircon source tree\footnote{\url{https://github.com/Allegra42/zircon}}.
+
+In contrast to Linux, Zircon is booted as a standalone system for this thesis.
+The Fuchsia userland is not used at al..
+Thus, the tooling of the running kernel is limited and just a subset of the console commands and interactions known from Linux or Fuchsia is available.
+This concerns i.a.\ the Unix-like tool \texttt{cat} which is, for example, used to read from device files, while \texttt{echo}, which is used to write into device files, is available.
+As an alternative option, an implementation of the older Unix tool \texttt{dd} can be used within the pure Zircon kernel.
+
+For the development of Zircon including drivers and operating system related userspace modules are both compilers, GCC and Clang available.
+While GCC is default in most situations and scripts, e.g.\ in the built script for the HiKey960 which is a native part of the source tree, are the surrounding tools like code formatting or linter clearly based on Clang and may require a Clang build to work.
+
+Just like Linux, the Zircon development setup is accessed via its \ac{uart} interface.
+The setup is the same as for Linux, no matter whether using a Raspberry Pi or the HiKey960.
+Without Fuchsia as an userland, Zircon is not running a full graphics stack at all and thus, would not be able to show a \ac{gui} in contrast to Linux respectively Raspbian.
+As the HiKey960 is not equipped with a physical ethernet interface, \ac{uart} is the only way to interact with Zircon.
+% For both, Linux and Zircon, the \ac{uart} also shows kernel messages.
 
   
 \section{General Driver Concept}\label{sec:cs-driver-concept}
+In general, the driver concept for both, Linux and Zircon should be very similar because the Grove-LCD RGB backlight as peripheral device specifies them and stays the same on both platforms.
+However, both operating system kernels add some requirements, too.
+
+Nevertheless, the first decisison for the driver concept is reasoned in the Grove-LCD RGB backlight's nature of combining two distinct device controllers into a single peripheral device.
+Especially in Linux, two distinct \ac{i2c} devices, i.e.\ two controllers and thus two slave addresses, required distinct device drivers until kernel 4.9.
+Only Linux kernel versions starting there allow a combined driver from two or more related \ac{i2c} slave addresses by providing an appropriate \ac{api}.
+Zircon also allows combined \ac{i2c} drivers in the used version level, but only on so-called \textit{platform devices}.
+The according term \textit{platform bus} describes the Zircon driver for a framework that manages several low level drivers on ARM64 system architectures.
+An \ac{i2c} is in this context a \textit{protocol implementation driver} and thus a part of the \textit{platform bus}.
+Such a driver is running in the same device host as the bus driver itself\cite{zircon-platformbus}.
+The situation is pictured in figure~\ref{pic:platformbus} which is also a part of the official Zircon documentation\footnote{\url{https://github.com/Allegra42/zircon/blob/i2c-grove-lcd/docs/ddk/platform-bus.png}}\cite{zircon-platformbus}.
+
+\begin{figure} [t]
+    \centering
+    \includegraphics[scale=0.35]{platform-bus}
+    \caption{The setup of the Zircon Platform Bus on ARM64 based devices\cite{zircon-platformbus}}\label{pic:platformbus}
+\end{figure} 
+
+However, the possibility to write a combined driver for both parts of the Grove is right now exclusively limited to platform devices.
+Indeed, the development setup using the HiKey960 and the Grove-LCD RGB backlight device fulfills this requirement but in contrast to Linux is the needed \ac{api} not fully available.
+
+For this work, the decision was made for using the new \ac{api} for a combined driver on Linux.
+It is still new and rarely used right now but interesting, global available and more meaningful for the selected device than writing two drivers.
+As a consequence, less boilerplate code, as it e.g.\ needed for initializations must be written.
+In the device filesystem \texttt{/dev/}, the Grove peripheral also shows up as a single device which is corresponds more to reality than distinct part devices.
+A further consequence of this decision results for user's access to the driver.
+The standard file operations \texttt{read()} and \texttt{write()} are not longer meaningful for the device.
+Using distinct drivers, especially for the \ac{lcd} are both of them very meaningful and thus useful, but already the meaning for the \ac{rgb} part is more complicated.
+While it is very clear that a string which is sent to a line display should be showed, is a string to a \ac{rgb} backlight device not that meaningful.
+It requires a certain non-intuitive format to be understand.
+By implementing distinct drivers, this is to some degree possible without loosing meaning and the intuitive nature of especially the \texttt{write()} call, but a combined driver would imply a sophisticated string parsing to differentiate between both devices.
+Thus, the usage of \texttt{write()} would not be intuitive for users anymore.
+As a result, is implementing those calls does not making sense for this kind of driver.
+Instead are \texttt{ioctl()} commands or specific defined pseudo-files in sysfs or procfs a more conceivable solution for the Linux driver.
+
+In Zircon, the situation is very similar to Linux.
+But the \ac{api} for a combined driver is not available on x86\_64 platforms.
+Using the combined \textit{platform device \ac{api}}, implementation standard file operations is, exactly as with Linux, not meaningful.
+Besides, the way file operations are implemented in Zircon is not taken as known as it is for Linux.
+Thus, both variants, the two driver version which is also useable on x86\_64, but also the platform device way, are interesting for this work and should be considered.
+Using the HiKey960 as a hardware platform enables both.
+While the standard file operations are available on both, Linux and Zircon, the further interfaces differ between them.
+Zircon offers with \ac{fidl} defined \acs{api} a very sophisticated option for driver specific interfaces which is comparable to the also available \ac{io}-controls but there are not equivalents to sysfs or procfs.
+To keep the drivers on both systems comparable and limit the development effort, they are not futher considered in this work.
+Of course, even more comparable would be the use of \texttt{ioctl()} on both operating systems, but this would break the idea of writing idiomatic code for both platforms as interface defined with \ac{fidl} are clearly preferred in Zircon.
+Although the trend in Linux goes away from \texttt{ioctl()} to implement meaningful virtual file entries for sysfs are the former ones still accepted and wide-spread while Zircon clearly prefers the use of \ac{fidl} in such a situation.
+Furthermore, the virtual entries below a sysfs record is hardly comparable to \ac{io}-controls or \ac{fidl} in terms of defining type-safe call signatures with several arguments and types.
+
+Additionally, Zircon enables driver development in different languages.
+For the source code version used within this work, these are \textit{C} and \textit{C++}.
+Using C as a programming language for drivers implies good documentation and lot of examples within the code.
+C++ is less documented in the used version but also in Google's master repository.
+Nevertheless, documentation and code are clearly in favour of C++ drivers and more and more C drivers are moved to C++.
+Accordingly, both ways are very attractive for this work, C++ in particular as drivers in this language are great difference to Linux ones.
+
+%TODO compilers & functional scope
 
 
-\section{Linux}\label{sec:cs-linux}
+
+
+
+
+
+ \section{Linux}\label{sec:cs-linux}
 
 
 \subsection{Driver Implementation} %TODO better titel, label
