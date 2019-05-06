@@ -542,5 +542,32 @@ On Ziron are these methods more interesting for this work, especially in the C++
 
 \section{Linux Driver Development}\label{sec:cs-linux}
 
+\subsection{Prearrangements}
+To built a Linux driver, various options are available.
+It can be built as a permanent part of the kernel as a \textit{built-in} driver or as a \textit{module}.
+Further, it is not needed a module's source code is located within the actual kernel source tree.
+For this work, the first choice should not play a deeper role, but the source location.
+Carefully developed as a module within the kernel sources, the change to \textit{built-in} is nothing more than a build configuration.
+Accordingly, the driver must be placed into the internal kernel structure in a meaningful way.
+Linux is organized into \textit{subsystems} to structure its monolithic architecture into functional related modules.
+Within the \textit{drivers} directory, are several subsystems which are more or less meaningful for the Grove display.
+The probably most appropriate subsystem for this device is \textit{auxdisplay}, i.e.\ auxiliary display which groups a small amount of drivers for small additional e.g.\ \ac{lcd}'s.
+Currently, the auxdisplay subsystem consists of only nine drivers.
+Each one is made from a single C code file and thus, not further divided into sub-directories for the drivers.
+%TODO
 
-\subsubsection{Interface} %ioctl
+
+\subsection{Driver Initialization and Exit}
+
+\subsection{Device Probing and Releasing}
+
+\subsection{Driver Interfaces}
+
+\begin{listing} [ht]
+	\caption{Custom macro definition for \texttt{printk()}}
+	\label{lst:printk-macro}
+	\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+
+	\end{minted}
+\end{listing}
+
