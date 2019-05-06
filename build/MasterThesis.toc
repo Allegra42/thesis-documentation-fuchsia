@@ -1,0 +1,162 @@
+\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
+\babel@toc {english}{}
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.1}Research Objectives}{2}{section.1.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {2}Modern Operating System Concepts}{5}{chapter.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.1}Operating System Architectures}{5}{section.2.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1.1}Monolithic Architectures}{8}{subsection.2.1.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1.2}Microkernel Architectures}{9}{subsection.2.1.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1.3}Layered Architectures}{11}{subsection.2.1.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1.4}Hybrid Architectures}{12}{subsection.2.1.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1.5}The Linux Kernel's Monolithic Architecture}{12}{subsection.2.1.5}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1.6}The Zircon Kernel's Microkernel Architecture}{13}{subsection.2.1.6}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.2}System Calls}{14}{section.2.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{POSIX}{15}{section*.9}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.2.1}System Calls in Linux}{16}{subsection.2.2.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.2.2}System Calls in Zircon}{16}{subsection.2.2.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.3}Processes and Threads}{17}{section.2.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.3.1}Processes}{17}{subsection.2.3.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.3.2}Threads}{21}{subsection.2.3.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.3.3}Processes and Threads in Linux}{22}{subsection.2.3.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.3.4}Processes and Threads in Zircon}{23}{subsection.2.3.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.4}Synchronization and Inter Process Communication}{25}{section.2.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.1}Synchronization}{26}{subsection.2.4.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.2}Inter Process Communication}{28}{subsection.2.4.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{Memory Based Communication}{29}{section*.18}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{Message based communication}{29}{section*.19}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Synchronous and Asynchronous Communication}{30}{section*.20}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Connection-Oriented and Connectionless Communication}{30}{section*.21}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Receiver Addressing}{31}{section*.22}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Priority}{32}{section*.23}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.3}Synchronization and IPC in Linux}{32}{subsection.2.4.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Pipes}{33}{section*.27}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Named Pipes (FIFOs)}{33}{section*.28}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Berkeley Sockets}{33}{section*.29}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.4}Synchronization and IPC in Zircon}{34}{subsection.2.4.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Shared Memory}{35}{section*.34}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Channels}{35}{section*.35}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Sockets}{35}{section*.36}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{FIFO}{36}{section*.37}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.5}Scheduling}{36}{section.2.5}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Round Robin}{38}{section*.40}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Dynamic Priority Round Robin}{38}{section*.41}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Shortest Remaining Time First}{39}{section*.42}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Multilevel Scheduling}{39}{section*.43}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Fair Share Scheduling}{39}{section*.44}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {paragraph}{Earliest Deadline First}{39}{section*.45}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.5.1}Scheduling in Linux}{40}{subsection.2.5.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.5.2}Scheduling in Zircon}{42}{subsection.2.5.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.6}Memory Management}{44}{section.2.6}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.6.1}Address Space}{45}{subsection.2.6.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.6.2}Virtual Memory}{45}{subsection.2.6.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.6.3}Memory Management in Linux}{47}{subsection.2.6.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.6.4}Memory Management in Zircon}{50}{subsection.2.6.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.7}I/O}{51}{section.2.7}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.1}Memory Mapped I/O}{52}{subsection.2.7.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.2}Direct Memory Access}{53}{subsection.2.7.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.3}Interrupts in I/O Devices}{53}{subsection.2.7.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.4}I/O in Linux and Zircon}{53}{subsection.2.7.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.8}Summary~-~Concepts in Linux and Zircon}{54}{section.2.8}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {3}Case Study: Driver Development in Linux and Zircon}{55}{chapter.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.1}Linux Driver Model}{56}{section.3.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.2}Zircon Driver Model}{61}{section.3.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.3}Development Setup}{64}{section.3.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.3.1}Hardware Selection}{64}{subsection.3.3.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.3.2}Software Development Setup}{66}{subsection.3.3.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.4}General Driver Concept}{68}{section.3.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.5}Linux}{71}{section.3.5}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.5.1}Driver Implementation}{71}{subsection.3.5.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{Interface}{71}{section*.67}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.6}Zircon}{71}{section.3.6}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.6.1}Driver}{71}{subsection.3.6.1}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{C}{71}{section*.68}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{C++}{71}{section*.69}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{FIDL}{71}{section*.70}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.6.2}PDev Driver}{71}{subsection.3.6.2}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{C}{71}{section*.71}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{C++}{71}{section*.72}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{FIDL}{71}{section*.73}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.6.3}User Application}{71}{subsection.3.6.3}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.7}Evaluation}{71}{section.3.7}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {4}Conclusion}{73}{chapter.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {5}Outlook}{75}{chapter.5}% 

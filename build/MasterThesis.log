@@ -1,0 +1,1420 @@
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/Arch Linux) (preloaded format=pdflatex 2019.4.30)  5 MAY 2019 12:34
+entering extended mode
+ \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**MasterThesis.tex
+(./MasterThesis.tex
+LaTeX2e <2018-12-01>
+(/usr/share/texmf-dist/tex/latex/base/book.cls
+Document Class: book 2018/09/03 v1.4i Standard LaTeX document class
+(/usr/share/texmf-dist/tex/latex/base/bk12.clo
+File: bk12.clo 2018/09/03 v1.4i Standard LaTeX file (size option)
+)
+\c@part=\count80
+\c@chapter=\count81
+\c@section=\count82
+\c@subsection=\count83
+\c@subsubsection=\count84
+\c@paragraph=\count85
+\c@subparagraph=\count86
+\c@figure=\count87
+\c@table=\count88
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+) (/usr/share/texmf-dist/tex/latex/base/inputenc.sty
+Package: inputenc 2018/08/11 v1.3c Input encoding file
+\inpenc@prehook=\toks14
+\inpenc@posthook=\toks15
+) (/usr/share/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2018/08/11 v2.0j Standard LaTeX package
+(/usr/share/texmf-dist/tex/latex/base/t1enc.def
+File: t1enc.def 2018/08/11 v2.0j Standard LaTeX file
+LaTeX Font Info:    Redeclaring font encoding T1 on input line 48.
+)) (/usr/share/texmf-dist/tex/latex/csquotes/csquotes.sty
+Package: csquotes 2018/04/13 v5.2d context-sensitive quotations (JAW)
+(/usr/share/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+Package: etoolbox 2018/08/19 v2.5f e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count89
+) (/usr/share/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
+\KV@toks@=\toks16
+)
+\csq@reset=\count90
+\csq@gtype=\count91
+\csq@glevel=\count92
+\csq@qlevel=\count93
+\csq@maxlvl=\count94
+\csq@tshold=\count95
+\csq@ltx@everypar=\toks17
+(/usr/share/texmf-dist/tex/latex/csquotes/csquotes.def
+File: csquotes.def 2018/04/13 v5.2d csquotes generic definitions (JAW)
+)
+Package csquotes Info: Trying to load configuration file 'csquotes.cfg'...
+Package csquotes Info: ... configuration file loaded successfully.
+(/usr/share/texmf-dist/tex/latex/csquotes/csquotes.cfg
+File: csquotes.cfg 
+)) (/usr/share/texmf-dist/tex/generic/babel/babel.sty
+Package: babel 2018/11/13 3.27 The Babel package
+(/usr/share/texmf-dist/tex/generic/babel/switch.def
+File: switch.def 2018/11/13 3.27 Babel switching mechanism
+) (/usr/share/texmf-dist/tex/generic/babel-english/english.ldf
+Language: english 2017/06/06 v3.3r English support from the babel system
+(/usr/share/texmf-dist/tex/generic/babel/babel.def
+File: babel.def 2018/11/13 3.27 Babel common definitions
+\babel@savecnt=\count96
+\U@D=\dimen103
+(/usr/share/texmf-dist/tex/generic/babel/txtbabel.def)
+\bbl@dirlevel=\count97
+)
+\l@canadian = a dialect from \language\l@american 
+\l@australian = a dialect from \language\l@british 
+\l@newzealand = a dialect from \language\l@british 
+)) (/usr/share/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2017/06/01 v1.1a Enhanced LaTeX Graphics (DPC,SPQR)
+(/usr/share/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2017/06/25 v1.2c Standard LaTeX Graphics (DPC,SPQR)
+(/usr/share/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+) (/usr/share/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 99.
+(/usr/share/texmf-dist/tex/latex/graphics-def/pdftex.def
+File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
+))
+\Gin@req@height=\dimen104
+\Gin@req@width=\dimen105
+) (/usr/share/texmf-dist/tex/latex/changepage/changepage.sty
+Package: changepage 2009/10/20 v1.0c check page and change page layout
+\c@cp@cntr=\count98
+\cp@tempcnt=\count99
+) (/usr/share/texmf-dist/tex/latex/subfig/subfig.sty
+Package: subfig 2005/06/28 ver: 1.3 subfig package
+(/usr/share/texmf-dist/tex/latex/caption/caption.sty
+Package: caption 2018/10/06 v3.3-154 Customizing captions (AR)
+(/usr/share/texmf-dist/tex/latex/caption/caption3.sty
+Package: caption3 2018/09/12 v1.8c caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 64.
+\captionmargin=\dimen106
+\captionmargin@=\dimen107
+\captionwidth=\dimen108
+\caption@tempdima=\dimen109
+\caption@indent=\dimen110
+\caption@parindent=\dimen111
+\caption@hangindent=\dimen112
+)
+\c@caption@flags=\count100
+\c@ContinuedFloat=\count101
+)
+\c@KVtest=\count102
+\sf@farskip=\skip43
+\sf@captopadj=\dimen113
+\sf@capskip=\skip44
+\sf@nearskip=\skip45
+\c@subfigure=\count103
+\c@subfigure@save=\count104
+\c@lofdepth=\count105
+\c@subtable=\count106
+\c@subtable@save=\count107
+\c@lotdepth=\count108
+\sf@top=\skip46
+\sf@bottom=\skip47
+) (/usr/share/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2016/07/10 v1.1e Standard LaTeX Color (DPC)
+(/usr/share/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package color Info: Driver file: pdftex.def on input line 147.
+) (/usr/share/texmf-dist/tex/latex/soul/soul.sty
+Package: soul 2003/11/17 v2.4 letterspacing/underlining (mf)
+\SOUL@word=\toks18
+\SOUL@lasttoken=\toks19
+\SOUL@cmds=\toks20
+\SOUL@buffer=\toks21
+\SOUL@token=\toks22
+\SOUL@spaceskip=\skip48
+\SOUL@ttwidth=\dimen114
+\SOUL@uldp=\dimen115
+\SOUL@ulht=\dimen116
+) (/usr/share/texmf-dist/tex/latex/hyperref/hyperref.sty
+Package: hyperref 2018/11/30 v6.88e Hypertext links for LaTeX
+(/usr/share/texmf-dist/tex/generic/oberdiek/hobsub-hyperref.sty
+Package: hobsub-hyperref 2016/05/16 v1.14 Bundle oberdiek, subset hyperref (HO)
+(/usr/share/texmf-dist/tex/generic/oberdiek/hobsub-generic.sty
+Package: hobsub-generic 2016/05/16 v1.14 Bundle oberdiek, subset generic (HO)
+Package: hobsub 2016/05/16 v1.14 Construct package bundles (HO)
+Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
+Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
+Package: ifluatex 2016/05/16 v1.4 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+Package: ifvtex 2016/05/16 v1.6 Detect VTeX and its facilities (HO)
+Package ifvtex Info: VTeX not detected.
+Package: intcalc 2016/05/16 v1.2 Expandable calculations with integers (HO)
+Package: ifpdf 2018/09/07 v3.3 Provides the ifpdf switch
+Package: etexcmds 2016/05/16 v1.6 Avoid name clashes with e-TeX commands (HO)
+Package etexcmds Info: Could not find \expanded.
+(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
+(etexcmds)             that some package has redefined \expanded.
+(etexcmds)             In the latter case, load this package earlier.
+Package: kvsetkeys 2016/05/16 v1.17 Key value parser (HO)
+Package: kvdefinekeys 2016/05/16 v1.4 Define keys (HO)
+Package: pdftexcmds 2018/09/10 v0.29 Utility functions of pdfTeX for LuaTeX (HO)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+Package: pdfescape 2016/05/16 v1.14 Implements pdfTeX's escape features (HO)
+Package: bigintcalc 2016/05/16 v1.4 Expandable calculations on big integers (HO)
+Package: bitset 2016/05/16 v1.2 Handle bit-vector datatype (HO)
+Package: uniquecounter 2016/05/16 v1.3 Provide unlimited unique counter (HO)
+)
+Package hobsub Info: Skipping package `hobsub' (already loaded).
+Package: letltxmacro 2016/05/16 v1.5 Let assignment for LaTeX macros (HO)
+Package: hopatch 2016/05/16 v1.3 Wrapper for package hooks (HO)
+Package: xcolor-patch 2016/05/16 xcolor patch
+Package: atveryend 2016/05/16 v1.9 Hooks at the very end of document (HO)
+Package: atbegshi 2016/06/09 v1.18 At begin shipout hook (HO)
+Package: refcount 2016/05/16 v3.5 Data extraction from label references (HO)
+Package: hycolor 2016/05/16 v1.8 Color options for hyperref/bookmark (HO)
+) (/usr/share/texmf-dist/tex/generic/ifxetex/ifxetex.sty
+Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
+) (/usr/share/texmf-dist/tex/latex/oberdiek/auxhook.sty
+Package: auxhook 2016/05/16 v1.4 Hooks for auxiliary files (HO)
+) (/usr/share/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2016/05/16 v3.12 Key value format for package options (HO)
+)
+\@linkdim=\dimen117
+\Hy@linkcounter=\count109
+\Hy@pagecounter=\count110
+(/usr/share/texmf-dist/tex/latex/hyperref/pd1enc.def
+File: pd1enc.def 2018/11/30 v6.88e Hyperref: PDFDocEncoding definition (HO)
+Now handling font encoding PD1 ...
+... no UTF-8 mapping file for font encoding PD1
+)
+\Hy@SavedSpaceFactor=\count111
+(/usr/share/texmf-dist/tex/latex/latexconfig/hyperref.cfg
+File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
+)
+Package hyperref Info: Hyper figures OFF on input line 4519.
+Package hyperref Info: Link nesting OFF on input line 4524.
+Package hyperref Info: Hyper index ON on input line 4527.
+Package hyperref Info: Plain pages OFF on input line 4534.
+Package hyperref Info: Backreferencing OFF on input line 4539.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4772.
+\c@Hy@tempcnt=\count112
+(/usr/share/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip10
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 5125.
+\XeTeXLinkMargin=\dimen118
+\Fld@menulength=\count113
+\Field@Width=\dimen119
+\Fld@charsize=\dimen120
+Package hyperref Info: Hyper figures OFF on input line 6380.
+Package hyperref Info: Link nesting OFF on input line 6385.
+Package hyperref Info: Hyper index ON on input line 6388.
+Package hyperref Info: backreferencing OFF on input line 6395.
+Package hyperref Info: Link coloring OFF on input line 6400.
+Package hyperref Info: Link coloring with OCG OFF on input line 6405.
+Package hyperref Info: PDF/A mode OFF on input line 6410.
+LaTeX Info: Redefining \ref on input line 6450.
+LaTeX Info: Redefining \pageref on input line 6454.
+\Hy@abspage=\count114
+\c@Item=\count115
+\c@Hfootnote=\count116
+)
+Package hyperref Info: Driver (autodetected): hpdftex.
+(/usr/share/texmf-dist/tex/latex/hyperref/hpdftex.def
+File: hpdftex.def 2018/11/30 v6.88e Hyperref driver for pdfTeX
+\Fld@listcount=\count117
+\c@bookmark@seq@number=\count118
+(/usr/share/texmf-dist/tex/latex/oberdiek/rerunfilecheck.sty
+Package: rerunfilecheck 2016/05/16 v1.8 Rerun checks for auxiliary files (HO)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 282.
+)
+\Hy@SectionHShift=\skip49
+) (/usr/share/texmf/tex/latex/minted/minted.sty
+Package: minted 2017/07/19 v2.5 Yet another Pygments shim for LaTeX
+(/usr/share/texmf/tex/latex/fvextra/fvextra.sty
+Package: fvextra 2016/09/02 v1.2.1 fvextra - extensions and patches for fancyvrb
+(/usr/share/texmf-dist/tex/latex/base/ifthen.sty
+Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
+) (/usr/share/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
+Package: fancyvrb 2019/01/15
+Style option: `fancyvrb' v3.2a <2019/01/15> (tvz)
+\FV@CodeLineNo=\count119
+\FV@InFile=\read1
+\FV@TabBox=\box27
+\c@FancyVerbLine=\count120
+\FV@StepNumber=\count121
+\FV@OutFile=\write3
+) (/usr/share/texmf-dist/tex/latex/upquote/upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verbatim
+(/usr/share/texmf-dist/tex/latex/base/textcomp.sty
+Package: textcomp 2018/08/11 v2.0j Standard LaTeX package
+Package textcomp Info: Sub-encoding information:
+(textcomp)               5 = only ISO-Adobe without \textcurrency
+(textcomp)               4 = 5 + \texteuro
+(textcomp)               3 = 4 + \textohm
+(textcomp)               2 = 3 + \textestimated + \textcurrency
+(textcomp)               1 = TS1 - \textcircled - \t
+(textcomp)               0 = TS1 (full)
+(textcomp)             Font families with sub-encoding setting implement
+(textcomp)             only a restricted character set as indicated.
+(textcomp)             Family '?' is the default used for unknown fonts.
+(textcomp)             See the documentation for details.
+Package textcomp Info: Setting ? sub-encoding to TS1/1 on input line 79.
+(/usr/share/texmf-dist/tex/latex/base/ts1enc.def
+File: ts1enc.def 2001/06/05 v3.0e (jk/car/fm) Standard LaTeX file
+Now handling font encoding TS1 ...
+... processing UTF-8 mapping file for font encoding TS1
+(/usr/share/texmf-dist/tex/latex/base/ts1enc.dfu
+File: ts1enc.dfu 2018/10/05 v1.2f UTF-8 support for inputenc
+   defining Unicode char U+00A2 (decimal 162)
+   defining Unicode char U+00A3 (decimal 163)
+   defining Unicode char U+00A4 (decimal 164)
+   defining Unicode char U+00A5 (decimal 165)
+   defining Unicode char U+00A6 (decimal 166)
+   defining Unicode char U+00A7 (decimal 167)
+   defining Unicode char U+00A8 (decimal 168)
+   defining Unicode char U+00A9 (decimal 169)
+   defining Unicode char U+00AA (decimal 170)
+   defining Unicode char U+00AC (decimal 172)
+   defining Unicode char U+00AE (decimal 174)
+   defining Unicode char U+00AF (decimal 175)
+   defining Unicode char U+00B0 (decimal 176)
+   defining Unicode char U+00B1 (decimal 177)
+   defining Unicode char U+00B2 (decimal 178)
+   defining Unicode char U+00B3 (decimal 179)
+   defining Unicode char U+00B4 (decimal 180)
+   defining Unicode char U+00B5 (decimal 181)
+   defining Unicode char U+00B6 (decimal 182)
+   defining Unicode char U+00B7 (decimal 183)
+   defining Unicode char U+00B9 (decimal 185)
+   defining Unicode char U+00BA (decimal 186)
+   defining Unicode char U+00BC (decimal 188)
+   defining Unicode char U+00BD (decimal 189)
+   defining Unicode char U+00BE (decimal 190)
+   defining Unicode char U+00D7 (decimal 215)
+   defining Unicode char U+00F7 (decimal 247)
+   defining Unicode char U+0192 (decimal 402)
+   defining Unicode char U+02C7 (decimal 711)
+   defining Unicode char U+02D8 (decimal 728)
+   defining Unicode char U+02DD (decimal 733)
+   defining Unicode char U+0E3F (decimal 3647)
+   defining Unicode char U+2016 (decimal 8214)
+   defining Unicode char U+2020 (decimal 8224)
+   defining Unicode char U+2021 (decimal 8225)
+   defining Unicode char U+2022 (decimal 8226)
+   defining Unicode char U+2030 (decimal 8240)
+   defining Unicode char U+2031 (decimal 8241)
+   defining Unicode char U+203B (decimal 8251)
+   defining Unicode char U+203D (decimal 8253)
+   defining Unicode char U+2044 (decimal 8260)
+   defining Unicode char U+204E (decimal 8270)
+   defining Unicode char U+2052 (decimal 8274)
+   defining Unicode char U+20A1 (decimal 8353)
+   defining Unicode char U+20A4 (decimal 8356)
+   defining Unicode char U+20A6 (decimal 8358)
+   defining Unicode char U+20A9 (decimal 8361)
+   defining Unicode char U+20AB (decimal 8363)
+   defining Unicode char U+20AC (decimal 8364)
+   defining Unicode char U+20B1 (decimal 8369)
+   defining Unicode char U+2103 (decimal 8451)
+   defining Unicode char U+2116 (decimal 8470)
+   defining Unicode char U+2117 (decimal 8471)
+   defining Unicode char U+211E (decimal 8478)
+   defining Unicode char U+2120 (decimal 8480)
+   defining Unicode char U+2122 (decimal 8482)
+   defining Unicode char U+2126 (decimal 8486)
+   defining Unicode char U+2127 (decimal 8487)
+   defining Unicode char U+212E (decimal 8494)
+   defining Unicode char U+2190 (decimal 8592)
+   defining Unicode char U+2191 (decimal 8593)
+   defining Unicode char U+2192 (decimal 8594)
+   defining Unicode char U+2193 (decimal 8595)
+   defining Unicode char U+2329 (decimal 9001)
+   defining Unicode char U+232A (decimal 9002)
+   defining Unicode char U+2422 (decimal 9250)
+   defining Unicode char U+25E6 (decimal 9702)
+   defining Unicode char U+25EF (decimal 9711)
+   defining Unicode char U+266A (decimal 9834)
+   defining Unicode char U+FEFF (decimal 65279)
+))
+LaTeX Info: Redefining \oldstylenums on input line 334.
+Package textcomp Info: Setting cmr sub-encoding to TS1/0 on input line 349.
+Package textcomp Info: Setting cmss sub-encoding to TS1/0 on input line 350.
+Package textcomp Info: Setting cmtt sub-encoding to TS1/0 on input line 351.
+Package textcomp Info: Setting cmvtt sub-encoding to TS1/0 on input line 352.
+Package textcomp Info: Setting cmbr sub-encoding to TS1/0 on input line 353.
+Package textcomp Info: Setting cmtl sub-encoding to TS1/0 on input line 354.
+Package textcomp Info: Setting ccr sub-encoding to TS1/0 on input line 355.
+Package textcomp Info: Setting ptm sub-encoding to TS1/4 on input line 356.
+Package textcomp Info: Setting pcr sub-encoding to TS1/4 on input line 357.
+Package textcomp Info: Setting phv sub-encoding to TS1/4 on input line 358.
+Package textcomp Info: Setting ppl sub-encoding to TS1/3 on input line 359.
+Package textcomp Info: Setting pag sub-encoding to TS1/4 on input line 360.
+Package textcomp Info: Setting pbk sub-encoding to TS1/4 on input line 361.
+Package textcomp Info: Setting pnc sub-encoding to TS1/4 on input line 362.
+Package textcomp Info: Setting pzc sub-encoding to TS1/4 on input line 363.
+Package textcomp Info: Setting bch sub-encoding to TS1/4 on input line 364.
+Package textcomp Info: Setting put sub-encoding to TS1/5 on input line 365.
+Package textcomp Info: Setting uag sub-encoding to TS1/5 on input line 366.
+Package textcomp Info: Setting ugq sub-encoding to TS1/5 on input line 367.
+Package textcomp Info: Setting ul8 sub-encoding to TS1/4 on input line 368.
+Package textcomp Info: Setting ul9 sub-encoding to TS1/4 on input line 369.
+Package textcomp Info: Setting augie sub-encoding to TS1/5 on input line 370.
+Package textcomp Info: Setting dayrom sub-encoding to TS1/3 on input line 371.
+Package textcomp Info: Setting dayroms sub-encoding to TS1/3 on input line 372.
+Package textcomp Info: Setting pxr sub-encoding to TS1/0 on input line 373.
+Package textcomp Info: Setting pxss sub-encoding to TS1/0 on input line 374.
+Package textcomp Info: Setting pxtt sub-encoding to TS1/0 on input line 375.
+Package textcomp Info: Setting txr sub-encoding to TS1/0 on input line 376.
+Package textcomp Info: Setting txss sub-encoding to TS1/0 on input line 377.
+Package textcomp Info: Setting txtt sub-encoding to TS1/0 on input line 378.
+Package textcomp Info: Setting lmr sub-encoding to TS1/0 on input line 379.
+Package textcomp Info: Setting lmdh sub-encoding to TS1/0 on input line 380.
+Package textcomp Info: Setting lmss sub-encoding to TS1/0 on input line 381.
+Package textcomp Info: Setting lmssq sub-encoding to TS1/0 on input line 382.
+Package textcomp Info: Setting lmvtt sub-encoding to TS1/0 on input line 383.
+Package textcomp Info: Setting lmtt sub-encoding to TS1/0 on input line 384.
+Package textcomp Info: Setting qhv sub-encoding to TS1/0 on input line 385.
+Package textcomp Info: Setting qag sub-encoding to TS1/0 on input line 386.
+Package textcomp Info: Setting qbk sub-encoding to TS1/0 on input line 387.
+Package textcomp Info: Setting qcr sub-encoding to TS1/0 on input line 388.
+Package textcomp Info: Setting qcs sub-encoding to TS1/0 on input line 389.
+Package textcomp Info: Setting qpl sub-encoding to TS1/0 on input line 390.
+Package textcomp Info: Setting qtm sub-encoding to TS1/0 on input line 391.
+Package textcomp Info: Setting qzc sub-encoding to TS1/0 on input line 392.
+Package textcomp Info: Setting qhvc sub-encoding to TS1/0 on input line 393.
+Package textcomp Info: Setting futs sub-encoding to TS1/4 on input line 394.
+Package textcomp Info: Setting futx sub-encoding to TS1/4 on input line 395.
+Package textcomp Info: Setting futj sub-encoding to TS1/4 on input line 396.
+Package textcomp Info: Setting hlh sub-encoding to TS1/3 on input line 397.
+Package textcomp Info: Setting hls sub-encoding to TS1/3 on input line 398.
+Package textcomp Info: Setting hlst sub-encoding to TS1/3 on input line 399.
+Package textcomp Info: Setting hlct sub-encoding to TS1/5 on input line 400.
+Package textcomp Info: Setting hlx sub-encoding to TS1/5 on input line 401.
+Package textcomp Info: Setting hlce sub-encoding to TS1/5 on input line 402.
+Package textcomp Info: Setting hlcn sub-encoding to TS1/5 on input line 403.
+Package textcomp Info: Setting hlcw sub-encoding to TS1/5 on input line 404.
+Package textcomp Info: Setting hlcf sub-encoding to TS1/5 on input line 405.
+Package textcomp Info: Setting pplx sub-encoding to TS1/3 on input line 406.
+Package textcomp Info: Setting pplj sub-encoding to TS1/3 on input line 407.
+Package textcomp Info: Setting ptmx sub-encoding to TS1/4 on input line 408.
+Package textcomp Info: Setting ptmj sub-encoding to TS1/4 on input line 409.
+)) (/usr/share/texmf-dist/tex/latex/lineno/lineno.sty
+Package: lineno 2005/11/02 line numbers on paragraphs v4.41
+\linenopenalty=\count122
+\output=\toks23
+\linenoprevgraf=\count123
+\linenumbersep=\dimen121
+\linenumberwidth=\dimen122
+\c@linenumber=\count124
+\c@pagewiselinenumber=\count125
+\c@LN@truepage=\count126
+\c@internallinenumber=\count127
+\c@internallinenumbers=\count128
+\quotelinenumbersep=\dimen123
+\bframerule=\dimen124
+\bframesep=\dimen125
+\bframebox=\box28
+
+LaTeX Warning: Command \@parboxrestore  has changed.
+               Check if current package is valid.
+
+LaTeX Info: Redefining \\ on input line 3056.
+)
+
+Package fvextra Warning: csquotes should be loaded after fvextra, to avoid a warning from the lineno package on input line 37.
+
+\c@FV@TrueTabGroupLevel=\count129
+\c@FV@TrueTabCounter=\count130
+\FV@TabBox@Group=\box29
+\FV@TmpLength=\skip50
+\c@FV@HighlightLinesStart=\count131
+\c@FV@HighlightLinesStop=\count132
+\FV@BreakIndent=\dimen126
+\FV@BreakSymbolSepLeft=\dimen127
+\FV@BreakSymbolSepRight=\dimen128
+\FV@BreakSymbolIndentLeft=\dimen129
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 562.
+(/usr/share/texmf-dist/tex/latex/base/t1cmtt.fd
+File: t1cmtt.fd 2014/09/29 v2.5h Standard LaTeX font definitions
+)
+\FV@BreakSymbolIndentRight=\dimen130
+\c@FancyVerbLineBreakLast=\count133
+\FV@LineBox=\box30
+\FV@LineIndentBox=\box31
+) (/usr/share/texmf-dist/tex/latex/tools/calc.sty
+Package: calc 2017/05/25 v4.3 Infix arithmetic (KKT,FJ)
+\calc@Acount=\count134
+\calc@Bcount=\count135
+\calc@Adimen=\dimen131
+\calc@Bdimen=\dimen132
+\calc@Askip=\skip51
+\calc@Bskip=\skip52
+LaTeX Info: Redefining \setlength on input line 80.
+LaTeX Info: Redefining \addtolength on input line 81.
+\calc@Ccount=\count136
+\calc@Cskip=\skip53
+) (/usr/share/texmf-dist/tex/latex/tools/shellesc.sty
+Package: shellesc 2016/06/07 v0.02a unified shell escape interface for LaTeX
+Package shellesc Info: Unrestricted shell escape enabled on input line 67.
+) (/usr/share/texmf-dist/tex/latex/ifplatform/ifplatform.sty
+Package: ifplatform 2017/10/13 v0.4a Testing for the operating system
+(/usr/share/texmf-dist/tex/generic/oberdiek/catchfile.sty
+Package: catchfile 2016/05/16 v1.7 Catch the contents of a file (HO)
+)
+runsystem(uname -s > "MasterThesis.w18")...executed.
+
+(./MasterThesis.w18)
+runsystem(rm -- "MasterThesis.w18")...executed.
+
+) (/usr/share/texmf-dist/tex/generic/xstring/xstring.sty (/usr/share/texmf-dist/tex/generic/xstring/xstring.tex
+\integerpart=\count137
+\decimalpart=\count138
+)
+Package: xstring 2019/02/06 v1.83 String manipulations (CT)
+) (/usr/share/texmf-dist/tex/latex/framed/framed.sty
+Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
+\OuterFrameSep=\skip54
+\fb@frw=\dimen133
+\fb@frh=\dimen134
+\FrameRule=\dimen135
+\FrameSep=\dimen136
+) (/usr/share/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count139
+\float@exts=\toks24
+\float@box=\box32
+\@float@everytoks=\toks25
+\@floatcapt=\box33
+)
+\minted@appexistsfile=\read2
+\minted@bgbox=\box34
+\minted@code=\write4
+\c@minted@FancyVerbLineTemp=\count140
+\c@minted@pygmentizecounter=\count141
+\@float@every@listing=\toks26
+\c@listing=\count142
+) (/usr/share/texmf-dist/tex/latex/acronym/acronym.sty
+Package: acronym 2015/03/21 v1.41 Support for acronyms (Tobias Oetiker)
+(/usr/share/texmf-dist/tex/latex/bigfoot/suffix.sty
+Package: suffix 2006/07/15 1.5a Variant command support
+)
+\AC@clearlist=\toks27
+) (/usr/share/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2018/12/01 v2.17b AMS math features
+\@mathmargin=\skip55
+For additional information on amsmath, use the `?' option.
+(/usr/share/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2000/06/29 v2.01 AMS text
+(/usr/share/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks28
+\ex@=\dimen137
+)) (/usr/share/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen138
+) (/usr/share/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 2016/03/08 v2.02 operator names
+)
+\inf@bad=\count143
+LaTeX Info: Redefining \frac on input line 223.
+\uproot@=\count144
+\leftroot@=\count145
+LaTeX Info: Redefining \overline on input line 385.
+\classnum@=\count146
+\DOTSCASE@=\count147
+LaTeX Info: Redefining \ldots on input line 482.
+LaTeX Info: Redefining \dots on input line 485.
+LaTeX Info: Redefining \cdots on input line 606.
+\Mathstrutbox@=\box35
+\strutbox@=\box36
+\big@size=\dimen139
+LaTeX Font Info:    Redeclaring font encoding OML on input line 729.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 730.
+\macc@depth=\count148
+\c@MaxMatrixCols=\count149
+\dotsspace@=\muskip11
+\c@parentequation=\count150
+\dspbrk@lvl=\count151
+\tag@help=\toks29
+\row@=\count152
+\column@=\count153
+\maxfields@=\count154
+\andhelp@=\toks30
+\eqnshift@=\dimen140
+\alignsep@=\dimen141
+\tagshift@=\dimen142
+\tagwidth@=\dimen143
+\totwidth@=\dimen144
+\lineht@=\dimen145
+\@envbody=\toks31
+\multlinegap=\skip56
+\multlinetaggap=\skip57
+\mathdisplay@stack=\toks32
+LaTeX Info: Redefining \[ on input line 2844.
+LaTeX Info: Redefining \] on input line 2845.
+) (/usr/share/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2018/04/16 v5.8 Page Geometry
+\Gm@cnth=\count155
+\Gm@cntv=\count156
+\c@Gm@tempcnt=\count157
+\Gm@bindingoffset=\dimen146
+\Gm@wd@mp=\dimen147
+\Gm@odd@mp=\dimen148
+\Gm@even@mp=\dimen149
+\Gm@layoutwidth=\dimen150
+\Gm@layoutheight=\dimen151
+\Gm@layouthoffset=\dimen152
+\Gm@layoutvoffset=\dimen153
+\Gm@dimlist=\toks33
+) (/usr/share/texmf-dist/tex/latex/pdfpages/pdfpages.sty
+Package: pdfpages 2017/10/31 v0.5l Insert pages of external PDF documents (AM)
+(/usr/share/texmf-dist/tex/latex/eso-pic/eso-pic.sty
+Package: eso-pic 2018/04/12 v2.0h eso-pic (RN)
+)
+\AM@pagewidth=\dimen154
+\AM@pageheight=\dimen155
+(/usr/share/texmf-dist/tex/latex/pdfpages/pppdftex.def
+File: pppdftex.def 2017/10/31 v0.5l Pdfpages driver for pdfTeX (AM)
+)
+\AM@pagebox=\box37
+\AM@global@opts=\toks34
+\AM@toc@title=\toks35
+\c@AM@survey=\count158
+\AM@templatesizebox=\box38
+) (/usr/share/texmf-dist/tex/latex/biblatex/biblatex.sty
+Package: biblatex 2018/11/02 v3.12 programmable bibliographies (PK/MW)
+(/usr/share/texmf-dist/tex/latex/logreq/logreq.sty
+Package: logreq 2010/08/04 v1.0 xml request logger
+\lrq@indent=\count159
+(/usr/share/texmf-dist/tex/latex/logreq/logreq.def
+File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
+))
+\c@tabx@nest=\count160
+\c@listtotal=\count161
+\c@listcount=\count162
+\c@liststart=\count163
+\c@liststop=\count164
+\c@citecount=\count165
+\c@citetotal=\count166
+\c@multicitecount=\count167
+\c@multicitetotal=\count168
+\c@instcount=\count169
+\c@maxnames=\count170
+\c@minnames=\count171
+\c@maxitems=\count172
+\c@minitems=\count173
+\c@citecounter=\count174
+\c@maxcitecounter=\count175
+\c@savedcitecounter=\count176
+\c@uniquelist=\count177
+\c@uniquename=\count178
+\c@refsection=\count179
+\c@refsegment=\count180
+\c@maxextratitle=\count181
+\c@maxextratitleyear=\count182
+\c@maxextraname=\count183
+\c@maxextradate=\count184
+\c@maxextraalpha=\count185
+\c@abbrvpenalty=\count186
+\c@highnamepenalty=\count187
+\c@lownamepenalty=\count188
+\c@maxparens=\count189
+\c@parenlevel=\count190
+\blx@tempcnta=\count191
+\blx@tempcntb=\count192
+\blx@tempcntc=\count193
+\blx@maxsection=\count194
+\blx@maxsegment@0=\count195
+\blx@notetype=\count196
+\blx@parenlevel@text=\count197
+\blx@parenlevel@foot=\count198
+\blx@sectionciteorder@0=\count199
+\blx@entrysetcounter=\count266
+\labelnumberwidth=\skip58
+\labelalphawidth=\skip59
+\biblabelsep=\skip60
+\bibitemsep=\skip61
+\bibnamesep=\skip62
+\bibinitsep=\skip63
+\bibparsep=\skip64
+\bibhang=\skip65
+\blx@bcfin=\read3
+\blx@bcfout=\write5
+\c@mincomprange=\count267
+\c@maxcomprange=\count268
+\c@mincompwidth=\count269
+Package biblatex Info: Trying to load biblatex default data model...
+Package biblatex Info: ... file 'blx-dm.def' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/blx-dm.def
+File: blx-dm.def 2018/11/02 v3.12 biblatex localization (PK/MW)
+)
+Package biblatex Info: Trying to load biblatex style data model...
+Package biblatex Info: ... file 'numeric.dbx' not found.
+Package biblatex Info: Trying to load biblatex custom data model...
+Package biblatex Info: ... file 'biblatex-dm.cfg' not found.
+\c@afterword=\count270
+\c@savedafterword=\count271
+\c@annotator=\count272
+\c@savedannotator=\count273
+\c@author=\count274
+\c@savedauthor=\count275
+\c@bookauthor=\count276
+\c@savedbookauthor=\count277
+\c@commentator=\count278
+\c@savedcommentator=\count279
+\c@editor=\count280
+\c@savededitor=\count281
+\c@editora=\count282
+\c@savededitora=\count283
+\c@editorb=\count284
+\c@savededitorb=\count285
+\c@editorc=\count286
+\c@savededitorc=\count287
+\c@foreword=\count288
+\c@savedforeword=\count289
+\c@holder=\count290
+\c@savedholder=\count291
+\c@introduction=\count292
+\c@savedintroduction=\count293
+\c@namea=\count294
+\c@savednamea=\count295
+\c@nameb=\count296
+\c@savednameb=\count297
+\c@namec=\count298
+\c@savednamec=\count299
+\c@translator=\count300
+\c@savedtranslator=\count301
+\c@shortauthor=\count302
+\c@savedshortauthor=\count303
+\c@shorteditor=\count304
+\c@savedshorteditor=\count305
+\c@labelname=\count306
+\c@savedlabelname=\count307
+\c@institution=\count308
+\c@savedinstitution=\count309
+\c@lista=\count310
+\c@savedlista=\count311
+\c@listb=\count312
+\c@savedlistb=\count313
+\c@listc=\count314
+\c@savedlistc=\count315
+\c@listd=\count316
+\c@savedlistd=\count317
+\c@liste=\count318
+\c@savedliste=\count319
+\c@listf=\count320
+\c@savedlistf=\count321
+\c@location=\count322
+\c@savedlocation=\count323
+\c@organization=\count324
+\c@savedorganization=\count325
+\c@origlocation=\count326
+\c@savedoriglocation=\count327
+\c@origpublisher=\count328
+\c@savedorigpublisher=\count329
+\c@publisher=\count330
+\c@savedpublisher=\count331
+\c@language=\count332
+\c@savedlanguage=\count333
+\c@origlanguage=\count334
+\c@savedoriglanguage=\count335
+\c@pageref=\count336
+\c@savedpageref=\count337
+\shorthandwidth=\skip66
+\shortjournalwidth=\skip67
+\shortserieswidth=\skip68
+\shorttitlewidth=\skip69
+\shortauthorwidth=\skip70
+\shorteditorwidth=\skip71
+\locallabelnumberwidth=\skip72
+\locallabelalphawidth=\skip73
+\localshorthandwidth=\skip74
+\localshortjournalwidth=\skip75
+\localshortserieswidth=\skip76
+\localshorttitlewidth=\skip77
+\localshortauthorwidth=\skip78
+\localshorteditorwidth=\skip79
+Package biblatex Info: Trying to load compatibility code...
+Package biblatex Info: ... file 'blx-compat.def' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/blx-compat.def
+File: blx-compat.def 2018/11/02 v3.12 biblatex compatibility (PK/MW)
+)
+Package biblatex Info: Trying to load generic definitions...
+Package biblatex Info: ... file 'biblatex.def' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/biblatex.def
+File: biblatex.def 2018/11/02 v3.12 biblatex compatibility (PK/MW)
+\c@textcitecount=\count338
+\c@textcitetotal=\count339
+\c@textcitemaxnames=\count340
+\c@biburlnumpenalty=\count341
+\c@biburlucpenalty=\count342
+\c@biburllcpenalty=\count343
+\c@smartand=\count344
+)
+Package biblatex Info: Trying to load bibliography style 'numeric'...
+Package biblatex Info: ... file 'numeric.bbx' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/bbx/numeric.bbx
+File: numeric.bbx 2018/11/02 v3.12 biblatex bibliography style (PK/MW)
+Package biblatex Info: Trying to load bibliography style 'standard'...
+Package biblatex Info: ... file 'standard.bbx' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/bbx/standard.bbx
+File: standard.bbx 2018/11/02 v3.12 biblatex bibliography style (PK/MW)
+\c@bbx:relatedcount=\count345
+\c@bbx:relatedtotal=\count346
+))
+Package biblatex Info: Trying to load citation style 'numeric'...
+Package biblatex Info: ... file 'numeric.cbx' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/cbx/numeric.cbx
+File: numeric.cbx 2018/11/02 v3.12 biblatex citation style (PK/MW)
+Package biblatex Info: Redefining '\cite'.
+Package biblatex Info: Redefining '\parencite'.
+Package biblatex Info: Redefining '\footcite'.
+Package biblatex Info: Redefining '\footcitetext'.
+Package biblatex Info: Redefining '\smartcite'.
+Package biblatex Info: Redefining '\supercite'.
+Package biblatex Info: Redefining '\textcite'.
+Package biblatex Info: Redefining '\textcites'.
+Package biblatex Info: Redefining '\cites'.
+Package biblatex Info: Redefining '\parencites'.
+Package biblatex Info: Redefining '\smartcites'.
+)
+Package biblatex Info: Trying to load configuration file...
+Package biblatex Info: ... file 'biblatex.cfg' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/biblatex.cfg
+File: biblatex.cfg 
+))
+Package csquotes Info: Checking for multilingual support...
+Package csquotes Info: ... found 'babel' package.
+Package csquotes Info: Adjusting default style.
+Package csquotes Info: Redefining alias 'default' -> 'english'.
+runsystem(which pygmentize && touch MasterThesis.aex)...executed.
+
+runsystem(rm MasterThesis.aex)...executed.
+
+Package biblatex Info: Trying to load language 'english'...
+Package biblatex Info: ... file 'english.lbx' found.
+(/usr/share/texmf-dist/tex/latex/biblatex/lbx/english.lbx
+File: english.lbx 2018/11/02 v3.12 biblatex localization (PK/MW)
+) (build/MasterThesis.aux)
+\openout1 = `MasterThesis.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 35.
+LaTeX Font Info:    Try loading font information for TS1+cmr on input line 35.
+(/usr/share/texmf-dist/tex/latex/base/ts1cmr.fd
+File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    ... okay on input line 35.
+(/usr/share/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count347
+\scratchdimen=\dimen156
+\scratchbox=\box39
+\nofMPsegments=\count348
+\nofMParguments=\count349
+\everyMPshowfont=\toks36
+\MPscratchCnt=\count350
+\MPscratchDim=\dimen157
+\MPnumerator=\count351
+\makeMPintoPDFobject=\count352
+\everyMPtoPDFconversion=\toks37
+) (/usr/share/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
+Package: epstopdf-base 2016/05/15 v2.6 Base part for package epstopdf
+(/usr/share/texmf-dist/tex/latex/oberdiek/grfext.sty
+Package: grfext 2016/05/16 v1.2 Manage graphics extensions (HO)
+)
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 438.
+Package grfext Info: Graphics extension search list:
+(grfext)             [.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 456.
+(/usr/share/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
+))
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: subfig package v1.3 is loaded.
+Package caption Info: float package is loaded.
+Package caption Info: hyperref package is loaded.
+Package caption Info: End \AtBeginDocument code.
+\AtBeginShipoutBox=\box40
+Package hyperref Info: Link coloring OFF on input line 35.
+(/usr/share/texmf-dist/tex/latex/hyperref/nameref.sty
+Package: nameref 2016/05/21 v2.44 Cross-referencing by name of section
+(/usr/share/texmf-dist/tex/generic/oberdiek/gettitlestring.sty
+Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
+)
+\c@section@level=\count353
+)
+LaTeX Info: Redefining \ref on input line 35.
+LaTeX Info: Redefining \pageref on input line 35.
+LaTeX Info: Redefining \nameref on input line 35.
+(build/MasterThesis.out) (build/MasterThesis.out)
+\@outlinefile=\write6
+\openout6 = `MasterThesis.out'.
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: twoside 
+* h-part:(L,W,R)=(85.35826pt, 441.01773pt, 71.13188pt)
+* v-part:(T,H,B)=(99.58464pt, 645.87756pt, 99.58464pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=441.01773pt
+* \textheight=645.87756pt
+* \oddsidemargin=13.08827pt
+* \evensidemargin=-1.1381pt
+* \topmargin=-13.13809pt
+* \headheight=12.0pt
+* \headsep=28.45274pt
+* \topskip=12.0pt
+* \footskip=34.1433pt
+* \marginparwidth=88.0pt
+* \marginparsep=7.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.8pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidetrue
+* \@mparswitchtrue
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+(/usr/share/texmf-dist/tex/latex/oberdiek/pdflscape.sty
+Package: pdflscape 2016/05/14 v0.11 Display of landscape pages in PDF (HO)
+(/usr/share/texmf-dist/tex/latex/graphics/lscape.sty
+Package: lscape 2000/10/22 v3.01 Landscape Pages (DPC)
+)
+Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
+)
+Package biblatex Info: Input encoding 'utf8' detected.
+Package biblatex Info: Automatic encoding selection.
+(biblatex)             Assuming data encoding 'utf8'.
+\openout5 = `MasterThesis.bcf'.
+
+Package biblatex Info: Trying to load bibliographic data...
+Package biblatex Info: ... file 'MasterThesis.bbl' found.
+(build/MasterThesis.bbl)
+Package biblatex Info: Reference section=0 on input line 35.
+Package biblatex Info: Reference segment=0 on input line 35.
+[1
+
+
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] (./Declaration.tex) [3] [4] (./Abstract.tex) (build/MasterThesis.toc [5
+
+])
+\tf@toc=\write7
+\openout7 = `MasterThesis.toc'.
+
+[6] (./Introduction.tex
+Chapter 1.
+Package acronym Info: Label `acro:cpu' newly defined as it shall be overridden
+although it is yet undefined on input line 21.
+Package acronym Info: Label `acro:io' newly defined as it shall be overridden
+although it is yet undefined on input line 22.
+
+Underfull \hbox (badness 6032) in paragraph at lines 33--33
+[][][]\T1/cmr/m/n/10 androidpolice.com, vis-ited on 13.02.2019 []$\T1/cmtt/m/n/10 https : / / www . androidpolice . com / 2016 / 08 / 12 /
+ []
+
+Package acronym Info: Label `acro:posix' newly defined as it shall be overridden
+although it is yet undefined on input line 36.
+[1
+
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 64--72
+
+ []
+
+[2]) (./ModernOSConcepts.tex [3] [4
+
+]
+Chapter 2.
+[5]
+<pictures/CPUPrivilegeRings.png, id=361, 614.295pt x 614.295pt>
+File: pictures/CPUPrivilegeRings.png Graphic file (type png)
+<use pictures/CPUPrivilegeRings.png>
+Package pdftex.def Info: pictures/CPUPrivilegeRings.png  used on input line 52.
+(pdftex.def)             Requested size: 184.28992pt x 184.28992pt.
+<pictures/ModeSwitchCallSequence.png, id=365, 1690.315pt x 604.2575pt>
+File: pictures/ModeSwitchCallSequence.png Graphic file (type png)
+<use pictures/ModeSwitchCallSequence.png>
+Package pdftex.def Info: pictures/ModeSwitchCallSequence.png  used on input line 58.
+(pdftex.def)             Requested size: 441.01773pt x 157.65645pt.
+[6]
+Package acronym Info: Label `acro:psw' newly defined as it shall be overridden
+although it is yet undefined on input line 70.
+Package acronym Info: Label `acro:cpsr' newly defined as it shall be overridden
+although it is yet undefined on input line 72.
+[7 <./pictures/CPUPrivilegeRings.png> <./pictures/ModeSwitchCallSequence.png>]
+Package acronym Info: Label `acro:smp' newly defined as it shall be overridden
+although it is yet undefined on input line 85.
+<pictures/MonolithicKernel.png, id=398, 564.1075pt x 805.0075pt>
+File: pictures/MonolithicKernel.png Graphic file (type png)
+<use pictures/MonolithicKernel.png>
+Package pdftex.def Info: pictures/MonolithicKernel.png  used on input line 105.
+(pdftex.def)             Requested size: 169.23355pt x 241.50412pt.
+[8] [9 <./pictures/MonolithicKernel.png>]
+<pictures/Microkernel.png, id=420, 845.1575pt x 805.0075pt>
+File: pictures/Microkernel.png Graphic file (type png)
+<use pictures/Microkernel.png>
+Package pdftex.def Info: pictures/Microkernel.png  used on input line 129.
+(pdftex.def)             Requested size: 253.54921pt x 241.50412pt.
+Package acronym Info: Label `acro:ipc' newly defined as it shall be overridden
+although it is yet undefined on input line 133.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[10 <./pictures/Microkernel.png>] [11]
+Package acronym Info: Label `acro:api' newly defined as it shall be overridden
+although it is yet undefined on input line 200.
+[12]
+Package acronym Info: Label `acro:gcc' newly defined as it shall be overridden
+although it is yet undefined on input line 219.
+[13]
+Package acronym Info: Label `acro:idl' newly defined as it shall be overridden
+although it is yet undefined on input line 252.
+Package acronym Info: Label `acro:idt' newly defined as it shall be overridden
+although it is yet undefined on input line 282.
+[14]
+<pictures/Systemcalls.png, id=529, 2027.575pt x 1184.425pt>
+File: pictures/Systemcalls.png Graphic file (type png)
+<use pictures/Systemcalls.png>
+Package pdftex.def Info: pictures/Systemcalls.png  used on input line 295.
+(pdftex.def)             Requested size: 441.01773pt x 257.61035pt.
+[15 <./pictures/Systemcalls.png>]
+Package acronym Info: Label `acro:vdso' newly defined as it shall be overridden
+although it is yet undefined on input line 338.
+Package acronym Info: Label `acro:elf' newly defined as it shall be overridden
+although it is yet undefined on input line 338.
+[16] [17] [18]
+<pictures/ProcessLifecycle.png, id=600, 1527.7075pt x 724.7075pt>
+File: pictures/ProcessLifecycle.png Graphic file (type png)
+<use pictures/ProcessLifecycle.png>
+Package pdftex.def Info: pictures/ProcessLifecycle.png  used on input line 499.
+(pdftex.def)             Requested size: 441.01773pt x 209.20879pt.
+Package acronym Info: Label `acro:pc' newly defined as it shall be overridden
+although it is yet undefined on input line 511.
+[19 <./pictures/ProcessLifecycle.png>]
+Package acronym Info: Label `acro:pcb' newly defined as it shall be overridden
+although it is yet undefined on input line 526.
+<pictures/ProcessCreation.png, id=627, 1688.3075pt x 564.1075pt>
+File: pictures/ProcessCreation.png Graphic file (type png)
+<use pictures/ProcessCreation.png>
+Package pdftex.def Info: pictures/ProcessCreation.png  used on input line 538.
+(pdftex.def)             Requested size: 441.01773pt x 147.35309pt.
+[20 <./pictures/ProcessCreation.png>]
+Package acronym Info: Label `acro:lwp' newly defined as it shall be overridden
+although it is yet undefined on input line 603.
+[21]
+Package acronym Info: Label `acro:tcb' newly defined as it shall be overridden
+although it is yet undefined on input line 607.
+Package acronym Info: Label `acro:pid' newly defined as it shall be overridden
+although it is yet undefined on input line 625.
+[22] [23]
+Package acronym Info: Label `acro:vmar' newly defined as it shall be overridden
+although it is yet undefined on input line 683.
+[24] [25] [26]
+Package acronym Info: Label `acro:tsl' newly defined as it shall be overridden
+although it is yet undefined on input line 791.
+Package acronym Info: Label `acro:tas' newly defined as it shall be overridden
+although it is yet undefined on input line 791.
+Package acronym Info: Label `acro:xchg' newly defined as it shall be overridden
+although it is yet undefined on input line 796.
+[27]
+Package acronym Info: Label `acro:futex' newly defined as it shall be overridden
+although it is yet undefined on input line 828.
+
+Underfull \hbox (badness 10000) in paragraph at lines 838--838
+[][][][]$\T1/cmtt/m/n/10 https : / / git . kernel . org / pub / scm / linux / kernel / git / torvalds / linux . git / tree /
+ []
+
+[28] [29] [30]
+Package acronym Info: Label `acro:fifo' newly defined as it shall be overridden
+although it is yet undefined on input line 963.
+[31] [32]
+Package acronym Info: Label `acro:tcp' newly defined as it shall be overridden
+although it is yet undefined on input line 1066.
+Package acronym Info: Label `acro:udp' newly defined as it shall be overridden
+although it is yet undefined on input line 1066.
+Package acronym Info: Label `acro:ip' newly defined as it shall be overridden
+although it is yet undefined on input line 1066.
+[33]
+Package acronym Info: Label `acro:vmo' newly defined as it shall be overridden
+although it is yet undefined on input line 1103.
+[34] [35] [36] [37]
+Package acronym Info: Label `acro:ui' newly defined as it shall be overridden
+although it is yet undefined on input line 1264.
+Package acronym Info: Label `acro:fcfs' newly defined as it shall be overridden
+although it is yet undefined on input line 1278.
+[38] [39] [40]
+Overfull \hbox (12.15216pt too wide) in paragraph at lines 1370--1371
+[]\T1/cmr/m/n/12 as a fully pre-emp-tive ker-nel for desk-top sys-tems with low la-tency re-quire-ments[[]26[]], [][][]. 
+ []
+
+Package acronym Info: Label `acro:cfs' newly defined as it shall be overridden
+although it is yet undefined on input line 1392.
+[41]
+Package acronym Info: Label `acro:cbs' newly defined as it shall be overridden
+although it is yet undefined on input line 1422.
+[42]
+Underfull \hbox (badness 10000) in paragraph at lines 1462--1470
+
+ []
+
+[43]
+Package acronym Info: Label `acro:ram' newly defined as it shall be overridden
+although it is yet undefined on input line 1486.
+Package acronym Info: Label `acro:ssd' newly defined as it shall be overridden
+although it is yet undefined on input line 1491.
+
+Underfull \vbox (badness 2846) has occurred while \output is active []
+
+[44] [45]
+Package acronym Info: Label `acro:mmu' newly defined as it shall be overridden
+although it is yet undefined on input line 1574.
+Package acronym Info: Label `acro:tlb' newly defined as it shall be overridden
+although it is yet undefined on input line 1574.
+[46]
+<pictures/HighLowMem.png, id=1061, 1286.8075pt x 855.195pt>
+File: pictures/HighLowMem.png Graphic file (type png)
+<use pictures/HighLowMem.png>
+Package pdftex.def Info: pictures/HighLowMem.png  used on input line 1615.
+(pdftex.def)             Requested size: 321.70108pt x 213.79823pt.
+[47]
+Package acronym Info: Label `acro:dma' newly defined as it shall be overridden
+although it is yet undefined on input line 1624.
+[48 <./pictures/HighLowMem.png>]
+<pictures/LinuxMemoryManagement.png, id=1077, 2150.0325pt x 1447.4075pt>
+File: pictures/LinuxMemoryManagement.png Graphic file (type png)
+<use pictures/LinuxMemoryManagement.png>
+Package pdftex.def Info: pictures/LinuxMemoryManagement.png  used on input line 1644.
+(pdftex.def)             Requested size: 441.01773pt x 296.89714pt.
+Package acronym Info: Label `acro:pfn' newly defined as it shall be overridden
+although it is yet undefined on input line 1653.
+[49 <./pictures/LinuxMemoryManagement.png>] [50] [51]
+./ModernOSConcepts.tex:1743: Undefined control sequence.
+l.1743 ...ol or data registers, mostly from \texit
+                                                  {character devices}, is ma...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+[52] [53]
+Package acronym Info: Label `acro:bti' newly defined as it shall be overridden
+although it is yet undefined on input line 1786.
+) (./CSLinux.tex [54]
+Chapter 3.
+[55
+
+]
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 56 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[56] [57]
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 58 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[58]
+Package acronym Info: Label `acro:pci' newly defined as it shall be overridden
+although it is yet undefined on input line 140.
+Package acronym Info: Label `acro:usb' newly defined as it shall be overridden
+although it is yet undefined on input line 140.
+
+Underfull \vbox (badness 4132) has occurred while \output is active []
+
+[59]
+Package acronym Info: Label `acro:i2c' newly defined as it shall be overridden
+although it is yet undefined on input line 167.
+<pictures/LinuxDriverLifecycle.png, id=1208, 2109.8825pt x 634.37pt>
+File: pictures/LinuxDriverLifecycle.png Graphic file (type png)
+<use pictures/LinuxDriverLifecycle.png>
+Package pdftex.def Info: pictures/LinuxDriverLifecycle.png  used on input line 190.
+(pdftex.def)             Requested size: 441.01773pt x 132.59244pt.
+
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 60 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[60]
+Package acronym Info: Label `acro:dso' newly defined as it shall be overridden
+although it is yet undefined on input line 219.
+[61 <./pictures/LinuxDriverLifecycle.png>]
+Package acronym Info: Label `acro:abi' newly defined as it shall be overridden
+although it is yet undefined on input line 232.
+Package acronym Info: Label `acro:rpc' newly defined as it shall be overridden
+although it is yet undefined on input line 241.
+Package acronym Info: Label `acro:fidl' newly defined as it shall be overridden
+although it is yet undefined on input line 242.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 62 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[62]
+<pictures/ZirconDriverLifecycle.png, id=1249, 1808.7575pt x 644.4075pt>
+File: pictures/ZirconDriverLifecycle.png Graphic file (type png)
+<use pictures/ZirconDriverLifecycle.png>
+Package pdftex.def Info: pictures/ZirconDriverLifecycle.png  used on input line 290.
+(pdftex.def)             Requested size: 441.01773pt x 157.11917pt.
+
+Overfull \hbox (0.67026pt too wide) in paragraph at lines 300--305
+\T1/cmr/m/n/12 ent de-vice de-tects the cor-re-spond-ing de-vice is re-moved and thus, calls \T1/cmtt/m/n/12 device_remove()
+ []
+
+[63]
+Overfull \hbox (7.68127pt too wide) in paragraph at lines 318--319
+[]\T1/cmr/m/n/12 4 ARM Cor-tex A73 and 4 ARM Cor-tex A53 [][] cores ar-ranged in the big.LITTLE
+ []
+
+Package acronym Info: Label `acro:gpu' newly defined as it shall be overridden
+although it is yet undefined on input line 319.
+
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 64 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[64 <./pictures/ZirconDriverLifecycle.png>]
+<pictures/hikey-960-SD-front.jpg, id=1269, 501.875pt x 331.2375pt>
+File: pictures/hikey-960-SD-front.jpg Graphic file (type jpg)
+<use pictures/hikey-960-SD-front.jpg>
+Package pdftex.def Info: pictures/hikey-960-SD-front.jpg  used on input line 333.
+(pdftex.def)             Requested size: 301.12732pt x 198.74402pt.
+Package acronym Info: Label `acro:lcd' newly defined as it shall be overridden
+although it is yet undefined on input line 343.
+Package acronym Info: Label `acro:rgb' newly defined as it shall be overridden
+although it is yet undefined on input line 350.
+
+./CSLinux.tex:356: LaTeX Error: File `GroveLCD' not found.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.356     \includegraphics[scale=0.35]{GroveLCD}
+                                                
+I could not locate the file with any of these extensions:
+.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+[65 <./pictures/hikey-960-SD-front.jpg>]
+./CSLinux.tex:377: Illegal parameter number in definition of \Hy@tempa.
+<to be read again> 
+                   d
+l.377 ...6#diff-9bd3cb9d38dba050f310f03d18bbb2cf}}
+                                                  ).
+You meant to type ## instead of #, right?
+Or maybe a } was forgotten somewhere earlier, and things
+are all screwed up? I'm going to assume that you meant ##.
+
+./CSLinux.tex:377: Illegal parameter number in definition of \Hy@tempa.
+<to be read again> 
+                   d
+l.377 ...6#diff-9bd3cb9d38dba050f310f03d18bbb2cf}}
+                                                  ).
+You meant to type ## instead of #, right?
+Or maybe a } was forgotten somewhere earlier, and things
+are all screwed up? I'm going to assume that you meant ##.
+
+
+Overfull \hbox (17.87022pt too wide) in paragraph at lines 377--377
+[][][][]$\T1/cmtt/m/n/10 https : / / github . com / Allegra42 / zircon / commit / 5dc89c3f67808804c0c7d1bd9a0df3703d961ce6 #
+ []
+
+<pictures/GroveAdjustment.png, id=1284, 1999.47pt x 937.5025pt>
+File: pictures/GroveAdjustment.png Graphic file (type png)
+<use pictures/GroveAdjustment.png>
+Package pdftex.def Info: pictures/GroveAdjustment.png  used on input line 383.
+(pdftex.def)             Requested size: 441.01773pt x 206.78047pt.
+
+./CSLinux.tex:389: LaTeX Error: File `ZirconSetup2' not found.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.389 ...\includegraphics[scale=0.3]{ZirconSetup2}
+                                                  
+I could not locate the file with any of these extensions:
+.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+./CSLinux.tex:395: LaTeX Error: File `LinuxSetup' not found.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.395     \includegraphics[scale=0.35]{LinuxSetup}
+                                                  
+I could not locate the file with any of these extensions:
+.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 66 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[66]
+Package acronym Info: Label `acro:uart' newly defined as it shall be overridden
+although it is yet undefined on input line 414.
+Package acronym Info: Label `acro:ttl' newly defined as it shall be overridden
+although it is yet undefined on input line 414.
+[67 <./pictures/GroveAdjustment.png>]
+Overfull \hbox (13.04356pt too wide) in paragraph at lines 431--433
+[]\T1/cmr/m/n/12 For the de-vel-op-ment of Zir-con in-clud-ing drivers and op-er-at-ing sys-tem re-lated userspace
+ []
+
+Package acronym Info: Label `acro:gui' newly defined as it shall be overridden
+although it is yet undefined on input line 436.
+
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 68 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[68]
+<pictures/platform-bus.png, id=1321, 994.71625pt x 696.6025pt>
+File: pictures/platform-bus.png Graphic file (type png)
+<use pictures/platform-bus.png>
+Package pdftex.def Info: pictures/platform-bus.png  used on input line 456.
+(pdftex.def)             Requested size: 348.1559pt x 243.81453pt.
+[69 <./pictures/platform-bus.png>]) (./CSZircon.tex) (./CSEvaluation.tex) (./Conclusion.tex
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 70 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[70] [71]
+Overfull \hbox (9.05154pt too wide) has occurred while \output is active
+\T1/cmr/m/n/12 72 \T1/cmr/m/sl/12 CHAPTER 3.  CASE STUDY: DRIVER DEVELOPMENT IN LINUX AND ZIRCON
+ []
+
+[72
+
+]
+Chapter 4.
+) (./Outlook.tex [73] [74
+
+]
+Chapter 5.
+) [75] [76
+
+] [77]
+./MasterThesis.tex:106: Undefined control sequence.
+<recently read> \upmu 
+                      
+l.106 
+      
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+[78]
+Overfull \hbox (4.65358pt too wide) in paragraph at lines 106--106
+\T1/cmr/m/it/12 tung, Syn-chro-ni-sa-tion, Prozesskom-mu-nika-tion, Vir-tu-al-isierung (Ger-man Edi-tion)\T1/cmr/m/n/12 .
+ []
+
+[79]
+Overfull \hbox (0.27359pt too wide) in paragraph at lines 106--106
+[]\T1/cmr/m/n/12 Andrew S. Tanen-baum and Her-bert Bos. \T1/cmr/m/it/12 Mod-ern op-er-at-ing sys-tems\T1/cmr/m/n/12 . 4. ed. Boston:
+ []
+
+(./Abbreviations.tex [80]
+Package acronym Info: Acronym dprr used in text but not spelled out in full in text on input line 21.
+Package acronym Info: Acronym edf used in text but not spelled out in full in text on input line 25.
+[81
+
+]
+Package acronym Info: Acronym rr used in text but not spelled out in full in text on input line 81.
+Package acronym Info: Acronym srtf used in text but not spelled out in full in text on input line 85.
+) [82] (build/MasterThesis.lol)
+\tf@lol=\write8
+\openout8 = `MasterThesis.lol'.
+
+[83
+
+] [84
+
+] (build/MasterThesis.lof)
+\tf@lof=\write9
+\openout9 = `MasterThesis.lof'.
+
+[85] [86
+
+] (build/MasterThesis.lot)
+\tf@lot=\write10
+\openout10 = `MasterThesis.lot'.
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 113.
+[87]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 113.
+(build/MasterThesis.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 113.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 113.
+Package rerunfilecheck Info: File `MasterThesis.out' has not changed.
+(rerunfilecheck)             Checksum: 3581D2CE2F29959EE9CF1474338591F5;3761.
+Package logreq Info: Writing requests to 'MasterThesis.run.xml'.
+\openout1 = `MasterThesis.run.xml'.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 20041 strings out of 492616
+ 341859 string characters out of 6135177
+ 877278 words of memory out of 5000000
+ 23330 multiletter control sequences out of 15000+600000
+ 21153 words of font info for 48 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 44i,8n,61p,828b,2803s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}{/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx2488.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfcc1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfcc1728.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfcc2074.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm0700.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfsl1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb>
+Output written on build/MasterThesis.pdf (93 pages, 1445471 bytes).
+PDF statistics:
+ 1720 PDF objects out of 1728 (max. 8388607)
+ 1552 compressed objects within 16 object streams
+ 298 named destinations out of 1000 (max. 500000)
+ 495 words of extra memory for PDF output out of 10000 (max. 10000000)
+

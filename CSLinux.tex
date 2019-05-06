@@ -494,17 +494,53 @@ C++ is less documented in the used version but also in Google's master repositor
 Nevertheless, documentation and code are clearly in favour of C++ drivers and more and more C drivers are moved to C++.
 Accordingly, both ways are very attractive for this work, C++ in particular as drivers in this language are great difference to Linux ones.
 
-%TODO compilers & functional scope
+The chosen compiler does not influence the actual driver development in an essential degree, but it does for the system.
+Most of all, the error messages, diagnostics and some internal details are the obvious parts that may differ between GCC and Clang.
+They may also influence the output, but syntax errors are found on both of them.
+Hence, the possibility to compare two builds from different compilers is useful at all, e.g.\ in cases of compiler errors, but also to compare code sizes, binary or build performances or code portability.
+On Zircon, Clang is slightly preferred as a respective build is needed for surrounding tools while GCC is often default for build scripts.
+GCC, on the other hand, was very closely interlocked with Linux for a long time.
+But also in this case, the chance to compare the outputs of two compilers is helpful and the work that was done to decouple Linux and GCC to enable Clang is positive at all.
+Another reasons for the use of Clang in Linux are, like for Zircon, the surrounding tools e.g.\ for style checking, linting, static and dynamic code analysis or address sanitizing\cite{linux-llvm}.
+However, without a closer look into the generated binaries is a well reasoned choice of the compiler for the pure driver development rather difficult.
+Due to the change to the Raspberry Pi as a hardware platform for Linux driver development, Clang can not longer be used out of the box compiling but before this change, both compilers and resulting kernels were employed.
+The same is and should still be done for Zircon, e.g.\ to see changes in the tooling of both compilers.
+
+%TODO functional scope
+The last but important issue for a general driver concept is the question of the implemented functional scope.
+The Grove-LCD RGB backlight as a peripheral device is rather complex, not only because its two controllers.
+It is also an account of its LCD controller and its complex and detailed internal instruction set.
+Already the Arduino library provided from the manufacturer for this device defines about 14 LCD methods.
+Implement all of them as a part of the drivers in all Linux and Zircon variants with meaningful user interfaces would break the context of this work without adding a value.
+Thus, all drivers should implement the same basic functionality to show general driver concepts.
+Because of the decision to write only a combined driver in Linux, this variant lacks of support for \texttt{read()} and \texttt{write()} but the additional defined interfacing options for user, i.e.\ \texttt{ioctl()} for Linux and \textit{FIDL} for Zircon, stays the same.
+As a result, the Zircon \textit{platform device} drivers represent the same functionality as the Linux driver.
+Respectively, a combined driver should provide in each case a way to:
+\begin{itemize}
+    \item set the backlight color,
+    \item get the backlight color,
+    \item clear the shown text on the LCD,
+    \item write the first LCD line,
+    \item write the second LCD line,
+    \item read the whole LCD content and
+    \item get the size of a LCD line.
+\end{itemize}
+The function arguments for these operations should be the same on both operating systems as far as it is permitted by the used interface mechanism.
+With this chosen functions, the driver implementations should cover the exchange of the most important datatypes between user and kernel space in both directions.
+Not depicted is e.g.\ memory mapping or \ac{dma} as there is not meaningful implementation for the device.
+
+The variants using two distinct driver implementations provide exactly the same functionality respectively the same interface definition but divided between both controllers.
+Thus, the first two named requirements belong to the RGB driver while the remaining ones are part of the LCD driver.
+Additionally, these driver types should implement \texttt{read()} and \texttt{write()}.
+On the LCD side, they should write the user's input to the device file at the LCD's first line for \texttt{write()} and read the entire content of the LCD for \texttt{read()}.
+Hence, their implementation is very similar to the explicit defined device operations above.
+In Linux, this would mean the implementation of e.g.\ writing the first line as a part of \texttt{ioctl()} would not differentiate more deeply from the one for \texttt{write()}.
+Only the function signature and thus the copying of data between user and kernel would slightly be different but not general file operation specific issues in Linux, the used helper functions and the actual invokation of the peripheral.
+This does not justify the development of a whole second driver variant in Linux, but the differences in this functions should be mentioned as a part of this work, nevertheless.
+On Ziron are these methods more interesting for this work, especially in the C++ implementation.
 
 
+\section{Linux Driver Development}\label{sec:cs-linux}
 
 
-
-
-
- \section{Linux}\label{sec:cs-linux}
-
-
-\subsection{Driver Implementation} %TODO better titel, label
 \subsubsection{Interface} %ioctl
-    % Development setup for x86-64, ARM64, ...

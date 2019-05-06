@@ -1,0 +1,46 @@
+\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
+\babel@toc {english}{}
+\defcounter {refsection}{0}\relax 
+\addvspace {10\p@ }
+\defcounter {refsection}{0}\relax 
+\addvspace {10\p@ }
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.1}{\ignorespaces The Rings of the x86's security concept according to~\cite {glatz2015betriebssysteme}\relax }}{7}{figure.caption.4}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.2}{\ignorespaces A system calls sequence including the mode switches according to~\cite {glatz2015betriebssysteme}\relax }}{7}{figure.caption.5}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.3}{\ignorespaces A Monolithic Kernel Architecture according to~\cite {lfd430}\relax }}{9}{figure.caption.6}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.4}{\ignorespaces A Microkernel Architecture according to~\cite {lfd430}\relax }}{10}{figure.caption.7}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.5}{\ignorespaces System Call Implementation inspired by~\cite {lfd430}\relax }}{15}{figure.caption.8}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Lifecycle of a process according to~\cite {silberschatz2009operating}\relax }}{19}{figure.caption.11}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.7}{\ignorespaces Ways of Process Creation according to~\cite {glatz2015betriebssysteme}\relax }}{20}{figure.caption.13}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.8}{\ignorespaces The Relation between Virtual and Physical Memory in 32-bit x86 Architectures according to~\cite {lfd430}\relax }}{48}{figure.caption.47}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {2.9}{\ignorespaces Linux memory management overview according to~\cite {lfd430}\relax }}{49}{figure.caption.48}% 
+\defcounter {refsection}{0}\relax 
+\addvspace {10\p@ }
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Simplified Lifecycle of a Linux Device Driver\relax }}{61}{figure.caption.54}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Simplified Lifecycle of a Zircon Device Driver\relax }}{64}{figure.caption.57}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.3}{\ignorespaces HiKey960\relax }}{65}{figure.caption.58}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.4}{\ignorespaces The Grove-LCD RGB backlight peripheral device\relax }}{66}{figure.caption.59}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Final Development Setup for Zircon using the HiKey960 Development Board\relax }}{66}{figure.caption.62}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Level Adjustment for the Grove RGB LCD with the HiKey960 Development Board\relax }}{67}{figure.caption.61}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Final Development Setup for Linux using the Raspberry Pi Development Board\relax }}{67}{figure.caption.63}% 
+\defcounter {refsection}{0}\relax 
+\contentsline {figure}{\numberline {3.8}{\ignorespaces The setup of the Zircon Platform Bus on ARM64 based devices\cite {zircon-platformbus}\relax }}{69}{figure.caption.66}% 
+\defcounter {refsection}{0}\relax 
+\addvspace {10\p@ }
+\defcounter {refsection}{0}\relax 
+\addvspace {10\p@ }
