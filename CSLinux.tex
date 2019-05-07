@@ -554,10 +554,75 @@ Within the \textit{drivers} directory, are several subsystems which are more or 
 The probably most appropriate subsystem for this device is \textit{auxdisplay}, i.e.\ auxiliary display which groups a small amount of drivers for small additional e.g.\ \ac{lcd}'s.
 Currently, the auxdisplay subsystem consists of only nine drivers.
 Each one is made from a single C code file and thus, not further divided into sub-directories for the drivers.
-%TODO
+The Grove driver is to be inserted in this structure.
+Therefore, the driver source file is placed in \texttt{drivers/auxdisplay} and its build rules are added in the general \texttt{Makefile} for this subsystem.
+To configure the build, i.e.\ if the driver should be built as part of the kernel or as a module or none at all, it must also be registered in the subsystems \texttt{Kconfig} file.
+Listing~\ref{lst:make} shows both entries in a combined view.
+The actual configuration is done via device specific configuration files, e.g.\ \mintinline{bash}{arch/arm/configs/bcm2709_defconfig}.
+Mostly, these long files are not directly modified.
+Instead, the command \mintinline{bash}{make menuconfig} is used as a front-end.
+It parses the \mintinline{bash}{Kconfig} files within the whole kernel and represents them in their tree structure.
+The Grove driver for example, is part of the \mintinline{bash}{auxdisplay} subsystem.
+Thus, general support for auxdisplays must be enabled to build also the Grove driver.
 
+\begin{listing} [t]
+	\caption{Build Configuration for the Grove-LCD RGB backlight driver}
+	\label{lst:make}
+	\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{Make}
+# Make Entry
+obj-$(CONFIG_GROVE)			+= grove.o
+
+# Kconfig Entry
+config GROVE
+tristate "Grove-LCD RGB backlight v4.0 Support"
+default m
+---help---
+    Enable support for the Grove-LCD RGB backlight v4.0 via I2C.
+    The device is accessible via "/dev/grove" char device.
+    For the interface see "include/uapi/linux/grove_ioctl.h".
+	\end{minted}
+\end{listing}
+
+The help text shown for the driver configuration shown in listing~\ref{lst:make} mentiones the path \texttt{include/uapi/linux/grove\_ioctl.h}.
+It contains the custom \texttt{ioctl()} call definitions.
+They should be accessable from both, kernel and userspace.
+Thus, the definition for this and other drivers are collected under this path.
 
 \subsection{Driver Initialization and Exit}
+For the Grove driver, there is no need for additional one time initializations that are commonly done within the regular \mintinline{c}{module_init()} call.
+As already mentioned, the Linux kernel provides macros instead, to register the driver without unneccessary boilerplate code.
+For an \ac{i2c} driver as the Grove it is, the matching macro is \mintinline{c}{module_i2c_driver()} (see listing~\ref{lst:init}, line 17).
+It takes an \mintinline{i2c_driver} structure (listing~\ref{lst:init}, line 8) as an argument which contains function pointers to the driver implementation of \mintinline{c}{probe()} and \mintinline{c}{remove()}, but also driver specific information like its name and a further pointer to an \mintinline{c}{of_device_id} table.
+This table defines a set of properties, e.g.\ so-called \textit{compatible strings} (listing~\ref{lst:init}, line 2}.
+As the Raspberry Pi is an ARM architecture, its actual hardware configuration and thus also firmly attached devices like the Grove are defined in a specific file, the \textit{device tree}. 
+
+\begin{listing} [t]
+    \caption{Driver Initialization Sequence using \texttt{module\_i2c\_driver()}}
+    \label{lst:init}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static const struct of_device_id grove_of_idtable[] = {
+    { .compatible = "grove,lcd" },
+    {}
+};
+
+MODULE_DEVICE_TABLE(of, grove_of_idtable);
+
+static struct i2c_driver grove_driver = {
+    .driver = {
+        .name = "grove",
+        .of_match_table = grove_of_idtable
+    },
+    .probe_new = grove_probe,
+    .remove = grove_remove,
+};
+
+module_i2c_driver(grove_driver);
+    \end{minted}
+\end{listing}
+
+%TODO
+zusammenhang zwischen compatible string und device tree -> show device tree definition
+functionspointer und probe\_new
 
 \subsection{Device Probing and Releasing}
 
