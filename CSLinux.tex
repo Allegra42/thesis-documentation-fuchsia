@@ -662,8 +662,30 @@ Using the \mintinline{c}{module_i2c_driver()} macro also means \mintinline{c}{ex
 \subsection{Device Probing and Releasing}
 As already discussed uses the \mintinline{c}{probe()} implementation in listing~\ref{lst:probe} already the new signature.
 The previously used second argument \mintinline{c}{struct i2c_device_id *id} is not needed for this driver.
+As pictured in figure~\ref{pic:linux-lifecycle} is a driver's implementation of probe roughly divisible in to two parts: the driver's own setup including its registration within the system and the device specific initializations.
+The first part is very similar for many drivers.
+It includes i.a.\ allocating private memory regions and device numbers but also creating entries in sysfs and devfs.
+Often, a driver supports a few similar devices or device revisions which differ in their needs e.g.\ for setting them up or their instuction set.
+In such a case, the driver must check within \mintinline{c}{probe()} if the probed device is actually a supported one and how it must be handled.
+The grove driver only allows a single compatible string.
+A decision between two similar devices is not needed.
+Also an additional testing if the device matches is redundant as long as the driver fails if the addresses defined within the device tree are not detected on the bus or the specific initializations failed.
 
+The \mintinline{c}{probe()} function is the first function of this driver that must possiby be \textit{reentrant} and aware of more than one device to handle.
+Thus, a structure for device specific and private data is needed.
+It is globally defined within this driver and should contain the needed information to restore a device and its state from each possible driver entry point.
+For the Grove peripheral, it is e.g.\ 
+\begin{itemize}
+    \item the device number \mintinline{c}{dev_t devnum}, which merges \textit{major} and \textit{minor} numbers,
+    \item the character device \mintinline{c}{struct cdev cdev},
+    \item pointers to the \ac{i2c} device instances \mintinline{c}{struct i2c_client *client} for both, \ac{rgb} and \ac{lcd} and 
+    \item device specific private data to restore the device's state, i.e.\ a struct to store color information and char buffers for the \ac{lcd} content.
+\end{itemize}
+The reasons for storing exactly these information within the struct defined as \mintinline{c}{struct grove_t} becomes clear in the course of this driver's analysis.
 
+As the items within the \texttt{grove\_t} structure should be filled during the \mintinline{c}{probe()} for exactly the device it is called with, is it useful to allocate the needed memory on the heap right from the start using \mintinline{c}{kzalloc()} (see listing~\ref{lst:probe}, line 8).
+Of course, the resulting pointer needs to be checked.
+In case of a failed memory allocation, the driver probing must be aborted with a corresponding error (see listing~\ref{lst:probe}, line 9 to 12).
 
 
 \begin{listing} [ht]
