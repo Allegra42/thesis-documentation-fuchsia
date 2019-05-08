@@ -565,10 +565,10 @@ It parses the \mintinline{bash}{Kconfig} files within the whole kernel and repre
 The Grove driver for example, is part of the \mintinline{bash}{auxdisplay} subsystem.
 Thus, general support for auxdisplays must be enabled to build also the Grove driver.
 
-\begin{listing} [t]
+\begin{listing} [ht]
 	\caption{Build Configuration for the Grove-LCD RGB backlight driver}
 	\label{lst:make}
-	\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{Make}
+	\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{make}
 # Make Entry
 obj-$(CONFIG_GROVE)			+= grove.o
 
@@ -596,7 +596,7 @@ It takes an \mintinline{i2c_driver} structure (listing~\ref{lst:init}, line 8) a
 This table defines a set of properties, e.g.\ so-called \textit{compatible strings} (listing~\ref{lst:init}, line 2}.
 As the Raspberry Pi is an ARM architecture, its actual hardware configuration and thus also firmly attached devices like the Grove are defined in a specific file, the \textit{device tree}. 
 
-\begin{listing} [t]
+\begin{listing} [ht]
     \caption{Driver Initialization Sequence using \texttt{module\_i2c\_driver()}}
     \label{lst:init}
     \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
@@ -620,11 +620,131 @@ module_i2c_driver(grove_driver);
     \end{minted}
 \end{listing}
 
-%TODO
-zusammenhang zwischen compatible string und device tree -> show device tree definition
-functionspointer und probe\_new
+Within the device tree, an entry which defines the relevant information about the Grove-LCD RGB backlight device is needed.
+Listing~\ref{lst:devtree} pictures this definition.
+From the system's view, these information are the superior \ac{i2c} node the device is attached and the device's addresses on the bus.
+
+\begin{listing} [ht]
+    \caption{Device Tree Configuration for the Grove Peripheral Device}
+    \label{lst:devtree}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+&i2c1 {
+  pinctrl-names = "default";
+  pinctrl-0 = <&i2c1_pins>;
+  clock-frequency = <100000>;
+  grovei2c: grove-i2c@3e {
+    compatible = "grove,lcd";
+    reg = <0x3e 0x62>;
+    reg-names = "grovelcd", "grovergb";
+  };
+};
+    \end{minted}
+\end{listing}
+
+Besides, for the matching between the actual device and the driver is the \textit{compatible string} a crucial information.
+It is defined according a defined scheme from the manufacturer and the device name (see listing~\ref{lst:devtree}, line 6).
+To take advantage from the new Linux \ac{api} which enables a single driver for combined \ac{i2c} devices from two or more bus slaves, their addresses and subnames must be defined in a specific way shown in listing~\ref{lst:devtree}, line 7 and 8.
+Defining, in this case, both partial \ac{i2c} devices within an own node would not work in the context of this \ac{api}.
+Unfortunately, this special requirement is rarely documented right now, maybe because the use of this feature within the mainline kernel is still very limited.
+
+To come back to the tasks of \mintinline{c}{module_i2c_driver()}, the focus returns to how this does to register the module as a driver in the system.
+Thus, the function pointers in listing\ref{lst:init} line 12 and 13 are also decisive.
+The structure given to \mintinline{c}{module_i2c_driver()} contains, besides the matching related entries, function pointers to the driver's implementations for \mintinline{c}{probe()} and \mintinline{c}{release()}.
+After register the driver by the system using this structure and the macro, is exactly this driver's \mintinline{c}{probe()} called for a device with matching compatible string.
+Indeed, the device tree used for ARM architectures is at first a static structure, but it can be extended at runtime using \textit{device tree overlays} which provides a kind of \textit{hotplugging} for device types like \ac{i2c} on ARM.
+The last and unusual issue in listing~\ref{lst:init} is the structure's entry for the \mintinline{c}{probe()} function in line 13.
+It is \mintinline{c}{probe_new()} instead of \mintinline{c}{probe()}, but the reason for this is simple.
+The current function signature for probing an \ac{i2c} device will change in future and \mintinline{c}{probe_new()} takes already a function pointer to the new one.
+As there is not need for the now deprecated one within this driver, the new function signature should be used.
+
+Using the \mintinline{c}{module_i2c_driver()} macro also means \mintinline{c}{exit()} does nothing special and thus, it is not futher mentioned.
 
 \subsection{Device Probing and Releasing}
+As already discussed uses the \mintinline{c}{probe()} implementation in listing~\ref{lst:probe} already the new signature.
+The previously used second argument \mintinline{c}{struct i2c_device_id *id} is not needed for this driver.
+
+
+
+
+\begin{listing} [ht]
+    \caption{Device Probing}
+    \label{lst:probe}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_probe(struct i2c_client *client)
+{
+  int ret = 0;
+  struct grove_t *grove;
+  struct device *dev = &client->dev;  // Store I2C client device
+  struct device *device;      // Resulting device from creating a devfs entry
+
+  grove = kzalloc(sizeof(struct grove_t), GFP_KERNEL);
+  if (IS_ERR(grove)) {
+  	dev_err(dev, "failed to allocate a private memory area for the device\n");
+	return -ENOMEM;
+  }
+
+  grove_class = class_create(THIS_MODULE, "grove");
+  if (IS_ERR(grove_class)) {
+    dev_err(dev, "failed to create sysfs class\n");
+	return -ENOMEM;
+  }
+
+  if (alloc_chrdev_region(&grove->devnum, 0, 1, "grove") < 0) {
+	dev_err(dev, "failed to allocate char dev region\n");
+	goto free_class;
+  }
+
+  cdev_init(&grove->cdev, &grove_fops);
+  grove->cdev.owner = THIS_MODULE;
+
+  if (cdev_add(&grove->cdev, grove->devnum, 1))
+	goto free_cdev;
+
+  device = device_create(grove_class, NULL, grove->devnum, "%s", "grove");
+  if (IS_ERR(device)) {
+	dev_err(dev, "failed to create dev entry\n");
+	goto free_cdev;
+  }
+  
+  /* continued with device specific initialization */
+}
+    \end{minted}
+\end{listing}
+
+\begin{listing} [ht]
+    \caption{Device Probing (Grove Specific Part)}
+    \label{lst:probe-grove}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_probe(struct i2c_client *client)
+{
+  /* continued */  
+  
+  grove->lcd_client = client;
+  i2c_set_clientdata(client, grove);
+  ret = grove_init_lcd(grove);
+  if (ret) {
+	dev_err(dev, "failed to init LCD, free resources\n");
+	goto free_device;
+  }
+
+  grove->rgb_client = i2c_new_secondary_device(grove->lcd_client, "grovergb", 0x62);
+  if (grove->rgb_client == NULL) {
+	dev_info(dev, "can not fetch secondary I2C device\n");
+	goto free_device;
+  }
+  i2c_set_clientdata(grove->rgb_client, grove);
+  ret = grove_init_rgb(grove);
+  if (ret) {
+    dev_err(dev, "failed to init RGB, free resources\n");
+    goto free_device;
+  }
+
+  return 0;
+  /* jump marks for error handling (not listed here) */
+}
+    \end{minted}
+\end{listing}
+
 
 \subsection{Driver Interfaces}
 
