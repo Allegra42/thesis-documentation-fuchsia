@@ -660,8 +660,8 @@ As there is not need for the now deprecated one within this driver, the new func
 Using the \mintinline{c}{module_i2c_driver()} macro also means \mintinline{c}{exit()} does nothing special and thus, it is not futher mentioned.
 
 \subsection{Device Probing and Releasing}
-As already discussed uses the \mintinline{c}{probe()} implementation in listing~\ref{lst:probe} already the new signature.
-The previously used second argument \mintinline{c}{struct i2c_device_id *id} is not needed for this driver.
+As already discussed uses the \mintinline{c}{probe()} implementation in listing~\ref{lst:probe} already the new method signature.
+The previously used second argument, the \mintinline{c}{struct i2c_device_id *id}, is not needed for this driver.
 As pictured in figure~\ref{pic:linux-lifecycle} is a driver's implementation of probe roughly divisible in to two parts: the driver's own setup including its registration within the system and the device specific initializations.
 The first part is very similar for many drivers.
 It includes i.a.\ allocating private memory regions and device numbers but also creating entries in sysfs and devfs.
@@ -671,7 +671,7 @@ The grove driver only allows a single compatible string.
 A decision between two similar devices is not needed.
 Also an additional testing if the device matches is redundant as long as the driver fails if the addresses defined within the device tree are not detected on the bus or the specific initializations failed.
 
-The \mintinline{c}{probe()} function is the first function of this driver that must possiby be \textit{reentrant} and aware of more than one device to handle.
+The \mintinline{c}{probe()} function is the first function of this driver which must be \textit{reentrant} and aware of more than one device to handle.
 Thus, a structure for device specific and private data is needed.
 It is globally defined within this driver and should contain the needed information to restore a device and its state from each possible driver entry point.
 For the Grove peripheral, it is e.g.\ 
@@ -687,8 +687,13 @@ As the items within the \texttt{grove\_t} structure should be filled during the 
 Of course, the resulting pointer needs to be checked.
 In case of a failed memory allocation, the driver probing must be aborted with a corresponding error (see listing~\ref{lst:probe}, line 9 to 12).
 
+The next step is creating a \textit{class} entry within the sysfs for the Grove device.
+For example with the name \textit{grove} as pictured in listing~\ref{lst:probe}, line 14.
+It is not only a good habit to create sysfs entries but also needed for the automatized assignment of device numbers.
+If this part is skipped, the entry in devfs including major and minor numbers must be created by hand.
+Of course, the resulting class pointer must be checked as well to avoid further errors, e.g.\ if the class could not be created for some reasons.
 
-\begin{listing} [ht]
+\begin{listing} [H]
     \caption{Device Probing}
     \label{lst:probe}
     \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
@@ -733,7 +738,46 @@ static int grove_probe(struct i2c_client *client)
     \end{minted}
 \end{listing}
 
-\begin{listing} [ht]
+Accordingly, the following call to \mintinline{c}{alloc_chrdev_region()} actually registers a range of device numbers for the asking device using the same name as for the class creation (see listing\ref{lst:probe}, line 20).
+For a single device, only one device number is needed.
+This is the meaning of the second and third argument in the call.
+The device number is unique for each device and thus helps to identify a device.
+For this reason, the resulting assigned number of the type \mintinline{c}{dev_t *}, is stored as part of the \mintinline{c}{grove_t} structure (see first method argument in listing~\ref{lst:probe}, line 20).
+As before, a check of the operation's return value and error handling in the case of a failure during the allocation is needed.
+
+In the following step, the character device structure \mintinline{c}{cdev} is initialized for this device using \mintinline{c}{cdev_init()} in listing~\ref{lst:probe}, line 25. 
+Its first argument is a reference to the empty struct which is a part of \mintinline{c}{grove_t}.
+The second argument references the \mintinline{c}{struct file_operations} which contains function pointers to the implementations of this drivers file operations, the driver entry points.
+The structure is not directly pictured as part of a listing as there is nothing special about.
+As defined in the general driver concept in section~\ref{sec:cs-general-driver-concept} should the driver be accessible via \ac{io}-controls and thus, the struct contains a function pointer to its implementation.
+Additionally, it holds pointers for the owner but also for open and release.
+The \mintinline{c}{.owner} is pointing commonly to \mintinline{c}{THIS_MODULE}.
+The reason for implementing \mintinline{c}{open()} and \mintinline{c}{release()} even if there is no need for an access control for this device is related to restoring the right device instance if the driver is entered via a file operation like \mintinline{c}{ioctl()}, \mintinline{c}{write()} or \mintinline{c}{read()}.
+Its underlying issue is further discussed as a part of the following section.
+In the context of \mintinline{c}{cdev_init()} are two further actions needed: Defining the cdev's owner (see listing~\ref{lst:probe}, line 26) and adding the cdev structure, and thus the represented character device as well, including its device numbers to the system (see listing~\ref{lst:probe}, line 28).
+
+As a last action within this part of \mintinline{c}{probe()}, an entry for the probed device is added within devfs (\texttt{/dev/} using \mintinline{c}{device_create()} (see listing~\ref{lst:probe}, line 31).
+It takes the class created in sysfs as a first argument.
+The second one would be the parent device for the newly created one. 
+As this there is no matching one for the Grove-LCD RGB backlight device, the argument stays \mintinline{c}{NULL}.
+To create the device in devfs is only one place the device number needed.
+Thus, it was neccessary to create it before and save it as a part of the \texttt{grove\_t} structure.
+The last arguments for this call are a format string to define the device' name within devfs and a number of strings or numbers to fill it.
+In this case, it is just the string \texttt{``grove''}.
+As previous, this call needs error checking and handling as well.
+
+
+The device specific part of \mintinline{c}{probe()} starts with saving the \ac{i2c} client which was delivered as an argument within the private \texttt{grove\_t} structure for later use.
+Because it is needed to perform the \ac{i2c} transfers is this structure an essential part of this driver.
+As listing~\ref{lst:probe-grove} pictures in line 5, the client structure is saved as \mintinline{c}{grove->lcd_client}.
+But how is it known that the structure delivered represents the \ac{lcd} and not the \ac{rgb} controller?
+To answer this, the device tree definition pictured in listing~\ref{lst:devtree} is needed.
+The order the controller addresses are defined within this description affect how the device is passed to the driver's \mintinline{c}{probe()} implementation.
+The \ac{lcd}'s address 0x3e was defined at first, thus it is passed as major device to \mintinline{c}{probe()}.
+All following devices are not directly passed.
+The driver handles them as so-called \textit{secondary devices} and references them using their address as well as their given name defined in the device tree.
+
+\begin{listing} [h]
     \caption{Device Probing (Grove Specific Part)}
     \label{lst:probe-grove}
     \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
@@ -767,6 +811,7 @@ static int grove_probe(struct i2c_client *client)
     \end{minted}
 \end{listing}
 
+But first, %TODO but first the major device setup 
 
 \subsection{Driver Interfaces}
 
