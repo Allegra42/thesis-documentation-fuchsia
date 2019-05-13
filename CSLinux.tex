@@ -542,5 +542,496 @@ On Ziron are these methods more interesting for this work, especially in the C++
 
 \section{Linux Driver Development}\label{sec:cs-linux}
 
+\subsection{Prearrangements}
+To built a Linux driver, various options are available.
+It can be built as a permanent part of the kernel as a \textit{built-in} driver or as a \textit{module}.
+Further, it is not needed a module's source code is located within the actual kernel source tree.
+For this work, the first choice should not play a deeper role, but the source location.
+Carefully developed as a module within the kernel sources, the change to \textit{built-in} is nothing more than a build configuration.
+Accordingly, the driver must be placed into the internal kernel structure in a meaningful way.
+Linux is organized into \textit{subsystems} to structure its monolithic architecture into functional related modules.
+Within the \textit{drivers} directory, are several subsystems which are more or less meaningful for the Grove display.
+The probably most appropriate subsystem for this device is \textit{auxdisplay}, i.e.\ auxiliary display which groups a small amount of drivers for small additional e.g.\ \ac{lcd}'s.
+Currently, the auxdisplay subsystem consists of only nine drivers.
+Each one is made from a single C code file and thus, not further divided into sub-directories for the drivers.
+The Grove driver is to be inserted in this structure.
+Therefore, the driver source file is placed in \texttt{drivers/auxdisplay} and its build rules are added in the general \texttt{Makefile} for this subsystem.
+To configure the build, i.e.\ if the driver should be built as part of the kernel or as a module or none at all, it must also be registered in the subsystems \texttt{Kconfig} file.
+Listing~\ref{lst:make} shows both entries in a combined view.
+The actual configuration is done via device specific configuration files, e.g.\ \mintinline{bash}{arch/arm/configs/bcm2709_defconfig}.
+Mostly, these long files are not directly modified.
+Instead, the command \mintinline{bash}{make menuconfig} is used as a front-end.
+It parses the \mintinline{bash}{Kconfig} files within the whole kernel and represents them in their tree structure.
+The Grove driver for example, is part of the \mintinline{bash}{auxdisplay} subsystem.
+Thus, general support for auxdisplays must be enabled to build also the Grove driver.
 
-\subsubsection{Interface} %ioctl
+\begin{listing} [ht]
+	\caption{Build Configuration for the Grove-LCD RGB backlight driver}
+	\label{lst:make}
+	\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{make}
+# Make Entry
+obj-$(CONFIG_GROVE)			+= grove.o
+
+# Kconfig Entry
+config GROVE
+tristate "Grove-LCD RGB backlight v4.0 Support"
+default m
+---help---
+    Enable support for the Grove-LCD RGB backlight v4.0 via I2C.
+    The device is accessible via "/dev/grove" char device.
+    For the interface see "include/uapi/linux/grove_ioctl.h".
+	\end{minted}
+\end{listing}
+
+The help text shown for the driver configuration shown in listing~\ref{lst:make} mentiones the path \texttt{include/uapi/linux/grove\_ioctl.h}.
+It contains the custom \texttt{ioctl()} call definitions.
+They should be accessable from both, kernel and userspace.
+Thus, the definition for this and other drivers are collected under this path.
+
+\subsection{Driver Initialization and Exit}
+For the Grove driver, there is no need for additional one time initializations that are commonly done within the regular \mintinline{c}{module_init()} call.
+As already mentioned, the Linux kernel provides macros instead, to register the driver without unneccessary boilerplate code.
+For an \ac{i2c} driver as the Grove it is, the matching macro is \mintinline{c}{module_i2c_driver()} (see listing~\ref{lst:init}, line 17).
+It takes an \mintinline{i2c_driver} structure (listing~\ref{lst:init}, line 8) as an argument which contains function pointers to the driver implementation of \mintinline{c}{probe()} and \mintinline{c}{remove()}, but also driver specific information like its name and a further pointer to an \mintinline{c}{of_device_id} table.
+This table defines a set of properties, e.g.\ so-called \textit{compatible strings} (listing~\ref{lst:init}, line 2}.
+As the Raspberry Pi is an ARM architecture, its actual hardware configuration and thus also firmly attached devices like the Grove are defined in a specific file, the \textit{device tree}. 
+
+\begin{listing} [ht]
+    \caption{Driver Initialization Sequence using \texttt{module\_i2c\_driver()}}
+    \label{lst:init}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static const struct of_device_id grove_of_idtable[] = {
+    { .compatible = "grove,lcd" },
+    {}
+};
+
+MODULE_DEVICE_TABLE(of, grove_of_idtable);
+
+static struct i2c_driver grove_driver = {
+    .driver = {
+        .name = "grove",
+        .of_match_table = grove_of_idtable
+    },
+    .probe_new = grove_probe,
+    .remove = grove_remove,
+};
+
+module_i2c_driver(grove_driver);
+    \end{minted}
+\end{listing}
+
+Within the device tree, an entry which defines the relevant information about the Grove-LCD RGB backlight device is needed.
+Listing~\ref{lst:devtree} pictures this definition.
+From the system's view, these information are the superior \ac{i2c} node the device is attached and the device's addresses on the bus.
+
+\begin{listing} [ht]
+    \caption{Device Tree Configuration for the Grove Peripheral Device}
+    \label{lst:devtree}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+&i2c1 {
+  pinctrl-names = "default";
+  pinctrl-0 = <&i2c1_pins>;
+  clock-frequency = <100000>;
+  grovei2c: grove-i2c@3e {
+    compatible = "grove,lcd";
+    reg = <0x3e 0x62>;
+    reg-names = "grovelcd", "grovergb";
+  };
+};
+    \end{minted}
+\end{listing}
+
+Besides, for the matching between the actual device and the driver is the \textit{compatible string} a crucial information.
+It is defined according a defined scheme from the manufacturer and the device name (see listing~\ref{lst:devtree}, line 6).
+To take advantage from the new Linux \ac{api} which enables a single driver for combined \ac{i2c} devices from two or more bus slaves, their addresses and subnames must be defined in a specific way shown in listing~\ref{lst:devtree}, line 7 and 8.
+Defining, in this case, both partial \ac{i2c} devices within an own node would not work in the context of this \ac{api}.
+Unfortunately, this special requirement is rarely documented right now, maybe because the use of this feature within the mainline kernel is still very limited.
+
+To come back to the tasks of \mintinline{c}{module_i2c_driver()}, the focus returns to how this does to register the module as a driver in the system.
+Thus, the function pointers in listing\ref{lst:init} line 12 and 13 are also decisive.
+The structure given to \mintinline{c}{module_i2c_driver()} contains, besides the matching related entries, function pointers to the driver's implementations for \mintinline{c}{probe()} and \mintinline{c}{release()}.
+After register the driver by the system using this structure and the macro, is exactly this driver's \mintinline{c}{probe()} called for a device with matching compatible string.
+Indeed, the device tree used for ARM architectures is at first a static structure, but it can be extended at runtime using \textit{device tree overlays} which provides a kind of \textit{hotplugging} for device types like \ac{i2c} on ARM.
+The last and unusual issue in listing~\ref{lst:init} is the structure's entry for the \mintinline{c}{probe()} function in line 13.
+It is \mintinline{c}{probe_new()} instead of \mintinline{c}{probe()}, but the reason for this is simple.
+The current function signature for probing an \ac{i2c} device will change in future and \mintinline{c}{probe_new()} takes already a function pointer to the new one.
+As there is not need for the now deprecated one within this driver, the new function signature should be used.
+
+Using the \mintinline{c}{module_i2c_driver()} macro also means \mintinline{c}{exit()} does nothing special and thus, it is not futher mentioned.
+
+\subsection{Device Probing and Releasing}
+As already discussed uses the \mintinline{c}{probe()} implementation in listing~\ref{lst:probe} already the new method signature.
+The previously used second argument, the \mintinline{c}{struct i2c_device_id *id}, is not needed for this driver.
+As pictured in figure~\ref{pic:linux-lifecycle} is a driver's implementation of probe roughly divisible in to two parts: the driver's own setup including its registration within the system and the device specific initializations.
+The first part is very similar for many drivers.
+It includes i.a.\ allocating private memory regions and device numbers but also creating entries in sysfs and devfs.
+Often, a driver supports a few similar devices or device revisions which differ in their needs e.g.\ for setting them up or their instuction set.
+In such a case, the driver must check within \mintinline{c}{probe()} if the probed device is actually a supported one and how it must be handled.
+The grove driver only allows a single compatible string.
+A decision between two similar devices is not needed.
+Also an additional testing if the device matches is redundant as long as the driver fails if the addresses defined within the device tree are not detected on the bus or the specific initializations failed.
+
+The \mintinline{c}{probe()} function is the first function of this driver which must be \textit{reentrant} and aware of more than one device to handle.
+Thus, a structure for device specific and private data is needed.
+It is globally defined within this driver and should contain the needed information to restore a device and its state from each possible driver entry point.
+For the Grove peripheral, it is e.g.\ 
+\begin{itemize}
+    \item the device number \mintinline{c}{dev_t devnum}, which merges \textit{major} and \textit{minor} numbers,
+    \item the character device \mintinline{c}{struct cdev cdev},
+    \item pointers to the \ac{i2c} device instances \mintinline{c}{struct i2c_client *client} for both, \ac{rgb} and \ac{lcd} and 
+    \item device specific private data to restore the device's state, i.e.\ a struct to store color information and char buffers for the \ac{lcd} content.
+\end{itemize}
+The reasons for storing exactly these information within the struct defined as \mintinline{c}{struct grove_t} becomes clear in the course of this driver's analysis.
+
+As the items within the \texttt{grove\_t} structure should be filled during the \mintinline{c}{probe()} for exactly the device it is called with, is it useful to allocate the needed memory on the heap right from the start using \mintinline{c}{kzalloc()} (see listing~\ref{lst:probe}, line 8).
+Of course, the resulting pointer needs to be checked.
+In case of a failed memory allocation, the driver probing must be aborted with a corresponding error (see listing~\ref{lst:probe}, line 9 to 12).
+
+The next step is creating a \textit{class} entry within the sysfs for the Grove device.
+For example with the name \textit{grove} as pictured in listing~\ref{lst:probe}, line 14.
+It is not only a good habit to create sysfs entries but also needed for the automatized assignment of device numbers.
+If this part is skipped, the entry in devfs including major and minor numbers must be created by hand.
+Of course, the resulting class pointer must be checked as well to avoid further errors, e.g.\ if the class could not be created for some reasons.
+
+\begin{listing} [H]
+    \caption{Device Probing}
+    \label{lst:probe}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_probe(struct i2c_client *client)
+{
+  int ret = 0;
+  struct grove_t *grove;
+  struct device *dev = &client->dev;  // Store I2C client device
+  struct device *device;      // Resulting device from creating a devfs entry
+
+  grove = kzalloc(sizeof(struct grove_t), GFP_KERNEL);
+  if (IS_ERR(grove)) {
+  	dev_err(dev, "failed to allocate a private memory area for the device\n");
+	return -ENOMEM;
+  }
+
+  grove_class = class_create(THIS_MODULE, "grove");
+  if (IS_ERR(grove_class)) {
+    dev_err(dev, "failed to create sysfs class\n");
+	return -ENOMEM;
+  }
+
+  if (alloc_chrdev_region(&grove->devnum, 0, 1, "grove") < 0) {
+	dev_err(dev, "failed to allocate char dev region\n");
+	goto free_class;
+  }
+
+  cdev_init(&grove->cdev, &grove_fops);
+  grove->cdev.owner = THIS_MODULE;
+
+  if (cdev_add(&grove->cdev, grove->devnum, 1))
+	goto free_cdev;
+
+  device = device_create(grove_class, NULL, grove->devnum, "%s", "grove");
+  if (IS_ERR(device)) {
+	dev_err(dev, "failed to create dev entry\n");
+	goto free_cdev;
+  }
+  
+  /* continued with device specific initialization */
+}
+    \end{minted}
+\end{listing}
+
+Accordingly, the following call to \mintinline{c}{alloc_chrdev_region()} actually registers a range of device numbers for the asking device using the same name as for the class creation (see listing\ref{lst:probe}, line 20).
+For a single device, only one device number is needed.
+This is the meaning of the second and third argument in the call.
+The device number is unique for each device and thus helps to identify a device.
+For this reason, the resulting assigned number of the type \mintinline{c}{dev_t *}, is stored as part of the \mintinline{c}{grove_t} structure (see first method argument in listing~\ref{lst:probe}, line 20).
+As before, a check of the operation's return value and error handling in the case of a failure during the allocation is needed.
+
+In the following step, the character device structure \mintinline{c}{cdev} is initialized for this device using \mintinline{c}{cdev_init()} in listing~\ref{lst:probe}, line 25. 
+Its first argument is a reference to the empty struct which is a part of \mintinline{c}{grove_t}.
+The second argument references the \mintinline{c}{struct file_operations} which contains function pointers to the implementations of this drivers file operations, the driver entry points.
+The structure is not directly pictured as part of a listing as there is nothing special about.
+As defined in the general driver concept in section~\ref{sec:cs-general-driver-concept} should the driver be accessible via \ac{io}-controls and thus, the struct contains a function pointer to its implementation.
+Additionally, it holds pointers for the owner but also for open and release.
+The \mintinline{c}{.owner} is pointing commonly to \mintinline{c}{THIS_MODULE}.
+The reason for implementing \mintinline{c}{open()} and \mintinline{c}{release()} even if there is no need for an access control for this device is related to restoring the right device instance if the driver is entered via a file operation like \mintinline{c}{ioctl()}, \mintinline{c}{write()} or \mintinline{c}{read()}.
+Its underlying issue is further discussed as a part of the following section.
+In the context of \mintinline{c}{cdev_init()} are two further actions needed: Defining the cdev's owner (see listing~\ref{lst:probe}, line 26) and adding the cdev structure, and thus the represented character device as well, including its device numbers to the system (see listing~\ref{lst:probe}, line 28).
+
+As a last action within this part of \mintinline{c}{probe()}, an entry for the probed device is added within devfs (\texttt{/dev/} using \mintinline{c}{device_create()} (see listing~\ref{lst:probe}, line 31).
+It takes the class created in sysfs as a first argument.
+The second one would be the parent device for the newly created one. 
+As this there is no matching one for the Grove-LCD RGB backlight device, the argument stays \mintinline{c}{NULL}.
+To create the device in devfs is only one place the device number needed.
+Thus, it was neccessary to create it before and save it as a part of the \texttt{grove\_t} structure.
+The last arguments for this call are a format string to define the device' name within devfs and a number of strings or numbers to fill it.
+In this case, it is just the string \texttt{``grove''}.
+As previous, this call needs error checking and handling as well.
+
+
+The device specific part of \mintinline{c}{probe()} starts with saving the \ac{i2c} client which was delivered as an argument within the private \texttt{grove\_t} structure for later use.
+Because it is needed to perform the \ac{i2c} transfers is this structure an essential part of this driver.
+As listing~\ref{lst:probe-grove} pictures in line 5, the client structure is saved as \mintinline{c}{grove->lcd_client}.
+But how is it known that the structure delivered represents the \ac{lcd} and not the \ac{rgb} controller?
+To answer this, the device tree definition pictured in listing~\ref{lst:devtree} is needed.
+The order the controller addresses are defined within this description affect how the device is passed to the driver's \mintinline{c}{probe()} implementation.
+The \ac{lcd}'s address 0x3e was defined at first, thus it is passed as major device to \mintinline{c}{probe()}.
+All following devices are not directly passed.
+The driver handles them as so-called \textit{secondary devices} and references them using their address as well as their given name defined in the device tree.
+
+\begin{listing} [h]
+    \caption{Device Probing (Grove Specific Part)}
+    \label{lst:probe-grove}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_probe(struct i2c_client *client)
+{
+  /* continued */  
+  
+  grove->lcd_client = client;
+  i2c_set_clientdata(client, grove);
+  ret = grove_init_lcd(grove);
+  if (ret) {
+	dev_err(dev, "failed to init LCD, free resources\n");
+	goto free_device;
+  }
+
+  grove->rgb_client = i2c_new_secondary_device(grove->lcd_client, "grovergb", 0x62);
+  if (grove->rgb_client == NULL) {
+	dev_info(dev, "can not fetch secondary I2C device\n");
+	goto free_device;
+  }
+  i2c_set_clientdata(grove->rgb_client, grove);
+  ret = grove_init_rgb(grove);
+  if (ret) {
+    dev_err(dev, "failed to init RGB, free resources\n");
+    goto free_device;
+  }
+
+  return 0;
+  /* jump marks for error handling (not listed here) */
+}
+    \end{minted}
+\end{listing}
+
+But first, the major \ac{i2c} device must be initialized before adding the secondary one.
+Before doing this, the \mintinline{c}{grove_t} structure which contains now the \ac{i2c} client for the \ac{lcd} controller as well, is set to the \mintinline{c}{void *driver_data} pointer of the \mintinline{struct device} which is itself a part of \mintinline{c}{struct i2c_device}.
+Some calls to this driver contain exactly this structure as an argument which allows to restore the device for use.
+Using global variables to store the data of all possible devices is avoided in this way.
+Additionally, it is a much more flexible way.
+Global definitions would not allow dynamically changing quantities of devices controlled by a driver and in the worst case, unneccessary allocated memory.
+The assignment to \mintinline{c}{void *driver_data} is done via the \mintinline{c}{i2c_set_clientdata()} call pictured in listing~\ref{lst:probe-grove}, line 6.
+Its counterpart, \mintinline{c}{i2c_get_clientdata()} is used within this driver as well, as a part of the opposite of device probing: the \mintinline{c}{release()} function. 
+The device initialization itself is outsourced to an own function.
+Within this thesis, only the \ac{lcd} initialization is pictured.
+The \ac{rgb} one is straight forward using the commands of the respective controller and as well as the \ac{lcd} initialization rather device specific than relevant for driver development consideration.
+
+The \ac{lcd} init function takes the \mintinline{c}{grove_t} structure as an argument.
+This is needed to access the \ac{i2c} client stored within which is needed for the actual communication with the device.
+Of course, it would be possible to use \mintinline{c}{struct i2c_client} as an argument as well, but in this case, the function call would change between \ac{lcd} and \ac{rgb} initialization.
+As \mintinline{c}{grove_t} stores both \ac{i2c} client structures, it is a comparable way.
+Within the function itself, the initialization sequence for the \ac{lcd} is traversed.
+
+\begin{listing} [H]
+    \caption{Controller-specific LCD Initialization}
+    \label{lst:probe-lcdinit}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_init_lcd(struct grove_t *grove)
+{
+    int i = 0;
+    int ret = 0;
+
+    struct i2c_cmd_t cmds[] = {
+      { LCD_CMD, 0x01 },  // clear display
+      { LCD_CMD, 0x02 },  // set cursor position to home
+      { LCD_CMD, 0x0c },  // enable display | show no cursor
+      { LCD_CMD, 0x28 },  // enable two line mode
+    };
+
+    mutex_lock(&grove_mutex);
+    for (i = 0; i < (int)ARRAY_SIZE(cmds); i++) {
+        ret = i2c_smbus_write_byte_data(grove->lcd_client, cmds[i].cmd,
+              cmds[i].val);
+        if (ret) {
+            dev_err(&grove->lcd_client->dev,
+                "failed to initialize the LCD\n");
+            goto fail;
+        }
+    }
+
+    char init[] = "@Init";
+
+    ret = i2c_master_send(grove->lcd_client, init, sizeof(init) - 1);
+    if (ret < sizeof(init - 1)) {
+        dev_err(&grove->lcd_client->dev,
+            "failed to initialize the LCD\n");
+        goto fail;
+    }
+    ret = 0;
+
+fail:
+    mutex_unlock(&grove_mutex);
+    return ret;
+}
+    \end{minted}
+\end{listing}
+
+The sequence is made from specific values that needs to be written to specific registers on the controller.
+The exact sequence depends on the device and is in general specified in the according documentation.
+For the Grove LCD, several options for the sequence is inspired by the manufacturer's documentation for using the device e.g.\ the Raspberry Pi and Python\footnote{wiki.seeedstudio.com, visited on 12.05.2019 \url{http://wiki.seeedstudio.com/Grove-LCD_RGB_Backlight/}}.
+The way the commands are defined and sent to the device is instead already inspired by the way it is done in \textit{Zircon} (see listing~\ref{lst:probe-lcdinit}, line 6 to 22).
+There, a structure is defined which describes the way a command is constructed, in this case, it is made from two \mintinline{c}{uint8_t}, the command register and the value which is to be set in it.
+Using such a struct enables easy readability but also to loop over the commands in a graceful way to send them to the device.
+The communication between driver and device is a \textit{critical section}.
+It is not desired to be entered by more than one process at the same time.
+The initialization should be only entered once per device, indeed, but is still secured with a mutex as a precaution.
+Within the loop, the actual transfer between driver and device is done using the kernel internal \ac{api} \mintinline{c}{i2c_smbus_write_byte_data()}.
+It writes exactly one byte of useable data, the value within the struct, to a specified controller register.
+For all of these setup commands, the register is 0x80 what the name \mintinline{c}{LCD_CMD} stands for.
+As a result, the loop iterates over all tupels made from a register and a value and sends them to the \mintinline{c}{struct i2c_device}pointer given as a first argument of the call (see listing~\ref{lst:probe-lcdinit}, line 14 to 22).
+For the \ac{lcd}, this way is only used to setup the device or prepare other writes, but not for the actual text writes itself.
+Using structures for text has \textit{padding effects} as a result.
+Thus, a more sophisticated way is to encode the target register on the controller as a part of the string to be sent and use so-called \textit{block writes} instead of sending single bytes at a time.
+It instrumenalizes the effect a block write like \mintinline{c}{i2c_master_send()} interprets the first sent byte as a controller register.
+In case of the Grove device, the according register is 0x40 which is interpreted as an \textbf{@} in \ac{ascii}.
+For this initialization, writing a string to the \ac{lcd} is not neccessarily needed.
+This part could also been skipped, thus, but it pictures the way strings are written during the whole driver.
+The call to the kernel \ac{api} \mintinline{c}{i2c_master_send()} is as well slightly different than the one used previously (see listing~\ref{lst:probe-lcdinit}, line 26).
+It also takes the \texttt{i2c\_device} structure as a first argument, but the second one is a pointer to the char buffer which is to be sent.
+In this context, it is \mintinline{char init[]} defined in listing~\ref{lst:probe-lcdinit}, line 24).
+The last argument is the number of bytes which are to be sent. 
+Usually, this would be the string size including \texttt{\n}.
+But because the \ac{lcd} would try to print this character as well, it is cutted of by decreasing the size by one.
+Unlike the previous call does \mintinline{c}{i2c_master_send()} not return a status code but the number of successfully transfered bytes.
+Thus, the error handling must check for this.
+In each case, the mutext must become unlocked before the function is left.
+Using jump marks for error handling simplifies this.
+In contrast to ordinary application development are they gladly used within Linux drivers because error handling becomes more readable than by using e.g.\ if-else constructs.
+However, only linear onward jumps are allowed to ensure this.
+
+After the device initialization itself was considered for the \ac{lcd} as an example for both parts of the Grove-LCD RGB backlight peripheral, the focus should come back to the anomaly of this driver, the handling of the second \ac{i2c} controller.
+While the \mintinline{c}{struct i2c_client} for the \ac{lcd} is given as an argument of \mintinline{c}{probe()} (see listing~\ref{lst:probe-lcdinit}, line 5), the one for the \ac{rgb} part must be requested using the rather new \mintinline{c}{i2c_new_secondary_device()} \ac{api} of the Linux kernel (see listing~\ref{lst:probe-lcdinit}, line 13).
+It is a helper function to fetch the second defined address in the device tree and create the associated device representation.
+Its first argument is a pointer to the primary \ac{i2c} client, in this case, the \ac{lcd}.
+The second one is the symbolic name given in device tree (see listing~\ref{lst:devtree}).
+Usually, the slave address is parsed from the according address to this name, but if there is an issue, the helper function tries to create the secondary device using the default address specified as a third argument.
+The resulting \mintinline{c}{struct i2c_client} is stored as a part of \mintinline{c}{grove_t} as well.
+Further steps for the \ac{rgb} device are the same as for the \ac{lcd} one (see listing~\ref{lst:probe-lcdinit}), but the exact implementation of the device specific initialization are of course different and meaningful for the \ac{rgb}.
+
+\subsection{Driver Interfaces}
+
+\begin{listing} [H]
+    \caption{I/O Controll Call Definitions}
+    \label{lst:ioctldefs}
+    \begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+#define MAGIC 'M'
+
+#define SET_COLOR           0x01
+#define GET_COLOR           0x02
+#define CLEAR_LCD           0x03
+#define WRITE_FIRST_LINE    0x04
+#define WRITE_SECOND_LINE   0x05
+#define READ_LCD            0x06
+#define GET_LINE_SIZE       0x07
+
+
+#define GROVE_SET_COLOR         _IOW (MAGIC, SET_COLOR, struct color_t) 
+#define GROVE_GET_COLOR         _IOR (MAGIC, GET_COLOR, struct color_t)
+#define GROVE_CLEAR_LCD         _IO  (MAGIC, CLEAR_LCD)
+#define GROVE_WRITE_FIRST_LINE  _IOW (MAGIC, WRITE_FIRST_LINE, struct string_t)
+#define GROVE_WRITE_SECOND_LINE _IOW (MAGIC, WRITE_SECOND_LINE, struct string_t)
+#define GROVE_READ_LCD          _IOR (MAGIC, READ_LCD, unsigned long)
+#define GROVE_GET_LINE_SIZE     _IOR (MAGIC, GET_LINE_SIZE, uint8_t)
+    \end{minted}
+\end{listing}
+
+
+\begin{listing} [H]
+    \caption{I/O Controll Implementation}
+    \label{lst:ioctl}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static long grove_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+  /* Definition of variables */
+
+  grove = file->private_data;
+  dev = &grove->lcd_client->dev;
+  color = kzalloc(sizeof(struct color_t), GFP_KERNEL);
+  if (IS_ERR(color))
+    return -ENOMEM;
+
+  string = kzalloc(sizeof(struct string_t), GFP_KERNEL);
+  if (IS_ERR(string))
+    return -ENOMEM;
+
+  switch (cmd) {
+  /* Some cases are skipped for this listing */
+  case GROVE_WRITE_FIRST_LINE:
+    mutex_lock(&grove_mutex);
+    if (copy_from_user(string, (const void *)arg, sizeof(struct string_t))) {
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    ret = i2c_smbus_write_byte_data(grove->lcd_client, LCD_CMD, (string->position | 0x80));
+    if (ret) {
+      dev_err(dev, "set position failed\n");
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    size = snprintf(tmp, LINE_SIZE + 3, "@%s", string->data);
+    dev_info(dev, "input %s %s\n", string->data, tmp);
+    ret = i2c_master_send(grove->lcd_client, tmp, size < 17 ? (size - 2) : 17);
+    if (ret < 0) {
+      dev_err(dev, "write first line failed\n");
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    snprintf(grove->line_one, sizeof(grove->line_one), "%s\n", string->data);
+    break;
+
+  case GROVE_READ_LCD:
+    mutex_lock(&grove_mutex);
+    snprintf(string->data, sizeof(string->data), "%s%s", grove->line_one, grove->line_two);
+    if (copy_to_user((void *)arg, (const void *)string, sizeof(struct string_t))) {
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    break;
+
+  /* Default case */
+
+  mutex_unlock(&grove_mutex);
+  return 0;
+}
+    \end{minted}
+\end{listing}
+
+
+\begin{listing} [H]
+    \caption{Implementation of \texttt{open()} and \texttt{release()} for an I2C device}
+    \label{lst:open}
+    \begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_open(struct inode *inode, struct file *file)
+{
+	struct grove_t *grove;
+
+	grove = container_of(inode->i_cdev, struct grove_t, cdev);
+	file->private_data = grove;
+
+	return 0;
+}    
+static int grove_release(struct inode *inode, struct file *file)
+{
+    file->private_data = NULL;
+    return -2;
+}
+    \end{minted}
+\end{listing}
+
+
+
+\begin{listing} [ht]
+	\caption{Custom macro definition for \texttt{printk()}}
+	\label{lst:printk-macro}
+	\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+
+	\end{minted}
+\end{listing}
+
