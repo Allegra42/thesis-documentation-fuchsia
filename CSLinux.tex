@@ -917,6 +917,116 @@ Further steps for the \ac{rgb} device are the same as for the \ac{lcd} one (see 
 
 \subsection{Driver Interfaces}
 
+\begin{listing} [H]
+    \caption{I/O Controll Call Definitions}
+    \label{lst:ioctldefs}
+    \begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+#define MAGIC 'M'
+
+#define SET_COLOR           0x01
+#define GET_COLOR           0x02
+#define CLEAR_LCD           0x03
+#define WRITE_FIRST_LINE    0x04
+#define WRITE_SECOND_LINE   0x05
+#define READ_LCD            0x06
+#define GET_LINE_SIZE       0x07
+
+
+#define GROVE_SET_COLOR         _IOW (MAGIC, SET_COLOR, struct color_t) 
+#define GROVE_GET_COLOR         _IOR (MAGIC, GET_COLOR, struct color_t)
+#define GROVE_CLEAR_LCD         _IO  (MAGIC, CLEAR_LCD)
+#define GROVE_WRITE_FIRST_LINE  _IOW (MAGIC, WRITE_FIRST_LINE, struct string_t)
+#define GROVE_WRITE_SECOND_LINE _IOW (MAGIC, WRITE_SECOND_LINE, struct string_t)
+#define GROVE_READ_LCD          _IOR (MAGIC, READ_LCD, unsigned long)
+#define GROVE_GET_LINE_SIZE     _IOR (MAGIC, GET_LINE_SIZE, uint8_t)
+    \end{minted}
+\end{listing}
+
+
+\begin{listing} [H]
+    \caption{I/O Controll Implementation}
+    \label{lst:ioctl}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static long grove_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+  /* Definition of variables */
+
+  grove = file->private_data;
+  dev = &grove->lcd_client->dev;
+  color = kzalloc(sizeof(struct color_t), GFP_KERNEL);
+  if (IS_ERR(color))
+    return -ENOMEM;
+
+  string = kzalloc(sizeof(struct string_t), GFP_KERNEL);
+  if (IS_ERR(string))
+    return -ENOMEM;
+
+  switch (cmd) {
+  /* Some cases are skipped for this listing */
+  case GROVE_WRITE_FIRST_LINE:
+    mutex_lock(&grove_mutex);
+    if (copy_from_user(string, (const void *)arg, sizeof(struct string_t))) {
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    ret = i2c_smbus_write_byte_data(grove->lcd_client, LCD_CMD, (string->position | 0x80));
+    if (ret) {
+      dev_err(dev, "set position failed\n");
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    size = snprintf(tmp, LINE_SIZE + 3, "@%s", string->data);
+    dev_info(dev, "input %s %s\n", string->data, tmp);
+    ret = i2c_master_send(grove->lcd_client, tmp, size < 17 ? (size - 2) : 17);
+    if (ret < 0) {
+      dev_err(dev, "write first line failed\n");
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    snprintf(grove->line_one, sizeof(grove->line_one), "%s\n", string->data);
+    break;
+
+  case GROVE_READ_LCD:
+    mutex_lock(&grove_mutex);
+    snprintf(string->data, sizeof(string->data), "%s%s", grove->line_one, grove->line_two);
+    if (copy_to_user((void *)arg, (const void *)string, sizeof(struct string_t))) {
+      mutex_unlock(&grove_mutex);
+      break;
+    }
+    break;
+
+  /* Default case */
+
+  mutex_unlock(&grove_mutex);
+  return 0;
+}
+    \end{minted}
+\end{listing}
+
+
+\begin{listing} [H]
+    \caption{Implementation of \texttt{open()} and \texttt{release()} for an I2C device}
+    \label{lst:open}
+    \begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_open(struct inode *inode, struct file *file)
+{
+	struct grove_t *grove;
+
+	grove = container_of(inode->i_cdev, struct grove_t, cdev);
+	file->private_data = grove;
+
+	return 0;
+}    
+static int grove_release(struct inode *inode, struct file *file)
+{
+    file->private_data = NULL;
+    return -2;
+}
+    \end{minted}
+\end{listing}
+
+
+
 \begin{listing} [ht]
 	\caption{Custom macro definition for \texttt{printk()}}
 	\label{lst:printk-macro}
