@@ -542,7 +542,7 @@ On Ziron are these methods more interesting for this work, especially in the C++
 
 \section{Linux Driver Development}\label{sec:cs-linux}
 
-\subsection{Prearrangements}
+ \subsection{Prearrangements}\label{sec:linux:prearrangements}
 To built a Linux driver, various options are available.
 It can be built as a permanent part of the kernel as a \textit{built-in} driver or as a \textit{module}.
 Further, it is not needed a module's source code is located within the actual kernel source tree.
@@ -916,6 +916,12 @@ The resulting \mintinline{c}{struct i2c_client} is stored as a part of \mintinli
 Further steps for the \ac{rgb} device are the same as for the \ac{lcd} one (see listing~\ref{lst:probe-lcdinit}), but the exact implementation of the device specific initialization are of course different and meaningful for the \ac{rgb}.
 
 \subsection{Driver Interfaces}
+
+As designed in section~\ref{sec:cs-driver-concept} is the Linux driver accessed via \ac{io} controlls and already the section about this driver's prearrangements~\ref{sec:linux:prearrangements} mentiones they are located besides tha actual source code, within \texttt{include/uapi/linux/grove\_ioctl.h}, to be access from both sides, user and kernel.
+For real, \ac{io} controll call definitions are nothing more than numbers and using pure numbers on both sides works as well.
+But it is error-prone and does not even allow the basic type checks Linux is able to perform for these calls.
+However, a well engineered \mintinline{c}{ioctl()} interface needs special care from the programmer.
+The Linux kernel provides macro definitions and a scheme to define meaningful and checkable \mintinline{c}{ioctl()} calls, but thus, they must be used.
 
 \begin{listing} [H]
     \caption{I/O Controll Call Definitions}
