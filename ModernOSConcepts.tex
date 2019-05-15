@@ -1590,7 +1590,7 @@ Just like caches and the main memory, a replacement strategy for the \ac{tlb} is
 A more detailed introduction to these hardware support mechanisms and related strategies can be consulted at \textsc{Mandl}\cite{mandl2014Grundkurs} or \textsc{Brause}\cite{brause2017betriebssysteme}.
 
  
-\subsection{Memory Management in Linux}
+\subsection{Memory Management in Linux}\label{sec:mm:linux}
 Linux also uses a virtual memory system, on modern \ac{mmu}-enabled \acp{cpu}, but there is a Linux kernel variant for \ac{mmu}-less architectures used for very small embedded systems, called \textit{uCLinux}.
 While a usual Linux kernel with virtual memory system needs an address translation, \textit{uCLinux} uses raw physical memory addresses without further protection or other sophisticated mechanisms.
 But more common and focused in this work is the use of virtual memory enabled systems\cite{lfd430}.

@@ -1006,8 +1006,24 @@ static int grove_release(struct inode *inode, struct file *file)
     \end{minted}
 \end{listing}
 
-%TODO
+Within the \mintinline{c}{ioctl()} implementation, the device's instance of \mintinline{c}{grove_t} is restored as a first step (see listing~\ref{lst:ioctl}, line 5).
+Its contents, especially the \mintinline{c}{i2c_client} instances for both controllers, are essential for this function.
+As following preparation before stating with the implementation of the individual commands, memory is allocated for the structures \mintinline{c}{struct color_t} and \mintinline{c}{struct string_t} (see listing~\ref{lst:ioctl}, line 7 and 11).
+They represent the backlight color, consisting of a red, green and blue share, and the \ac{lcd}'s content and become filled either from kernel or from user space depending on the actual command and thus, the data transfer direction.
+Of course, they must be freed before leaving this function, even if it is not pictured in the according listing~\ref{lst:ioctl}.
 
+It is neigher possible nor purposeful for the question of this work to consider all commands defined within the concept in detail.
+As the idea of \ac{lcd} writing was already mentioned during device probing, the one of \mintinline{c}{ioctl()} shall focus on setting the \ac{rgb} backlight respectively returning its state to the user.
+It is obvious that the setting of the \ac{lcd}'s content is not exactly the same as it was during \mintinline{c}{probe()}.
+There, a static string was set which already contained the encoded target register on the controller.
+The \mintinline{c}{ioctl()} implementation receives user defined strings and thus, string operations to do a respective encoding.
+For the now considered \ac{rgb} backlight device, the implementation is much more straight forward.
+Its first command defined in the concept and the according Linux header is \mintinline{c}{GROVE_SET_COLOR}.
+In case the functions argument \mintinline{c}{unsigned int arg} matches the number behind this symbolic name, the associated implementation in the switch-case construct is called.
+As the commands are decoded as numbers, using switch-case to implement them is a common pattern.
+Thus, the code for this function is more longish and sometimes, it is useful to do the actual command implementations in external functions.
+In each case, the error handling and ending of a command's realization must be done properly to avoid unattended effects from fall-through's if they are not explicitly desired in a situation.
+However, all of this drivers commands contain at least one critical command, either a data transfer from or to a user and/or an \ac{i2c} write transaction.
 
 \begin{listing} [H]
     \caption{I/O Control Implementation}
@@ -1029,53 +1045,82 @@ static long grove_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
   switch (cmd) {
   /* Some cases are skipped for this listing */
-  case GROVE_WRITE_FIRST_LINE:
+  case GROVE_SET_COLOR:
     mutex_lock(&grove_mutex);
-    if (copy_from_user(string, (const void *)arg, sizeof(struct string_t))) {
+    if (copy_from_user(color, (const void *)arg, sizeof(struct color_t))) {
+      dev_err(dev, "copy from user failed\n");
       mutex_unlock(&grove_mutex);
       break;
     }
-    ret = i2c_smbus_write_byte_data(grove->lcd_client, LCD_CMD, (string->position | 0x80));
-    if (ret) {
-      dev_err(dev, "set position failed\n");
-      mutex_unlock(&grove_mutex);
-      break;
-    }
-    size = snprintf(tmp, LINE_SIZE + 3, "@%s", string->data);
-    dev_info(dev, "input %s %s\n", string->data, tmp);
-    ret = i2c_master_send(grove->lcd_client, tmp, size < 17 ? (size - 2) : 17);
-    if (ret < 0) {
-      dev_err(dev, "write first line failed\n");
-      mutex_unlock(&grove_mutex);
-      break;
-    }
-    snprintf(grove->line_one, sizeof(grove->line_one), "%s\n", string->data);
+
+    struct i2c_cmd_t cmds[] = {
+      { RED, color->red },
+      { GREEN, color->green },
+      { BLUE, color->blue },
+    };
+    for (i = 0; i < (int)ARRAY_SIZE(cmds); i++) {
+      ret = i2c_smbus_write_byte_data(grove->rgb_client, cmds[i].cmd, cmds[i].val);
+      if (ret) {
+        dev_err(dev, "set new color failed\n");
+        mutex_unlock(&grove_mutex);
+        break;
+      }
+    }   
+    grove->color = *color;
     break;
 
-  case GROVE_READ_LCD:
+  case GROVE_GET_COLOR:
     mutex_lock(&grove_mutex);
-    snprintf(string->data, sizeof(string->data), "%s%s", grove->line_one, grove->line_two);
-    if (copy_to_user((void *)arg, (const void *)string, sizeof(struct string_t))) {
+    if (copy_to_user((void *)arg, (const void *)&grove->color, sizeof(struct color_t))) {
       mutex_unlock(&grove_mutex);
-      break;
     }
     break;
 
-  /* Default case */
+  /* Default case */ 
+  /* Free allocated memory */
 
   mutex_unlock(&grove_mutex);
   return 0;
 }
     \end{minted}
 \end{listing}
+%
+As a reation, the according instructions must be locked with a mutex.
+In cases an error occured, it must be ensured the mutex is unlocked in any situation and the switch-case but also the function itself is left properly.
+The task of \mintinline{c}{GROVE_SET_COLOR} is to receive user input in a certain format defined by the structure \mintinline{c}{color_t} and set the device' backlight color accordingly.
+Both subtasks, but especially the operation on the \ac{i2c} bus, must be locked.
+Nevertheless, the data transfer between user and driver for this is command but for each other one needs special attention as well.
+As discussed in section~\ref{sec:mm:linux} does Linux use different address types between them.
+Thus, the call's argument \mintinline{c}{unsigned long arg} which is interpreted as an address to the user's buffer, is meaningless within kernel.
+Using it without further ado is possibly dangerous.
+Instead, the buffer must be transfered to the kernel space, more precisely into the buffer \mintinline{c}{color_t color} which was allocated at beginning (see listing~\ref{lst:ioctl}, line 7).
+The \mintinline{c}{ioctl()} header definition specified the size of this structure as transfer size of this call.
+For the actual transfer between the address spaces, the Linux kernel offers helpers.
+The call \mintinline{c}{copy_from_user()} which is used for this command, and its counterpart \mintinline{c}{copy_to_user()} that will be used as part of the next considered one.
+It takes the given function arg as an address in userspace and copies a given number of bytes, i.e.\ the defined structures size, to a specified memory region in kernel (see listing~\ref{lst:ioctl}, line 19).
+According to the command definition in the header file (see listing~\ref{lst:ioctldefs}), the transfered buffer should be of type \mintinline{c}{color_t}, and thus it can be interpreted accordingly.
+In cases the transfer failed, it is neccessarily to unlock the mutex and leave the entire \mintinline{c}{ioctl()} implementation properly.
 
+On a successful transfer, the received data is used to set the color on the actual device.
+Similar to the \ac{lcd}'s setup known from device probing, a structure consiting from the target registers address and the value to set is defined and an array is made from it.
+Each \ac{rgb} color share is set within an own register and thus, as an own entry within the array.
+The \ac{i2c} transfer is, again done as known from \mintinline{c}{probe()}.
+A loop iterates over the array and transfers each partital command tupel to the respectively device controller (see listing~\ref{lst:ioctl}, line 30 to 37).
+Unfortunately, the controller does not allow reading the current values directly from the device.
+Thus, they must be stored alongside the private device instance data.
+The \ac{lcd} shares the same issue and thus, a private buffer to store its state as well.
+Respectively, updating the device implies updating this state information, but it must not be changed before the \ac{i2c} transfered was finished successfully to avoid wrong or inconsitent states (see listing~\ref{lst:ioctl}, line 38).
 
+The next considered command, \mintinline{c}{GROVE_GET_COLOR} takes advantage of this state information.
+Through this situation, there is no \ac{i2c} read transfer in this \ac{io} control command, but the buffer must be copied intothe user's address space.
+As mentioned previously, the kernel helper \mintinline{c}{copy_to_user()} is invoked for this task (see listing~\ref{lst:ioctl}, line 43).
+It differs from its counterpart only in the transfered direction.
+The \ac{ioctl()} call argument \texttt{arg} is interpreted as an address in userspace again, but this time as a target address, while the \mintinline{struct color_t} which is stored as a part of the instance data acts as source.
 
-\begin{listing} [ht]
-	\caption{Custom macro definition for \texttt{printk()}}
-	\label{lst:printk-macro}
-	\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+Even if the individual \ac{io} control commands are implemented in a row within this function is in common only a single one executed each time \mintinline{c}{ioctl()} is called by an user.
+Thus, the developer must ensure the \mintinline{c}{break;} command is set correctly each time it is needed.
+The listing pictured as a part of this work only shows a snipped of the full implementation listed in the related Github repository\footnote{github.com, \url{https://github.com/Allegra42/linux-rpi/blob/rpi-5.0.y/drivers/auxdisplay/grove.c}}, but is a recognizable complex task if the number of commands or the complexity of their implementation increases. 
+To outsource them into own functions might be helpful in this cases. 
+%TODO Nevertheless..?
 
-	\end{minted}
-\end{listing}
 
