@@ -1,15 +1,22 @@
 % !TEX root = MasterThesis.tex
 
 \section{Zircon Driver Development}\label{sec:cs-zircon}
+By allowing differnt programming languages for device drivers but also the variety of available and legit ways result in the fact that Zircon drivers can not be considered in each detail.
+In Linux, the situation was similar, but the ways and resulting drivers in Zircon are noticable more.
+This section will focus on the \textit{platform device} driver variants, especially the C one to hold this consideration comparable to the Linux one, but the C++ driver implementation and its anomalies are considered as well because it is special compared to Linux.
+Nevertheless, the \textit{two driver} variant should be mentioned, too.
+The differenced between both ones are rather reasoned in the way the device is defined and initialized and thus, not crucial.
+Similar to Linux, will this section focus on selected driver aspects as well.
+The full implementations for all written driver variants are available in the according GitHub repository\footnote{github.com, \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/system/dev/display}}.
 
-% C, C++, misc, I2C
+\subsection{Prearrangements}
 
-\subsection{C-Driver Alternatives}
-\subsubsection{Two Driver Variant}
-\subsubsection{Platform Device Variant} 
 
-\subsection{C++-Driver Alternatives}
-\subsubsection{Two Driver Variant}
+\subsection{C-Driver}
+% \subsubsection{Two Driver Variant}
+\subsubsection{Two Driver Variant} 
+
+\subsection{C++-Driver}
 \subsubsection{Platform Device Variant}
  
 
