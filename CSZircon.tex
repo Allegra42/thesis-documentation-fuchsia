@@ -10,10 +10,151 @@ Similar to Linux, will this section focus on selected driver aspects as well.
 The full implementations for all written driver variants are available in the according GitHub repository\footnote{github.com, \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/system/dev/display}}.
 
 \subsection{Prearrangements}
+Zircon drivers are always built as a part of the kernel and according user system components at them moment.
+Within the corresponding driver directory \texttt{zircon/system/dev} are several subdirectories to group them based on their tasks.
+As there is no comparable one to \textit{auxdisplay} on Linux, the probably best matching one is \texttt{display}.
+Each driver variant is located in \texttt{display} as an own subdirectory consisting of its source file and a \texttt{rules.mk}, the makefile.
+A dedicated and sophisticated build configuration as known from Linux \texttt{Kconfig} system is not available.
+If a driver directory contains a valid \texttt{rules.mk}, it is built.
+Working with four different driver variant for the same device, this situation leads to expectable issues.
+Thus, the \texttt{rules.mk} of each currently not needed driver must be taken off the build, e.g.\ by commenting its content out.
+
+As already discussed uses Zircon the \acf{fidl} rather than \ac{io} controls.
+All of these definitions which refer to a module located within \texttt{zircon/system}, i.e.\ a system component that is not part of the actual microkernel, are collected within the directory \texttt{zircon/system/fidl}.
+According to the way a driver is modularized, one or more \ac{fidl} definitions are grouped in a subdirectory together with a \texttt{rules.mk} file.
+A special compiler generates interface definitions and bindings in the needed languages from the generic \ac{fidl} files.
+At the moment, these are most of all C bindings for both sides, a set for the use in drivers and a corresponding one for the use in user applications.
+Even if a driver is written in C++ are currently only the C bindings available.
+The resulting effects are considered as a part of the following section.
+
+\subsection{Device Definition}
+In Linux, the way an \ac{i2c} device is defined for the system was discussed as part of driver initialization.
+A corresponding driver function exists but is hardly ever used and the whole binding mechanism in Zircon works slightly different.
+Zircon relies on so-called \textit{board files} to define a computing platform such as the Hikey960 is.
+Linux previously did the same but changed to the already known \textit{device tree} representation for ARM-based computing devices because the former concept did not scale with the number of supported boards.
+ale with the number of supported boards.
+The device tree files are a textual representation in an own syntax while board files are written in C on both kernels.
+For the actual use are device tree files but board files as well compiled to a binary representation.
+However, the device tree can be enhanced during runtime using so-called textit{device tree overlays}.
+Today, a comparable mechanism for Zircon board files is not known.
+
+For the actual definition of the Grove-LCD RGB device for the Hikey960 running Zircon, the targeted driver language is not decisive but the kind of the driver.
+If both controllers are to be used in standalone driver implementations, e.g.\ neccessary on non platform devices, they must be defined independed from each other as well.
+After all, a driver must be able to pick exactly the desired device controller.
+In cases a combined \textit{platform device} specific driver is requested, both controllers must be accessable from the same binding sequence.
+
+Listing~\ref{lst:boardfile} pictures the way the devices are defined for both driver kinds.
+Line 1 to 13 shows the pure definition of single handled devices on the \ac{i2c} bus.
+They are described as an array of a structure consiting of the bus id and the respectively slave address.
+The definition for the combined device is pictured in the same listing from line 15 to 24. 
+It is nothing else than above but combined both of those definitions in a single one, i.e.\ the array contains both structure elements instead only a single one.
+More interesting is the way the device is actually defined in order to be bindable.
+The definitions listed so far does not contain any information that allows a matching between device defintion and driver.
+Those are added in a second structure which contains a device name, but also entries for a \textit{vendor id (vid)}, a \textit{product id (pid)} and a \textit{device id (did)}.
+These id's are decisive for the binding between device and driver.
+In order to include the device to be addressed in this structure as well, a pointer of the respectively structure type is added alongside the number of actual device entries in the previous list (see listing~\ref{lst:boardfile}, line 27 to 34 and 36 to 43).
+
+\begin{listing} [H]
+\caption{Device Definition in Zircon Boardfiles}
+\label{lst:boardfile}
+\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static const pbus_i2c_channel_t i2c_grove_rgb_channels[] = {
+  {
+    .bus_id = 0,
+    .address = 0x62,
+  },
+};
+
+static const pbus_i2c_channel_t i2c_grove_lcd_channels[] = {
+  {
+    .bus_id = 0,
+    .address = 0x3e,
+  },
+}; 
+
+static const pbus_i2c_channel_t i2c_grove_pdev_channels[] = {
+  {
+    .bus_id = 0,
+    .address = 0x62,
+  },
+  {
+    .bus_id = 0,
+    .address = 0x3e,
+  },
+};
+
+
+static const pbus_dev_t i2c_grove_lcd_dev = {
+  .name = "grove-lcd-i2c",
+  .vid = PDEV_VID_SEEED,              
+  .pid = PDEV_PID_SEEED,              
+  .did = PDEV_DID_SEEED_GROVE_LCD,    
+  .i2c_channel_list = i2c_grove_lcd_channels,
+  .i2c_channel_count = countof(i2c_grove_lcd_channels),
+}; 
+
+static const pbus_dev_t i2c_grove_pdev_dev = {
+  .name = "grove-lcd-i2c",
+  .vid = PDEV_VID_SEEED,              
+  .pid = PDEV_PID_SEEED,              
+  .did = PDEV_DID_SEEED_GROVE_PDEV,  
+  .i2c_channel_list = i2c_grove_pdev_channels,
+  .i2c_channel_count = countof(i2c_grove_pdev_channels),
+};
+\end{minted}
+\end{listing}
+
+As a result, the device definitions for a single driver only contain one element in this \mintinline{c}{i2c_channel_list} while the device definition for the pdev driver holds two of them.
+The listing~\ref{lst:boardfile} pictures only the \ac{lcd} definition for the first type.
+The one for \ac{rgb} is defined accordingly.
+But the idea behind this second device definition goes further.
+It does not only allow one or more \ac{i2c} devices but additional ones as well.
+This allows to create complex device descriptions, e.g.\ a device consisting of \ac{i2c} parts, \ac{gpio}'s, interrupts and others, and make exacatly this combination of devices accessible to a single driver.
+Within the Hikey960 board files, such an approach is for example used to describe the on-board \ac{gpu} which is made from \ac{mmio}, interrupts and \ac{bti} for \ac{dma} transfers.
+
+Thus, the device description in Zircon is much more detailed but very descriptive.
+Unfortunately, there is hardly any documentation available on this topic and the binding mechanism in general.
+However, the pure definition of the devices is not enough.
+If these descriptions are not attached to the object representing the \textit{platform bus} for the Hikey960 using the \mintinline{c}{pbus_device_add()} \ac{api}, no binding is possible at all.
+The device is not known without.
+
+\subsection{Driver Binding}
+The pure binding or matching mechanism between device definition and driver is the same for C and C++ in both variants as well because for this situation are only C language bindings available at the moment.
+Thus, the way a driver defines a matching device is considered for both language versions while the actual \mintinline{c}{bind()} implementation is discussed in the specific sections.
+Within C driver implementations, the neccessary code lines are a part of the common driver source code, in C++ they are usually outsourced in a single \texttt{bind.c} file containing these lines and an extern definition of the C++ function signature for \mintinline{c}{bind()}.
+While the way for C drivers is well-defined and documented, the implementations of C++ \texttt{bind.c} files differs a lot within the available sources.
+These work only discusses the way used within this case study.
+
+The listing~\ref{lst:binding} pictures such a binding definition, to be accurate, the one for the C++ \ac{lcd} driver.
+It only differs by the one used for the C one by line 2 which is only needed for C++ and the C++ specific naming within the code.
+%TODO write about matching...
+%TODO after the code block...
+
+\begin{listing} [H]
+\caption{Driver Binding for the LCD Driver C/C++}
+\label{lst:binding}
+\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+/* C++ specific line */
+extern zx_status_t grove_lcd_bind(void* ctx, zx_device_t* parent);
+
+/* Shared part */
+static zx_driver_ops_t grove_lcd_cpp_driver_ops = {
+  .version = DRIVER_OPS_VERSION,
+  .bind = grove_lcd_bind,
+};
+
+ZIRCON_DRIVER_BEGIN(grove-lcd-cpp, grove_lcd_cpp_driver_ops, "grove-lcd-cpp", "0.1", 3)
+  BI_ABORT_IF(NE, BIND_PLATFORM_DEV_VID, PDEV_VID_SEEED),
+  BI_ABORT_IF(NE, BIND_PLATFORM_DEV_PID, PDEV_PID_SEEED),
+  BI_MATCH_IF(EQ, BIND_PLATFORM_DEV_DID, PDEV_DID_SEEED_GROVE_LCD),
+ZIRCON_DRIVER_END(grove-lcd-cpp)
+\end{minted}
+\end{listing}
 
 
 \subsection{C-Driver}
-% \subsubsection{Two Driver Variant}
+%TODO fidl ink wie wird fidl definiert und inkludiert
+
 \subsubsection{Two Driver Variant} 
 
 \subsection{C++-Driver}
