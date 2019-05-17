@@ -160,7 +160,7 @@ In combination with its first argument \mintinline{c}{NE}, the lines 11 and 12 i
 These type of a rule is used within all drivers written as a part of this thesis to ensure the vendor and product id matches the ones defined for the Grove device definitions.
 All of them share exactly these symbolic names pictured in this listing as vendor and product id's.
 Only the product id, and thus, the last binding rule pictured in line 13 is different for the particular device types, the \ac{LCD}, the \ac{RGB} and the combined PDev device.
-The according binding rule to differ between them is \mintinline{BI_MATCH_IF()} with \mintinline{c}{EQ} as a first argument.
+The according binding rule to differ between them is \mintinline{c}{BI_MATCH_IF()} with \mintinline{c}{EQ} as a first argument.
 As a result, the whole binding sequence means a device matching to the pictured rule must define \texttt{PDEV\_VID\_SEEED} as a vendor id, \texttt{PDEV\_PID\_SEEED} as a product id and \texttt{PDEV\_DID\_SEEED\_GROVE\_LCD} as a product id.
 Accordingly, the pictured rule is for a Grove \ac{LCD} driver, no matter if written in C or C++.
 To change it for the \ac{rgb} or PDev one, only the symbolic name in listing~\ref{lst:binding}, line 13 and related naming definitions must be changed.
