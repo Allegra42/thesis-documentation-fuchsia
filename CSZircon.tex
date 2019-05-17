@@ -124,11 +124,8 @@ Thus, the way a driver defines a matching device is considered for both language
 Within C driver implementations, the neccessary code lines are a part of the common driver source code, in C++ they are usually outsourced in a single \texttt{bind.c} file containing these lines and an extern definition of the C++ function signature for \mintinline{c}{bind()}.
 While the way for C drivers is well-defined and documented, the implementations of C++ \texttt{bind.c} files differs a lot within the available sources.
 These work only discusses the way used within this case study.
-
 The listing~\ref{lst:binding} pictures such a binding definition, to be accurate, the one for the C++ \ac{lcd} driver.
 It only differs by the one used for the C one by line 2 which is only needed for C++ and the C++ specific naming within the code.
-%TODO write about matching...
-%TODO after the code block...
 
 \begin{listing} [H]
 \caption{Driver Binding for the LCD Driver C/C++}
@@ -151,6 +148,24 @@ ZIRCON_DRIVER_END(grove-lcd-cpp)
 \end{minted}
 \end{listing}
 
+While Linux uses compatible strings for the matching between driver and device offers Zircon a more sophisticated mechanism based on macros.
+Listing~\ref{lst:binding} pictures a rather basic example in the lines 10 to 14.
+The binding definitions are surrounded by two macros, the \mintinline{c}{ZIRCON_DRIVER_BEGIN()} and \mintinline{c}{ZIRCON_DRIVER_END()}.
+With, the actual binding rules are defined.
+Zircon allows much more complex sequences to describe the device to be binded than Linux does.
+The according listing~\ref{lst:binding} only pictures two types of them.
+A full definition is available in \texttt{system/public/zircon/driver/binding.h}.
+The first used type is \mintinline{c}{BI_ABORT_IF()}.
+In combination with its first argument \mintinline{c}{NE}, the lines 11 and 12 indicate the device coordinator to abort the binding process if the third argument which must be from the type specified as a second argument, not matches the one defined for a device (see~\ref{lst:boardfile}, lines 29 to 30 and 38 to 39).
+These type of a rule is used within all drivers written as a part of this thesis to ensure the vendor and product id matches the ones defined for the Grove device definitions.
+All of them share exactly these symbolic names pictured in this listing as vendor and product id's.
+Only the product id, and thus, the last binding rule pictured in line 13 is different for the particular device types, the \ac{LCD}, the \ac{RGB} and the combined PDev device.
+The according binding rule to differ between them is \mintinline{BI_MATCH_IF()} with \mintinline{c}{EQ} as a first argument.
+As a result, the whole binding sequence means a device matching to the pictured rule must define \texttt{PDEV\_VID\_SEEED} as a vendor id, \texttt{PDEV\_PID\_SEEED} as a product id and \texttt{PDEV\_DID\_SEEED\_GROVE\_LCD} as a product id.
+Accordingly, the pictured rule is for a Grove \ac{LCD} driver, no matter if written in C or C++.
+To change it for the \ac{rgb} or PDev one, only the symbolic name in listing~\ref{lst:binding}, line 13 and related naming definitions must be changed.
+In common, these are the names used as arguments for \mintinline{c}{ZIRCON_DRIVER_BEGIN/END()}.
+%TODO verknüpfung zu den driver ops_t, regelcount 
 
 \subsection{C-Driver}
 %TODO fidl ink wie wird fidl definiert und inkludiert
