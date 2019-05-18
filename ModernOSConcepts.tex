@@ -1740,7 +1740,7 @@ This means in general writing certain values into defined control registers on t
 The \ac{io} device controller is attached to the computer's bus system, which finally provides various ways to access the peripheral device's control registers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}. 
 
 \subsection{Memory Mapped I/O}
-The first and also wide-spread method to interact with the peripheral device's control or data registers, mostly from \texit{character devices}, is mapping these few registers into the address space of the actual computer, i.e.\ into the main memory of the system.
+The first and also wide-spread method to interact with the peripheral device's control or data registers, mostly from \textit{character devices}, is mapping these few registers into the address space of the actual computer, i.e.\ into the main memory of the system.
 This results in accessing an address, mapped to a control register of a peripheral \ac{io} device, is not longer accessing a storage location within the main memory but the control register outside.
 From a programmer's view is accessing such a control register nothing special using \textit{memory mapped \ac{io}}.
 It is a common memory operation which can be written in C or another high-level language without a need for specialized and architecture dependent assembly instructions.
