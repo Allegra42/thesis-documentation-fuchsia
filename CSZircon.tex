@@ -181,8 +181,193 @@ One further special situation about these binding rules is the fact they are def
 The full driver is not loaded before a matching device is found and its \mintinline{c}{bind()} function referenced in \mintinline{c}{zx_driver_ops_t} is actually called.
 
 \subsection{C-Driver}
+
+\subsubsection{Driver Binding and Release}\label{sec:zircon:drv:bind}
 After a match between driver and device is found by the device coordinator, the complete driver is loaded into the device host process of a superior device.
-At this point, the drivers execution starts. 
+At this point, the drivers execution starts by calling its \mintinline{c}{bind()} function with these parent device as an argument.
+
+Zircon driver code seems unfamiliar at the first sight if switching from Linux, e.g.\ because of naming, function signatures and coding style.
+But the structure within is similar.
+As a first step, memory for instance specific driver data is allocated.
+The previous section mentioned already that the coding style used in Zircon prefers type definitions over structures for C drivers. 
+Thus, the type \mintinline{grove_t} is introduced for this situation.
+The data stored within is comparable to the one stored in the Linux equivalent.
+It contains, besides other entries that are considered as soon as they are needed, ones for the \ac{i2c} objects but also entries to store the device' current state.
+Unlike Linux, the actual memory allocation for this type is done via \mintinline{c}{calloc()}, a standard C library function (see listing~\ref{lst:bindfunc}, line 4 to 7).
+Obviously, error handling in form of checking if the pointer to the resulting memory regions is valid, is needed in Zircon as well.
+
+The next call is a kind of platform device specific.
+It fetches the protocol device for this driver, in this case for the \texttt{PDev} protocol (see listing~\ref{lst:bindfunc}, line 9 to 13).
+This will turn this driver implementation into a platform device specific one.
+A driver which is not addicted to platform devices would fetch the \mintinline{c}{ZX_PROTOCOL_I2C} instead, in this situation.
+The result of this call is a \mintinline{c}{pdev_protocol_t} typed object which represents the platform device instance.
+It is needed to fetch associated devices on the platform bus.
+For this driver, these are both \ac{i2c} devices of the Grove-LCD RGB backlight.
+They are allocated using the call \mintinline{c}{pdev_get_protocol()} pictured in listing~\ref{lst:bindfunc}, line 16 to 25}.
+The call is very similar to the previously used one to fetch the platform device.
+It uses this one as a parent instead of the one given as a call argument to the bind function.
+The fetched protocol is, of course, \mintinline{c}{ZX_PROTOCOL_I2C} and the resulting object is stored as a \mintinline{c}{i2c_protocol_t} within the \mintinline{c}{grove_t} structure.
+But to fetch the desired device from the both possible ones defined in listing~\ref{lst:boardfile}, an additional call argument is needed.
+It is a number to describe the position within the \mintinline{c}{pbus_i2c_channel_t} array (see listing~\ref{lst:boardfile}, line 15 to 24).
+
+Unlike Linux \mintinline{c}{probe()}, Zircon's \mintinline{bind()} does not need that much kernel internal driver setup and registration in various infrastructure elements.
+The only similar action a Zircon driver must perform is adding a device below the parent via the \mintinline{c}{device_add()} call in listing~\ref{lst:bindfunc}, line 35.
+This call adds this device instance to the system using the arguments defined in line 27 to 33.
+For this reason, the structure contains a pointer to the driver operations (line 31), i.a.\ the \ac{fidl} operations on this platform device driver.
+The issue known from Linux, make the private driver instance data available through the whole driver including the file operations and other interfacing options is solved more sophisticated in Zircon.
+Already this arguments structure contains it as a so-called \textit{context pointer} \texttt{ctx}.
+It is a void pointer and thus, capable of own type definitions.
+Beside these entries, the structure contains a version code, the driver name to be shown and maybe additional flags.
+
+\begin{listing} [H]
+    \caption{Implementation of the \texttt{bind()} Function within the Zircon Platform Device Driver in C}
+\label{lst:bindfunc}
+\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static zx_status_t grove_bind(void* ctx, zx_device_t* parent) {
+    zx_status_t status;
+
+    grove_t* grove = calloc(1, sizeof(*grove));
+    if (!grove) {
+        return ZX_ERR_NO_MEMORY;
+    }
+
+    if (device_get_protocol(parent, ZX_PROTOCOL_PDEV, &grove->pdev) != ZX_OK) {
+        free(grove);
+        zxlogf(ERROR, "Failed to fetch the PDEV protocol for the grove lcd rgb driver - not supported\n");
+        return ZX_ERR_NOT_SUPPORTED;
+    }
+
+    size_t actual;
+    if (pdev_get_protocol(&grove->pdev, ZX_PROTOCOL_I2C, 0, &grove->i2c_rgb, sizeof(grove->i2c_rgb), &actual) != ZX_OK) {
+        free(grove);
+        zxlogf(ERROR, "Failed to fetch the I2C protocol (rgb) for the grove lcd rgb driver - not supported\n");
+        return ZX_ERR_NOT_SUPPORTED;
+    }
+    if (pdev_get_protocol(&grove->pdev, ZX_PROTOCOL_I2C, 1, &grove->i2c_lcd, sizeof(grove->i2c_lcd), &actual) != ZX_OK) {
+        free(grove);
+        zxlogf(ERROR, "Failed to fetch the I2C protocol (lcd) for the grove lcd rgb driver - not supported\n");
+        return ZX_ERR_NOT_SUPPORTED;
+    }
+
+    device_add_args_t args = {
+        .version = DEVICE_ADD_ARGS_VERSION,
+        .name = "grove-pdev-drv",
+        .ctx = grove,
+        .ops = &grove_device_protocol,
+        .flags = DEVICE_ADD_INVISIBLE,
+    };
+
+    if ((status = device_add(parent, &args, &grove->device)) != ZX_OK) {
+        free(grove);
+        return status;
+    }
+
+    thrd_t thrd;
+    int thrd_ret = thrd_create_with_name(&thrd, grove_init_thread, grove, "grove_init_thread");
+    if (thrd_ret != thrd_success) {
+        status = thrd_ret;
+        device_remove(grove->device);
+        free(grove);
+    }
+
+    return status;
+}
+\end{minted}
+\end{listing}
+
+These flags influence, among other things, the way a device is added to the system.
+The implementation pictured uses \mintinline{c}{DEVICE_ADD_INVISIBLE} as a flag.
+It should be used for device drivers with long running initializations.
+The idea behind is to add a devices representation already to the system and leave the \mintinline{c}{bind()} function but hide it from users until the initialization is done.
+One or more of such long running operations are in common done as possibly in parallel running threads.
+If the initialization finishes successfully, the driver implementation must switch the device state to visible while a failed one was not spotted by users at all.
+
+The device initializations for both Grove parts are not that long and it would probably be fine to initialize them using as sequential function.
+However, Zircon does not define precise rules for this situation.
+For this reason, the actual device initialization is implemented in the thread version in C and the sequential one in C++.
+The code pictured in listing~\ref{lst:bindfunc}, line 40 to 46 uses a single thread for both initializations which is considered in detail within the following section.
+As the thread creation takes the driver context as an argument as well, it enables the access to the needed \ac{i2c} instances without further ado.
+The used Zircon driver implementation returns a status code which is needed for a proper error handling.
+However, if the device initialization fails, the only situation occurs in which a call must be revoked within the whole binding function.
+The already added device must be removed and, as always, the \mintinline{c}{grove_t} instance must be freed (see listing~\ref{lst:bindfunc}, line 42 to 46).
+
+As pictured, Zircon does not need a sophisticated driver setup as known from Linux and as a result, not that much memory allocations in \mintinline{c}{bind()}.
+At the same time, it is not needed to undo the most calls done during this function.
+As a result, the error handling is, in this case, less complex than known from Linux.
+Using jump marks for clean up is not needed, thus, but valid in Zircon as well.
+
+Accordingly, the \mintinline{c}{release()} implementation is very simple and short as well and thus, not pictured here.
+The device should be removed and the context data must be freed.
+However, it is rare this function is called according to the driver lifecycle discussed in section~\ref{sec:zirconlifecycle}.
+
+%TODO device initialization
+
+\begin{listing} [H]
+    \caption{Device Initialization in a Zircon Platform Device Driver (C)}
+\label{lst:zirconinit}
+\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static int grove_init_thread(void* arg) {
+    grove_t* grove = arg;
+    zx_status_t status;
+    uint8_t green;
+
+    mtx_lock(&grove->lock);
+
+    green = 0xff;
+
+    i2c_cmd_t cmds[] = {
+        {0x00, 0x00},
+        {0x01, 0x00},
+        {0x08, 0xaa},
+        {RED, 0x00},
+        {GREEN, green},
+        {BLUE, 0x00},
+    };
+
+    for (int i = 0; i < (int)ARRAY_SIZE(cmds); i++) {
+        status = i2c_write_sync(&grove->i2c_rgb, &cmds[i].cmd, sizeof(cmds[0]));
+        if (status != ZX_OK) {
+            zxlogf(ERROR, "grove: write failed\n");
+            goto init_failed;
+        }
+    }
+    grove->color.green = green;
+
+    i2c_cmd_t setup_cmds[] = {
+        {LCD_CMD, 0x01},
+        {LCD_CMD, 0x02},
+        {LCD_CMD, 0x0c},
+        {LCD_CMD, 0x28},
+    };
+
+    for (int i = 0; i < (int)ARRAY_SIZE(cmds); i++) {
+        status = i2c_write_sync(&grove->i2c_lcd, &setup_cmds[i].cmd, sizeof(setup_cmds[0]));
+        if (status != ZX_OK) {
+            zxlogf(ERROR, "grove-lcd: write to i2c device failed\n");
+            goto init_failed;
+        }
+    }
+
+    status = i2c_write_sync(&grove->i2c_lcd, "@Initialized", 12);
+    if (status != ZX_OK) {
+        zxlogf(ERROR, "grove-lcd: write to i2c device failed\n");
+        goto init_failed;
+    }
+
+    mtx_unlock(&grove->lock);
+    device_make_visible(grove->device);
+    return ZX_OK;
+
+init_failed:
+    zxlogf(ERROR, "grove init thread failed\n");
+    mtx_unlock(&grove->lock);
+    device_remove(grove->device);
+    free(grove);
+    return ZX_ERR_IO;
+}
+\end{minted}
+\end{listing}
+
 %TODO fidl ink wie wird fidl definiert und inkludiert
 
 \subsubsection{Two Driver Variant} 

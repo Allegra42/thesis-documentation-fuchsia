@@ -255,7 +255,7 @@ At the time of writing, the names within the class directories, the device ident
         % -> devhost loads drivers from elf shared libraries (dsos)
         % -> the protocol stack allows the creation of a complete ``driver'' for a device, consisting of platform dependent and platform independent components -> self contained process container
 %
-\subsubsection*{Driver Lifecycle}
+\subsubsection*{Driver Lifecycle}\label{sec:zirconlifecycle}
 It is currently not possible in Zircon to built drivers in a different way than the built-in \textit{\ac{elf} shared libraries} mentioned before.
 They are not loaded into a device host process until it is determined they are actually needed.
 This is done using \textit{binding program} which is a part of the driver.
