@@ -217,7 +217,6 @@ For this reason, the structure contains a pointer to the driver operations (line
 The issue known from Linux, make the private driver instance data available through the whole driver including the file operations and other interfacing options is solved more sophisticated in Zircon.
 Already this arguments structure contains it as a so-called \textit{context pointer} \texttt{ctx}.
 It is a void pointer and thus, capable of own type definitions.
-Beside these entries, the structure contains a version code, the driver name to be shown and maybe additional flags.
 
 \begin{listing} [H]
     \caption{Implementation of the \texttt{bind()} Function within the Zircon Platform Device Driver in C}
@@ -275,6 +274,7 @@ static zx_status_t grove_bind(void* ctx, zx_device_t* parent) {
 \end{minted}
 \end{listing}
 
+Beside these entries, the structure contains a version code, the driver name to be shown and maybe additional flags.
 These flags influence, among other things, the way a device is added to the system.
 The implementation pictured uses \mintinline{c}{DEVICE_ADD_INVISIBLE} as a flag.
 It should be used for device drivers with long running initializations.
@@ -300,7 +300,15 @@ Accordingly, the \mintinline{c}{release()} implementation is very simple and sho
 The device should be removed and the context data must be freed.
 However, it is rare this function is called according to the driver lifecycle discussed in section~\ref{sec:zirconlifecycle}.
 
-%TODO device initialization
+The mentioned actual device initialization is very similar to the way it is done in Linux.
+Thus, this section focuses on the Zircon specific parts and considers only the \ac{lcd} initialization.
+The \ac{rgb} one is part of this thread function as well, but skipped in this context.
+Data transfers on the \ac{i2c} bus are also critical sections in Zircon, so it is needed to lock them just like in Linux (see listing~\ref{lst:zirconinit}, line 4), but the lock variable \mintinline{c}{lock} is managed as a part of the \mintinline{c}{grove_t} instance instead as a global variable.
+Overall, in Zircon is it avoided to use global variables at all, while static defines, e.g.\ for fixed values are allowed.
+Everything else should be a part of a device instance context.
+After the section is locked, the way \ac{i2c} transactions are done does not differ from Linux except the available kernel \ac{api} calls.
+It is because the Linux implementation was inspired by Zircon.
+Defining a structure respectively a data type for the register and according value tupels, build an array containing the needed sequence (see listing~\ref{lst:zirconinit}, lines 7 to 12) and send it using a loop over this array (lines 14 to 20) was discovered as a commonly used pattern in Zircon.
 
 \begin{listing} [H]
     \caption{Device Initialization in a Zircon Platform Device Driver (C)}
@@ -308,30 +316,9 @@ However, it is rare this function is called according to the driver lifecycle di
 \begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
 static int grove_init_thread(void* arg) {
     grove_t* grove = arg;
-    zx_status_t status;
-    uint8_t green;
 
     mtx_lock(&grove->lock);
-
-    green = 0xff;
-
-    i2c_cmd_t cmds[] = {
-        {0x00, 0x00},
-        {0x01, 0x00},
-        {0x08, 0xaa},
-        {RED, 0x00},
-        {GREEN, green},
-        {BLUE, 0x00},
-    };
-
-    for (int i = 0; i < (int)ARRAY_SIZE(cmds); i++) {
-        status = i2c_write_sync(&grove->i2c_rgb, &cmds[i].cmd, sizeof(cmds[0]));
-        if (status != ZX_OK) {
-            zxlogf(ERROR, "grove: write failed\n");
-            goto init_failed;
-        }
-    }
-    grove->color.green = green;
+    /* RGB initialization is skipped */
 
     i2c_cmd_t setup_cmds[] = {
         {LCD_CMD, 0x01},
@@ -361,12 +348,30 @@ static int grove_init_thread(void* arg) {
 init_failed:
     zxlogf(ERROR, "grove init thread failed\n");
     mtx_unlock(&grove->lock);
-    device_remove(grove->device);
-    free(grove);
     return ZX_ERR_IO;
 }
 \end{minted}
 \end{listing}
+
+It is better readable but as well more flexible than writing the commands hard coded into the \ac{i2c} \acp{api} and reduces redundant code at the same time.
+Using this pattern, an additional step in the initialization sequence requires only an extra entry in the \mintinline{c}{i2c_cmd_t} array but not change in the write logic.
+The used loop determines the array's size and does the action, the \mintinline{c}{i2c_write_sync()} for all tupels within.
+Thereby is the \ac{i2c} write call similar to the one invoked on Linux.
+Indeed, there is no \ac{api} to write a single byte value into a controller register, but the call pictured in listing~\ref{lst:zirconinit}, line 15 takes the desired \ac{i2c} representation as a first argument as well.
+The following argument differs.
+It is the address to an element in the array, which represents the target register on the controller.
+From this point, the call works like the one used to send strings in Linux.
+The last argument is not a single value to be written in the named register but a number of bytes to be transfered.
+As already known from Linux is the first one interpreted as a target register while all following one are written in it.
+To leave the loop correctly in case of an error does this function implementation take advantage of jumps.
+The error routine must unlock the mutex and exit the thread with a certain error code which allows a proper tear down of the failed driver in the calling function (see listing~\ref{lst:zirconinit}, lines 18 and 32 to 35).
+
+If the initialization of both partital devices was successful so far, an example text is set to the \ac{lcd}.
+It shows to a user that the display is initialized and ready for use.
+With the available Zircon \ac{api} for writing \ac{i2c} transfers, the idea for texts stays the same as already pictured for Linux.
+The target register is encoded as an \ac{ascii} character and prefixes the actual text to be shown.
+%TODO
+
 
 %TODO fidl ink wie wird fidl definiert und inkludiert
 
