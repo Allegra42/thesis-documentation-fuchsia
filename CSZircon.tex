@@ -370,15 +370,97 @@ If the initialization of both partital devices was successful so far, an example
 It shows to a user that the display is initialized and ready for use.
 With the available Zircon \ac{api} for writing \ac{i2c} transfers, the idea for texts stays the same as already pictured for Linux.
 The target register is encoded as an \ac{ascii} character and prefixes the actual text to be shown.
+As discussed previously must the terminating, non-printable character of a string be cutted off at sending to prevent display errors.
+
+However, the probably most important task of this function is, after the initialization was finished successfully, to change the device visibility in Zircon's device filesystem.
+This is done using the call \mintinline{c}{device_make_visible()}, pictured in listing~\ref{lst:zirconinit}, line 29.
+From this moment on, its representation and thus the actual Grove device, is accessable by users via the interfacing options defined via the \mintinline{c}{.ops} field in the \mintinline{c}{device_add_args_t} (see listing~\ref{lst:bindfunc}, line 31).
+
+\subsubsection{Driver Interfaces}
+In accordance with the concept drawn up previously, the Zircon platform device driver receives only a \ac{fidl} interface.
+The common file operations \mintinline{c}{read()} and \mintinline{c}{write()} are considered in the following section for the two-driver version.
+
+All \ac{fidl} definitions for the Grove-LCD RGB backlight driver variants are defined within the directory \texttt{system/fidl/zircon-display-grove/} in the Zircon sources.
+It contains tree single definitions, one for the platform device variant and two of them for the single controllers.
+Thereby is the first variant split into the controller specific parts for the \ac{lcd} and \ac{rgb} definitions.
+The defined function signatures does not change between both variants.
+Besides the \ac{fidl} files, the directory contains a \texttt{rules.mk} file as well.
+It bundles the make rules for all of them in a single file.
+Do reach distinct outouts, the built modules get a name extentions.
+In common, they are named according the current directory but to build all \ac{fidl} files in a single directory with only one \texttt{rules.mk}, the module names are extended with e.g.\ \texttt{.pdev} for the platform device definition or \texttt{.rgb} for the \ac{rgb} specific one. 
+The compiled results are available in the build directory unter the path \texttt{build-arm64/system/fidl/zircon-display-grove.pdev} for the platform device.
+The other ones are named according their extentions.
+Important for the further driver development is the generated header file with the function signatures for driver and user.
+It must be include in the source file and the whole directory must be referenced in the driver's \texttt{rules.mk} by adding the additiona line \mintinline{c}{MODULE_FIDL_LIBS := system/fidl/zircon-display-grove.pdev} in order to be linked correctly.
+Within the source file, it is sufficient using \mintinline{c}{zircon/display/grove/pdev/c/fidl.h} as an include path.
+
+\begin{listing} [H]
+    \caption{FIDL Definitions for a Zircon Platform Device Driver (C)}
+\label{lst:fidldef}
+\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+library zircon.display.grove.pdev;
+
+[Layout="Simple"]
+
+interface Pdev {
+    1:SetColor(uint8 red, uint8 green, uint8 blue);
+    2:GetColor() -> (uint8 red, uint8 green, uint8 blue);
+    3:ClearLcd();
+    4:WriteFirstLine(uint8 position, string:32 line);
+    5:WriteSecondLine(uint8 position, string:32 line);
+    6:ReadLcd() -> (string:32 content);
+    7:GetLineSize() -> (uint8 linesize);
+};
+\end{minted}
+\end{listing}
+
+It is the path to the header definition starting in the mentioned directory's \texttt{gen/include/zircon} record.
+
+The actual interface definitions are pictured in listing~\ref{lst:fidldef}.
+It's C-like syntax is simple to use, but with some pitfalls.
+The definition for interface number 3 in line 8 is very simple.
+It is a void call and thus without call arguments.
+More complex ones as number 1 in line 6 take one or more primitive datatype as arguments.
+Return values, e.g.\ as defined for interface number 2 in line 7 are defined using a \texttt{-> (<type>)} after the actual call interface.
+The return value might consist of more than one value.
+An anomaly is the way strings are defined as in or out parameters in the \ac{fidl} syntax.
+Using the \textit{simple} layout needed for device drivers, a string as datatype definition must be followed by its maximum transfer size (see listing~\ref{lst:fidldef}, lines 9 to 11).
+
 %TODO
+Within the driver, the \ac{fidl}..
 
+\begin{listing} [H]
+    \caption{Driver Interfaces via FIDL in a Zircon Platform Device Driver (C)}
+\label{lst:fidlinit}
+\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static zx_protocol_device_t grove_device_protocol = {
+    .version = DEVICE_OPS_VERSION,
+    .release = grove_release,
+    .message = grove_fidl_message,
+};
 
-%TODO fidl ink wie wird fidl definiert und inkludiert
+static zx_status_t grove_fidl_message(void* ctx, fidl_msg_t* msg, fidl_txn_t* txn) {
+    zx_status_t status = zircon_display_grove_pdev_Pdev_dispatch(ctx, txn, msg, &fidl_ops);
+    return status;
+}
+
+static zircon_display_grove_pdev_Pdev_ops_t fidl_ops = {
+    .SetColor = grove_fidl_set_color,
+    .GetColor = grove_fidl_get_color,
+    .ClearLcd = grove_fidl_clear_lcd,
+    .WriteFirstLine = grove_fidl_write_first_line,
+    .WriteSecondLine = grove_fidl_write_second_line,
+    .ReadLcd = grove_fidl_read_lcd,
+    .GetLineSize = grove_fidl_get_line_size,
+};
+\end{minted}
+\end{listing}
+
 
 \subsubsection{Two Driver Variant} 
 
 \subsection{C++-Driver}
-\subsubsection{Platform Device Variant}
+% \subsubsection{Platform Device Variant}
  
 
 
