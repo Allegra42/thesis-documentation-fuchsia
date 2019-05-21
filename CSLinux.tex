@@ -948,7 +948,7 @@ It does not define a \textit{size} to transfer in contrast to the other ones (se
 \begin{listing} [H]
     \caption{I/O Control Call Definitions}
     \label{lst:ioctldefs}
-    \begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 #define MAGIC 'M'
 
 #define SET_COLOR           0x01
@@ -988,7 +988,7 @@ By using this trick, the data must be freed in \mintinline{c}{release()}, the co
 \begin{listing} [H]
     \caption{Implementation of \texttt{open()} and \texttt{release()}}
     \label{lst:open}
-    \begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+    \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 static int grove_open(struct inode *inode, struct file *file)
 {
     struct grove_t *grove;

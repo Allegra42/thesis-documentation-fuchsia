@@ -57,7 +57,7 @@ In order to include the device to be addressed in this structure as well, a poin
 \begin{listing} [H]
 \caption{Device Definition in Zircon Boardfiles}
 \label{lst:boardfile}
-\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 static const pbus_i2c_channel_t i2c_grove_rgb_channels[] = {
   {
     .bus_id = 0,
@@ -130,7 +130,7 @@ It only differs by the one used for the C one by line 2 which is only needed for
 \begin{listing} [H]
 \caption{Driver Binding for the LCD Driver C/C++}
 \label{lst:binding}
-\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 /* C++ specific line */
 extern zx_status_t grove_lcd_bind(void* ctx, zx_device_t* parent);
 
@@ -221,10 +221,8 @@ It is a void pointer and thus, capable of own type definitions.
 \begin{listing} [H]
     \caption{Implementation of the \texttt{bind()} Function within the Zircon Platform Device Driver in C}
 \label{lst:bindfunc}
-\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 static zx_status_t grove_bind(void* ctx, zx_device_t* parent) {
-    zx_status_t status;
-
     grove_t* grove = calloc(1, sizeof(*grove));
     if (!grove) {
         return ZX_ERR_NO_MEMORY;
@@ -313,7 +311,7 @@ Defining a structure respectively a data type for the register and according val
 \begin{listing} [H]
     \caption{Device Initialization in a Zircon Platform Device Driver (C)}
 \label{lst:zirconinit}
-\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 static int grove_init_thread(void* arg) {
     grove_t* grove = arg;
 
@@ -397,7 +395,7 @@ Within the source file, it is sufficient using \mintinline{c}{zircon/display/gro
 \begin{listing} [H]
     \caption{FIDL Definitions for a Zircon Platform Device Driver (C)}
 \label{lst:fidldef}
-\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 library zircon.display.grove.pdev;
 
 [Layout="Simple"]
@@ -441,7 +439,7 @@ The \mintinline{c}{zircon_display_grove_pdev_Pdev_ops_t} structure holds the fun
 \begin{listing} [H]
     \caption{Driver Interfaces via FIDL in a Zircon Platform Device Driver (C)}
 \label{lst:fidlinit}
-\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 static zx_protocol_device_t grove_device_protocol = {
     .version = DEVICE_OPS_VERSION,
     .release = grove_release,
@@ -484,7 +482,7 @@ Furthermore, the \ac{fidl} compiler generated a \mintinline{c}{reply()} call spe
 \begin{listing} [H]
     \caption{Illustrative Implementation of two FIDL Calls in a Zircon Platform Device Driver (C)}
 \label{lst:fidlimpl}
-\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
 static zx_status_t grove_fidl_set_color(void* ctx, uint8_t red, uint8_t green, uint8_t blue) {
     grove_t* grove = ctx;
     zx_status_t status;
@@ -532,8 +530,96 @@ The full source code for this driver variant is available in the corresponding G
 \subsection{Further Driver Variants}
 
 \subsubsection*{Two Driver Variant} 
-%TODO bind api
+The first difference between the C driver variants is in the bind implementation of the drivers.
+Section~\ref{sec:zircon:drv:bind} mentioned already the difference between the \ac{i2c} device allocation in both C driver variants, the platform device and the common one.
+The platform device variant etches the \mintinline{c}{ZX_PROTOCOL_PDEV} using the parent device given as a call argument of \mintinline{c}{bind()} (see listing~\ref{lst:i2callocpdev}). 
+Following, it uses the resulting \mintinline{c}{pdev_protocol_t} instance with a platform device specific \ac{api} to allocate the \ac{i2c} devices (see listing~\ref{lst:i2callocpdev}).
+Instead, the common version, here shown for the \ac{rgb} C driver, allocates the \ac{i2c} device directly by fetching a \mintinline{c}{ZX_PROTOCOL_I2C} (see listing~\ref{lst:i2calloccomm}).
+For the actual use of the fetched \ac{i2c} instances does the underlying mechanism not matter at all.
+However, a single driver implementation for a composed device is currently only available on platform devices using the related \ac{api}.
+
+\begin{figure}[!h]
+ \begin{minipage}{0.45\textwidth}
+  \centering
+  \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+  if (device_get_protocol(parent, ZX_PROTOCOL_PDEV, &grove->pdev) != ZX_OK) {
+    /* error handling */
+  }
+
+  if (pdev_get_protocol(&grove->pdev, ZX_PROTOCOL_I2C, 0, &grove->i2c_rgb, sizeof(grove->i2c_rgb), &actual) != ZX_OK) {
+    /* error handling */
+  }
+  if (pdev_get_protocol(&grove->pdev, ZX_PROTOCOL_I2C, 1, &grove->i2c_lcd, sizeof(grove->i2c_lcd), &actual) != ZX_OK) {
+    /* error handling */
+  }
+  \end{minted}
+  \captionof{listing}{Allocation of an I²C device in a Zircon Platform Device Driver (C)}
+  \label{lst:i2callocpdev}
+ \end{minipage}
+ \hspace{0.09\textwidth}
+ \begin{minipage}{0.45\textwidth}
+  \centering
+  \begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+  if (device_get_protocol(parent, ZX_PROTOCOL_I2C, &grove_rgb->i2c) != ZX_OK) {
+    free(grove_rgb);
+    zxlogf(ERROR, "Failed to fetch the I2C protocol for the grove lcd rgb driver - not supported\n");
+    return ZX_ERR_NOT_SUPPORTED;
+  }
+}
+  \end{minted}
+  \captionof{listing}{Allocation of an I²C device in a common Zircon Device Driver (C, RGB)}
+  \label{lst:i2calloccomm}
+ \end{minipage}
+  \label{lst:i2c:pdev:common:comp}
+\end{figure}
+
 %TODO read/write
+The implementation of the \ac{fidl} calls is the same, no matter which driver type is used.
+As a single difference, there is a division of the total calls to the corresponding controller specific driver parts.
+But in contrast to a platform device driver, it is more or less meaningful to implement the \mintinline{c}{read()} and \mintinline{c}{write()} systemcalls for those drivers.
+In general, they are done similar to the unattended Linux implementation, except already known Zircon specifics and details.
+The discussion about these calls is about the \ac{rgb} specific driver within this work.
+It does not only illustrate the calls itself but also the issue with \mintinline{c}{write()} for such a device and why \ac{fidl} or respectively \mintinline{c}{ioctl()} on Linux, is more suitable is some situations.
+
+The \mintinline{c}{read()} implementation pictured in listing~\ref{lst:read} is absolutely fine and valid for the \ac{rgb} device except the representation of its results.
+It is a composite value made from a red, green and blue share.
+Of course, the driver is free to define the output format but it is not that intuitive and comparable than reading e.g.\ files.
+Apart from this problem, the implementation is rather simple and follows the standard.
+A \mintinline{c}{read()} call in Zircon has, as each one discussed until now, a context pointer as an argument.
+Thus, an additional procedure to make the instance data available as in Linux is not neccessary (see listing~\ref{lst:read}, lines 1 and 3).
+Without different kinds of addresses between driver and user, there is no need for sophisticated buffer transfers between them.
+The data to be read is transfered using the \mintinline{c}{snprintf()} function in line 4 with a defined format.
+In point of fact, the resulting string should be prepared with this call.
+However, the maximum size to copy is specified in the argument \mintinline{c}{count} and the user buffer is accessable without further ado, thus the call \mintinline{c}{snprintf()} can execute the transfer without any additional steps (see listing~\ref{lst:read}, line 4).
+The original logic behind is again similar to Linux except the names, but both specify an offset on which should be read.
+An example for such an implementation is given in \cite{zircon-simpledrv}.
+Another call argument is the read offset \mintinline{c}{off}.
+It specifies the start address to read from.
+For a character device like the considered \ac{rgb} backlight device is such an offset not meaningful at all and thus, ignored.
+If an offset is specified, no data at all is copied as a result, the value of \mintinline{actual} is set to \textit{EOF (End Of File)}.
+Is the offset zero, the as much data as possible, specific in the already mentioned \mintinline{c}{count} value, is transfered.
+The call argument \mintinline{c}{actual} is in fact an output argument which must be set with the number of actually transfered bytes.
+For this reason, the return value of \mintinline{c}{snprintf()} in line 4 is stored within.
+Independend from this value, the \mintinline{c}{read()} function must always return \mintinline{ZX_OK} (see listing~\ref{lst:read}, line 9).
+
+
+\begin{listing} [H]
+    \caption{Implementation of the \texttt{read()} call in a Zircon Device Driver (C)}
+\label{lst:read}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static zx_status_t grove_rgb_read(void* ctx, void* buf, size_t count, zx_off_t off, size_t* actual) {
+  if (off == 0) {
+    grove_rgb_t* grove_rgb = ctx;
+    *actual = snprintf(buf, count, "Grove LCD RGB Status:\nRed: %x\nGreen: %x\nBlue: %x\n",
+        grove_rgb->color.red, grove_rgb->color.green, grove_rgb->color.blue);
+  } else {
+    *actual = 0;
+  }
+  return ZX_OK;
+}
+\end{minted}
+\end{listing}
+
 
 \subsubsection*{C++ Driver Variants}
  
