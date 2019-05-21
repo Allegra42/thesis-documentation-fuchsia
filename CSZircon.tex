@@ -425,9 +425,18 @@ Return values, e.g.\ as defined for interface number 2 in line 7 are defined usi
 The return value might consist of more than one value.
 An anomaly is the way strings are defined as in or out parameters in the \ac{fidl} syntax.
 Using the \textit{simple} layout needed for device drivers, a string as datatype definition must be followed by its maximum transfer size (see listing~\ref{lst:fidldef}, lines 9 to 11).
+However, the well defined input and output arguments lead to some advantage over Linux' \ac{io} controls.
+The generated code allows for example strict type safety and according checks.
+At the same time enables the use of an abstract interface definition language the generation of bindings in different target languages.
+For the Zircon version used during this work, only ideomatical C bindings are available for drivers.
 
-%TODO
-Within the driver, the \ac{fidl}..
+Within the driver, the \ac{fidl} calls are declared via a \mintinline{c}{.message} function pointer in the already mentioned \mintinline{c}{zx_protocol_device_t} structure.
+Beside this message entry, it contains as well a version string and the function pointer to the previously discussed driver release implementation (see listing~\ref{lst:fidlinit}, lines 1 to 5).
+The \mintinline{c}{message()} implementation followes always the same scheme.
+It calls a dispatcher function which is generated as a part of the \ac{fidl} definitions and forwards the message call arguments to this function besides a reference to \mintinline{c}{zircon_display_grove_pdev_Pdev_ops_t} (see listing~\ref{lst:fidlinit}, lines 7 to 10).
+This datatype consists of a structure of function pointers to the \ac{fidl} definitions for the included one and is generated in this context as well. 
+All generated helpers and function signatures are available in the previously mentioned and included header file.
+The \mintinline{c}{zircon_display_grove_pdev_Pdev_ops_t} structure holds the function pointers to the actual implementations of the defined interfaces within this driver.
 
 \begin{listing} [H]
     \caption{Driver Interfaces via FIDL in a Zircon Platform Device Driver (C)}
@@ -456,11 +465,77 @@ static zircon_display_grove_pdev_Pdev_ops_t fidl_ops = {
 \end{minted}
 \end{listing}
 
+A \ac{fidl} call reaches the driver as a marshalled message which is dispatched into the actual call via the provided \mintinline{c}{dispatch()} call and the list of actual implementations in the driver in \mintinline{c}{zircon_display_grove_pdev_Pdev_ops_t}.
 
-\subsubsection{Two Driver Variant} 
+The actual implementations of the \ac{fidl} calls are similar to the Linux ones.
+As there, the set and get function for the \ac{rgb} controller are considered in the Zircon specific listing~\ref{lst:fidlimpl}.
+Besides the changing \ac{api}, is the way data is transfered between user and driver the main difference and characterized by \ac{fidl} and the fact Zircon drivers are located in userspace.
+Call arguments are applicable without further ado and each function signature is enhanced with a context pointer by the \ac{fidl} compiler.
+As a result, it is not neccessary to use \mintinline{c}{open()} and \mintinline{c}{close()} to access the device instance data as it is done in Linux.
+Both functions are not needed at all, if no specific needs must be matched.
+Thus, the actual \mintinline{c}{grove_fidl_set_color()} implementation follows the same sequence as the Linux one discussed before.
+Of course, the code pictured in listing~\ref{lst:fidlimpl}, lines 1 to 27, is ideomatic for Zircon and uses these \acp{api} which were already considered during the \mintinline{c}{bind()} implementation.
 
-\subsection{C++-Driver}
-% \subsubsection{Platform Device Variant}
+The \mintinline{c}{grove_fidl_get_color()} implementation is more interesting.
+It's inital \ac{fidl} definition had no input but three output arguments which must be transported back to the calling user process which invokes \ac{ipc} communication.
+The generated function signate contains the familiar context pointer but as well an argument of the type \mintinline{c}{fidl_txn_t}.
+Furthermore, the \ac{fidl} compiler generated a \mintinline{c}{reply()} call specific to this interface definition (see listing~\ref{lst:fidlimpl}, line 31).
+
+\begin{listing} [H]
+    \caption{Illustrative Implementation of two FIDL Calls in a Zircon Platform Device Driver (C)}
+\label{lst:fidlimpl}
+\begin{minted}[frame=lines, framesep=0mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static zx_status_t grove_fidl_set_color(void* ctx, uint8_t red, uint8_t green, uint8_t blue) {
+    grove_t* grove = ctx;
+    zx_status_t status;
+
+    mtx_lock(&grove->lock);
+
+    i2c_cmd_t cmds[] = {
+        {RED, red},
+        {GREEN, green},
+        {BLUE, blue},
+    };
+
+    for (int i = 0; i < (int)ARRAY_SIZE(cmds); i++) {
+        status = i2c_write_sync(&grove->i2c_rgb, &cmds[i].cmd, sizeof(cmds[0]));
+        if (status != ZX_OK) {
+            zxlogf(ERROR, "grove: write to i2c device failed\n");
+            mtx_unlock(&grove->lock);
+            return status;
+        }
+    }
+    grove->color.red = red;
+    grove->color.green = green;
+    grove->color.blue = blue;
+
+    mtx_unlock(&grove->lock);
+    return status;
+}
+
+static zx_status_t grove_fidl_get_color(void* ctx, fidl_txn_t* txn) {
+    grove_t* grove = ctx;
+    zx_status_t status = zircon_display_grove_pdev_PdevGetColor_reply(txn, grove->color.red, grove->color.green, grove->color.blue);
+    return status;
+}
+\end{minted}
+\end{listing}
+
+It must be called with matching arguments but the underlying \ac{ipc} mechanism is abstracted.
+Thus, especially this implementation is very simple.
+The \mintinline{c}{fidl_txn_t} pointer \mintinline{c}{txn} is forwarded to the reply call while the \ac{rgb} component values are taken from the currently saved instance state, the context.
+
+Further \ac{fidl} call implementation are neighter discussed nor pictured as part of this work.
+The full source code for this driver variant is available in the corresponding GitHub repository at \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/system/dev/display/grove-c-pdev-driver}.
+
+
+\subsection{Further Driver Variants}
+
+\subsubsection*{Two Driver Variant} 
+%TODO bind api
+%TODO read/write
+
+\subsubsection*{C++ Driver Variants}
  
 
 
