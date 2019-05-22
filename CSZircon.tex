@@ -619,11 +619,88 @@ static zx_status_t grove_rgb_read(void* ctx, void* buf, size_t count, zx_off_t o
 \end{minted}
 \end{listing}
 
-%TODO write
+\begin{listing} [H]
+    \caption{Implementation of the \texttt{write()} call in a Zircon Device Driver (C)}
+\label{lst:write}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+static zx_status_t grove_rgb_write(void* ctx, const void* buf, size_t count, zx_off_t off, size_t* actual) {
+  grove_rgb_t* grove_rgb = ctx;
+  char delim[] = " ";
+  char tmp[count + 1];
+    
+  snprintf(tmp, count, "%s\n", (char*)buf);
+  *actual = count;
+
+  mtx_lock(&grove_rgb->lock);
+
+  char* ptr = strtok(tmp, delim);
+  while (ptr != NULL) {
+    if (i == 0 && ptr[0] == 'r') {
+      red = atoi(++ptr);
+    } else if (i == 1 && ptr[0] == 'g') {
+      green = atoi(++ptr);
+    } else if (i == 2 && ptr[0] == 'b') {
+      blue = atoi(++ptr);
+    } else {
+      /* handle wrong input format */
+    }
+    ptr = strtok(NULL, delim);
+    i++;
+  }
+
+  i2c_cmd_t cmds[] = {
+    {RED, red},
+    {GREEN, green},
+    {BLUE, blue},
+  };
+
+  for (int i = 0; i < (int)ARRAY_SIZE(cmds); i++) {
+    status = i2c_write_sync(&grove_rgb->i2c, &cmds[i].cmd, sizeof(cmds[0]));
+    if (status != ZX_OK) {
+            zxlogf(ERROR, "grove-rgb: write failed\n");
+            goto fail;
+    }
+  }
+  grove_rgb->color.red = red;
+  grove_rgb->color.green = green;
+  grove_rgb->color.blue = blue;
+
+fail:
+    mtx_unlock(&grove_rgb->lock);
+    return status;
+}
+\end{minted}
+\end{listing}
+
+Even for the \mintinline{c}{write()} function pictured in listing~\ref{lst:write}, the buffer given as a call argument could be used directly, without any validation checking.
+However, a buffer with \ac{rgb} values can not been written like a text.
+The color shares must be parsed from the given buffer and sent to specific and distinct registers.
+Thus, the input text needs a certainly defined format to be parsed in this situation.
+Implementing the \mintinline{c}{write()} call for \ac{rgb} is rather a demonstration of the way it is realized and the issues with writing such data than a valid use case.
+\ac{fidl} calls are considerably better suitable for this situation.
+Because the input buffer must be parsed, it makes sense to copy it to a temporary one where the parsing is done.
+As the temporary buffer can take the size of the input buffer specific by the \mintinline{c}{count} value, the whole content can be copied at once (see listing~\ref{lst:write}, lines 4 and 6).
+Similar to the \mintinline{c}{read()} function, the number of copied bytes is stored in \mintinline{c}{*actual} as an output argument.
+Why string parsing is not desired in a driver is pictured in the lines 11 to 24.
+It is complex, error-proune and hard to maintain, even in Zircon which enables the use of the standard C library.
+Furthermore, the user must know about the specific syntax.
+In the pictured and shortened function, the information about this syntax is skipped.
+It is only printed to the user in the case a wrong format was sent.
+
+The actual \ac{i2c} transfer is done according to the previously considered ones.
+A structure is used to store the tupels of register address and its matching color share parsed from the input buffer and a loop steps over these tupels to send them via \mintinline{c}{i2c_write_sync()} (see listing~\ref{lst:write}, lines 26 to 38).
+Even if the Grove \ac{rgb} backlight is modified using \mintinline{c}{write()}, the internal color state must be updated after a successful update since it is not possible to read it directly from the device.
+
+
 
 \subsubsection*{C++ Driver Variants}
- 
-
+The C++ driver variants are considered at once with a focus on the platform device one.
+Nevertheless, are important differences in the two-driver variant mentioned.
+Zircon C++ drivers are truely object-oriented.
+A Driver is representated by a common class with contructor, destructor as well as public and private variables and functions.
+Thus, the driver is organized differntly from a pseudo object-oriented C driver.
+A per device context data structure is not needed anymore because a driver object itself is instanciated per device and the private variables adopt the task of it.  
+%TODO
 
 \section{User Application}
 
