@@ -700,8 +700,69 @@ Zircon C++ drivers are truely object-oriented.
 A Driver is representated by a common class with contructor, destructor as well as public and private variables and functions.
 Thus, the driver is organized differntly from a pseudo object-oriented C driver.
 A per device context data structure is not needed anymore because a driver object itself is instanciated per device and the private variables adopt the task of it.  
-%TODO
+Further are the widely used function pointers not ideomatic in C++ and thus avoided when possible.
+Instead, especially the driver operations like \mintinline{c}{read()}, \mintinline{c}{write()} or the \mintinline{c}{message()} function which dispatches \ac{fidl} calls, are integrated as C++ \textbf{mixin}s.
+Unfortunately, neither C++ drivers nor Mixins in this context are well documented.
+The probably best information about it is written as a comment in the header file \texttt{system/ulib/ddktl/include/ddktl/device.h}.
+It contains a list about the available mixins as well.
+Because the platform device driver must support \ac{fidl} defined function calls, the corresponding mixin \mintinline{cpp}{ddk::Messageable} must be invoked.
+For the two-driver variant is it additionally \mintinline{cpp}{ddk::Readable} and \mintinline{cpp}{ddk::Writeable}.
+Listing~\ref{lst:cppheader} pictures the way the \mintinline{cpp}{ddk::Messageable} mixin is invoked for the Grove platform device C++ driver in line 2.
+Line 3 pictures the situation for the two-driver variant.
+The mixin functions must be declared in the public section with a defined name and signature as pictured in the lines 14 and 15 for the \mintinline{cpp}{DdkRelease()} function which is obligatory for each driver and for \mintinline{cpp}{DdkMessage()}.
 
+
+\begin{listing} [H]
+    \caption{Header Definition for a C++ Platform Driver in Zircon}
+\label{lst:cppheader}
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, breaklines]{c}
+class GroveDevice;
+using DeviceType = ddk::Device<GroveDevice, ddk::Messageable>;
+/* using DeviceType = ddk::Device<GroveDevice, ddk::Messageable, ddk::Readable, ddk::Writeable>; */
+
+class GroveDevice : public DeviceType {
+public:
+    GroveDevice(zx_device_t* parent)
+        : DeviceType(parent), pdev(parent) {}
+    ~GroveDevice() {}
+
+    static zx_status_t Bind(zx_device_t* parent);
+
+    /* Mixin methods */
+    void DdkRelease();
+    zx_status_t DdkMessage(fidl_msg_t* msg, fidl_txn_t* txn);
+
+    /* Definitions for FIDL (shortened) */
+    static zx_status_t SetColor(void* ctx, uint8_t red, uint8_t green, uint8_t blue);
+    static zx_status_t GetColor(void* ctx, fidl_txn_t* txn);
+
+private:
+    ddk::PDev pdev;
+    std::optional<ddk::I2cChannel> i2c_rgb;
+    std::optional<ddk::I2cChannel> i2c_lcd;
+    fbl::Mutex i2c_lock;
+    /* Variables holding the device state */
+
+    struct I2cCmd {
+        uint8_t cmd;
+        uint8_t val;
+    };
+
+    /* Definitions for internally used functions, e.g. init functions */
+};
+\end{minted}
+\end{listing}
+
+%TODO
+pdev(parent) in line 8
+fbl 
+%TODO
+c source file
+calls must be on an object
+pointermagic
+pdev (see above)
+i2c alloc
+fidl -> no ideomatic cpp bindings  -> ops with function pointers, signatures with ctx pointer (static casts, ..)
 \section{User Application}
 
 \section{Performance Comparison}
