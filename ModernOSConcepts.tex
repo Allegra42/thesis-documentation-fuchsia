@@ -1100,8 +1100,9 @@ It is possible to wait for specific signals on several objects\cite{zircon-signa
 
 \subsubsection*{Inter Process Communication}
 \paragraph{Shared Memory}
-Zircon provides so-called \textit{\acp{vmo}} and \textit{\acp{vmar}} which represents a contiguous region of virtual memory respectively of virtual memory address space.
-Both go together and are mixed up sometimes.
+Zircon provides so-called \textit{\acfp{vmo}} and \textit{\acfp{vmar}}.
+A \ac{vmar} represents a virtual memory address space in which a \ac{vmo} lives as a contiguous allocated memory region.
+Both terms go together and are mixed up sometimes.
 Generally, the term \ac{vmar} is used for any operating according to address regions, e.g.\ allocate them, map and unmap \acp{vmo} to processes, but also to protect and destroy regions\cite{zircon-vmar}.
 The term \ac{vmo} is used for actions on the memory object, such as create one and read or write it\cite{zircon-vmo}.
 A \ac{vmo} represents a set of physical memory pages on the one hand, but also the potential for pages on-demand via lazy creation on the other.
@@ -1197,7 +1198,7 @@ Unlike channels, sockets provide short writes if the internal message buffer is 
 
 \paragraph{FIFO}
 The last \ac{ipc} object Zircon provide, is a \ac{fifo}.
-There is no much documentation about yet, neighter in the usual documentation version used nor in Google's master repository ones.
+There is no much documentation about yet, neither in the usual documentation version used nor in Google's master repository ones.
 \acp{fifo} are described as \ac{ipc} queues with an advantage on read and write operations.
 They are intended to be a top-level interface for shared memory based \ac{ipc} which enables the performance advantages over channels and sockets.
 Nevertheless, are \acp{fifo} on Zircon more limited on the size of elements and buffers than the previously named mechanisms\cite{zircon-fifo}.
@@ -1437,7 +1438,7 @@ The scheduler starts with the queue with the highest priority and executes the j
 Only when this queue is empty, the next one is considered.
 If a job blocks, it is completely removed from the \ac{cpu}'s queue and added to a distinct waiting queue.
 The stays there until the required resource becomes available and thus its status changes to runnable again.
-The job is put back to, whenever possible the previous \ac{cpu} core's, queue with the right prioity.
+The job is put back to, whenever possible the previous \ac{cpu} core's, queue with the right priority.
 Was the job blocked before its time slice was finished, it becomes rewarded by being inserted at the front of the queue to resume as soon as possible\cite{zircon-scheduling}.
 
 The priority of jobs in Zircon is determined on the basis of three criteria:
@@ -1482,7 +1483,9 @@ Registers are implemented in the same technology as the \ac{cpu} itself.
 As a result, they are very limited and expensive but also very fast.
 The next layer are caches.
 Current systems use a hierarchical cache system itself.
-The topmost layer is nearly equivalent to registers in terms of access time and costs, and thus, very small.
+The topmost layer, the layer 1 cache is nearly equivalent to registers in terms of access time and costs\cite{tanenbaum-modern-operating-systems}.
+It is always a part of the \ac{cpu} to reduce the signal paths.
+But there is not unlimited space and thus, it is very small sized\cite{tanenbaum-modern-operating-systems}.
 After two to four cache levels follows by main memory or \ac{ram}.
 If it is spoken about memory within this work, the main memory is meant in the majority of cases.
 In common, it is implemented as \textit{Dynamic} \ac{ram}.
@@ -1492,8 +1495,9 @@ The last kind of memory which is important as a part of this thesis are common h
 
 The memory hierarchy is a result of often not having enough space.
 Not even the main memory is always capable to store the data of all running applications. 
-But there is a desire for allowing processes to use more memory than physically available and for a unified contiguous view of the memory area of each process together with the needs of processes, i.e.\ the isolation between the address spaces of distinct processes but also a way to share memory for \ac{ipc} (see~\ref{sec:processes-threads} for the details)\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}
-A pure static and direct memory management would not be sufficient for these purposes.
+But there is a desire for allowing processes to use more memory than physically available and for a unified contiguous view of the memory area of each process.
+A solution for this issue, the virtual memory, merges with the requirement of \textit{process isolation} between the address spaces of distinct processes.
+For real, the main issue for virtual addresses is process isolation but this also creates a need for efficient \acf{ipc} and ways to share memory between processes (see~\ref{sec:processes-threads} for the details)\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
 In current systems, this is mostly realized by using the mechanisms of \textit{address spaces} and \textit{virtual memory}, which already have been mentioned several times.
 % The following sections explain what this implies.
 
@@ -1575,17 +1579,17 @@ To speed up this costly translations, current application-oriented \acp{cpu} are
 
 The \ac{mmu} is a part of the processor itself and responsible to map virtual addresses to physical ones. 
 Thus, accessing the raw main memory and regions with a special meaning is in common a privileged action done within the operating system kernel. 
-The \ac{cpu} sends a virtual address to the \ac{mmu} which calculates the physical one according a defined algorithm and sends the result via the address bus to the main memory.
+The \ac{cpu} sends a virtual address to the \ac{mmu} which disperses the address to a physical one using the according page table and sends the result via the address bus to the main memory.
 If a needed page is not available there, the \ac{mmu} raises a special interrupt named \textit{page fault}.
-It interrupts the running process so the \ac{cpu} can try to fetch the needed address from disk.
+It interrupts the running process so the kernel can try to fetch the needed address from disk.
 Even if only a single address is missing, the memory manager always loads whole pages to the main memory.
 If the virtual memory address as a resource is available, the interrupted process is rescheduled according the currently used policy\cite{mandl2014Grundkurs}.
 
 The \ac{tlb} works together with the \ac{mmu}.
-It is an additional fast cache to speed up the assignment between virtual and physical memory addresses. 
+It is an additional fast cache to speed up the lookup between virtual and physical memory addresses. 
 As described previously is accessing a cache still considerably faster than accessing the main memory itself.
-Similar to common L1 and L2 \ac{cpu} caches is there an own \ac{tlb} per \ac{cpu}.
-If the needed address translation is already stored in the \ac{tlb}, no further access to the main memory is needed, if not must the \ac{mmu} be invoked.
+Similar to common L1 and L2 \ac{cpu} caches is there an own \ac{tlb} per \ac{cpu} core.
+If the needed address translation is already stored in the \ac{tlb}, no further access to the main memory is needed, if not must the \ac{mmu} itself be invoked and not only its caching component, the \ac{tlb}.
 Just like caches and the main memory, a replacement strategy for the \ac{tlb} is needed to ensure its efficient use.
 A more detailed introduction to these hardware support mechanisms and related strategies can be consulted at \textsc{Mandl}\cite{mandl2014Grundkurs} or \textsc{Brause}\cite{brause2017betriebssysteme}.
 
@@ -1699,7 +1703,7 @@ It tries to spread the allocations widely across the available size of the \ac{v
 Additionally, \acp{vmar} support an optional fixed offset mapping mode, comparable with kernel logical addresses in Linux, which is called \textit{specific mapping}\cite{zircon-concepts},~\cite{zircon-vmar}.
 
 The second part in Zircon's memory management are \acfp{vmo}.
-They represent a set of physical memory pages or the potential for pages, i.e.\ a contiguous region of virtual memory that may can be mapped into one or multiple process address spaces (\acp{vmar}.
+They represent a set of physical memory pages or the potential for pages, i.e.\ a contiguous region of virtual memory that may can be mapped into one or multiple process address spaces (\acp{vmar}).
 \acp{vmo} are used from both, kernel and userspace and represent virtual memory pages as well as physical memory.
 A \ac{vmo} is created as needed on demand, i.e.\ virtual pages are also allocated on demand.
 As this object is based on pages, its size is only given in whole pages.
@@ -1713,7 +1717,7 @@ For the use within device drivers or other processes with special purposes is it
 \section{I/O}\label{sec:io} 
 The term \acf{io} is commonly used to describe the interactions between a computer itself and several devices types such as disks, keyboards, displays, clocks and much more which are usually referred as \textit{peripheral devices}.
 Thus, it enters the actual topic of this work: device driver development.
-The majority of device driver development deals with \ac{io} devices and related issues, such as control the device via a defined interface, catch and process interrupts from a device and handle interrupts.
+The majority of device driver development deals with \ac{io} devices and related issues, such as control the device via a defined interface, reacts to an interrupts from a device and handles it.
 Finally, an \ac{io} system, respectively device drivers for \ac{io} devices as part of an operating system, have to provide simple and consistent abstractions between the actual device and the user\cite{tanenbaum-modern-operating-systems}.
 Nevertheless, this section will focus on the communication mechanisms between \ac{io} devices and operating systems, but not about the physical connection between computer and peripherals or protocols.
 The actual implementation of \ac{io} drivers in both considered systems follows in the next chapter of this work.
@@ -1748,8 +1752,8 @@ Beside the simple and transparent use of \textit{memory mapped \ac{io}} to acces
 Accessing the main memory directly is already a privileged operation within the most systems but also mapping \ac{io} regions to a user process invokes the operating system itself and the \ac{mmu} to check the needed permissions\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}.  
 
 \subsection{Direct Memory Access}
-Another way to interact with a peripheral \ac{io} device is \acf{dma}.
-In earlier days, it was used on \acp{cpu} where \textit{memory mapped \ac{io}} were not available.
+An optimized way to interact with a peripheral \ac{io} device is \acf{dma}.
+In earlier days, it was commonly used on \acp{cpu} where \textit{memory mapped \ac{io}} were not available, but the so-called \ac{io} ports, which are not further consider in this work.
 Today, the purpose of \ac{dma} is rather speeding up large data transfers between a peripheral device and the systems main memory.
 % Thus, \ac{dma} is more often used for \textit{block-oriented} \ac{io} devices.
 The idea behind is moving the rather costly \ac{io} transfers from the \ac{cpu} to a distinct but specialized controller, which allows direct interaction between external device and memory.
@@ -1765,7 +1769,7 @@ As the \ac{cpu} is bypassed during \ac{dma} transfers, caches may become inconsi
 
 \subsection{Interrupts in I/O Devices}
 Interrupts were already part of this work in different places.
-Within \ac{io} operations, they are commonly used by the \ac{io} peripheral devices to signal a given action is finished.
+Within \ac{io} operations, they are commonly used by the \ac{io} peripheral devices e.g.\ to signal data are ready to be read or a given action is finished.
 To do so, the \ac{io} device asserts a signal on the assigned bus line.
 The signal is detected by an interrupt controller chip within the computer itself respectively the \ac{cpu} which decides how to handle it, e.g.\ by activating the right interrupt handler routine.
 In the context of \ac{io} devices are interrupts popular for keyboards or hardware clocks\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.

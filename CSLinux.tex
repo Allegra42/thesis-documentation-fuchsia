@@ -44,7 +44,7 @@ But Linux offers a way for common user applications (userspace) to access hardwa
 It is, above all, used for video drivers which are incorporated into the \textit{X.Org display server}.
 In order to obtain the neccessary rights are two systemcalls needed: \texttt{iopl()} to change the privileged level and \texttt{ioperm()} to set the \ac{io} port permissions.
 These calls can only be done by a privileged Linux user, the \textit{root} user.
-Compared to other options to access peripheral hardware, this one has the disadvantage that interrupts are to available at all and the user software may run into issues with demand paging.
+Compared to other options to access peripheral hardware, this one has the disadvantage that interrupts are not available at all and the user software may run into issues with demand paging.
 So this way is maybe slower than a device driver in kernelspace, but for some tasks, like the already named \textit{X.Org server} is it more meaningful than a kernel driver\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 
 Another widely unknown and \ac{cpu} specific way to perform \ac{io} operations is using \textit{minimal operating system support} to access serial interfaces on x86-based \acp{cpu}.
@@ -85,7 +85,7 @@ Thus, the kernel size increases but some drivers will not be used at all and to 
 Current Linux kernels allow additionally the dynamically loadable modules with optional parameters.
 Reload a driver during runtime without a reboot does not only saves space, it is also useful for development.
 It is only needed to recompile and reload a single module instead of the entire kernel including a system reboot\cite{quade2016Linux}.
-However, the module has to be built to exactly the same kernel module as running in order to be loaded.
+However, the module has to be built to exactly the same kernel as running in order to be loaded.
 A module which is dynamically loaded via \texttt{insmod} respectively \texttt{modprobe} is, like built-in drivers, a part of the kernel's address space and running in kernel mode.
 But as a module does a dynamic binding to the kernel's symbol table, it is only allowed to use a, in comparison to built-in drivers, restricted \ac{api}\cite{glatz2015betriebssysteme}.
 However, beeing a part of the kernel's address space brings drivers into a special responsibility.
@@ -94,8 +94,8 @@ For the implementation of a driver, the fact of it should be used as built-in dr
 It does require little or no changes on the source at all to switch between them as it is most of all a build configuration\cite{lfd430}.
 
 Module driver are indeed useful, but not realizable for each device type.
-Some drivers, e.g.\ disk drivers, must be present at a very early system stage to enable Linux to read from hard drives.
-Writing such a disk driver as a module which needs to be read from a hard drive to be loaded into the system is not realizable accordingly\cite{quade2016Linux}.
+Some drivers, e.g.\ specific \ac{cpu} controller, must be present at a very early system stage to enable Linux to read from hard drives.
+Writing such a driver as a module which needs to be read from a hard drive to be loaded into the system is not realizable accordingly\cite{quade2016Linux}.
 
 \subsubsection*{Driver Interfaces}
 As for device drivers in general need the ones in Linux functions to include themself into the system, i.e.\ methods to initialize respectively deinitialize the driver and the associated device, operating system triggered functions, e.g.\ interrupt handler functions, as well as user application tiggered routines to enable the communication between user and device\cite{quade2016Linux}.
@@ -105,7 +105,7 @@ If there is no such behaviour a device, it is preferred to implement only the me
 Besides the standard \ac{io} \ac{api}, there are e.g.\ communication or multimedia specific \acp{api} which suits better to devices of these kinds.
 Often, these interfaces are defined in Linux but built on basis of the \texttt{ioctl()} call which is technically a part of the file operationsi\cite{quade2016Linux}.
 \ac{io} control is a universal interface to define own, device specific commands.
-An \texttt{ioctl()} command is usually made from a made from a number and the type of optional arguments.
+An \texttt{ioctl()} command is usually made from a number and the type of optional arguments.
 However, the preferred way is to utilize the macros Linux provide to define beside the number and the arument types also the size of the transfered data and their transfer direction\cite{quade2016Linux}.
 This is the best way to verify \texttt{ioctl()} calls to a certain extent.
 The calls defined for the use in \texttt{ioctl()}'s must be known in both, kernel and userspace.
@@ -121,9 +121,10 @@ Functions that do not have a meaning for a specific driver are denoted with a nu
 Besides controlling the actual device is the communication with the user a main task of a driver and done as part of common calls like \texttt{read()}, \texttt{write()} or \texttt{ioctl()}.
 This requires data exchange between processes.
 \ac{ipc} was already a topic of this work, also the way it is done in Linux, but the communication between driver and user application is different.
-It is not an exchange between processes in userspace but between kernel and userspace, with different address spaces, different virtual memory addresses types and different rights.
-Addresses in the one address space are not neccessary meaningful in the other and additionally are user space buffers may swapped out from \ac{ram} to disk.
-The Linux kernel helps in this situation with the built-in functions \texttt{copy\_from\_user()} and \texttt{copy\_to\_user()} which do the transition between the address spaces\cite{lfd430},~\cite{glatz2015betriebssysteme}.
+It is not an exchange between processes in userspace but between kernel and userspace.
+This means a change of the \ac{cpu}' execution mode and thus, different access rights.
+Addresses in the one mode are not neccessary meaningful in the other and additionally are user mode buffers may swapped out from \ac{ram} to disk.
+The Linux kernel helps in this situation with the built-in functions \texttt{copy\_from\_user()} and \texttt{copy\_to\_user()} which provides a validation\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 
 Another way to exchange data between both worlds is the use of \textit{memory mapping} via the \texttt{mmap()} call, a standard \ac{posix} systemcall.
 It enables user applications direct access to kernel memory buffers which may also include memory regions of a device controller, by mapping it into the application's address space.
@@ -220,7 +221,7 @@ A driver itself is in Zircon compiled to a \acf{elf} shared library, a \ac{dso}.
 
 Another related mechanism in the Zircon kernel is the \textit{device manager process (devmgr)}.
 It contains the \textit{device coordinator}, a piece of software that keeps track of drivers and devices.
-The device coordinator manages the discovery of drivers and devices and is responsible for the cration of device host processes.
+The device coordinator manages the discovery of drivers and devices and is responsible for the creation of device host processes.
 A \ac{dso} driver is loaded into a \textit{device host (devhost)} process and lives there maybe together with other related drivers to reduce needed context switches without soften the microkernel concept too much.
 In addition, the coordinator maintains the \textit{device filesystem (devfs)} as a mechanism that enables userspace applications to access a driver and thus, the device too.
 Similar to the unified device model in Linux, the Zircon device coordinator views devices as a part of a unified tree structure\cite{zircon-devicemodel},~\cite{zircon-ddk-gettingstarted}.
@@ -1094,9 +1095,9 @@ Nevertheless, the data transfer between user and driver for this is command but 
 As discussed in section~\ref{sec:mm:linux} does Linux use different address types between them.
 Thus, the call's argument \mintinline{c}{unsigned long arg} which is interpreted as an address to the user's buffer, is meaningless within kernel.
 Using it without further ado is possibly even dangerous.
-Instead, the buffer must be transfered to the kernel's address space, more precisely into the buffer \mintinline{c}{color_t color} which was allocated at beginning (see listing~\ref{lst:ioctl}, line 7).
+Instead, the buffer must be transfered to the kernel buffer \mintinline{c}{color_t color} which was allocated at beginning (see listing~\ref{lst:ioctl}, line 7).
 The \mintinline{c}{ioctl()} header definition specified the size of this structure as transfer size of this call and should be used as a reference for the maximum size to copy.
-For the actual transfer between the address spaces, the Linux kernel offers helpers.
+For the actual transfer, the Linux kernel offers helpers.
 The call \mintinline{c}{copy_from_user()} which is used for this command, and its counterpart \mintinline{c}{copy_to_user()} that will be used as part of the next considered one.
 It takes the given function arg as an address in userspace and copies a given number of bytes, i.e.\ the defined structures size, to a specified memory region in kernel (see listing~\ref{lst:ioctl}, line 19).
 According to the command definition in the header file (see listing~\ref{lst:ioctldefs}), the transfered buffer should be of type \mintinline{c}{color_t}, and thus it can be interpreted accordingly.
@@ -1115,7 +1116,7 @@ Thus, they must be stored alongside the private device instance data.
 The \ac{lcd} shares the same issue and thus, a private buffer to store its state as well.
 Respectively, updating the device implies updating this state information, but it must not be changed before the \ac{i2c} transfered was finished successfully to avoid wrong or inconsitent states (see listing~\ref{lst:ioctl}, line 38).
 The next considered command, \mintinline{c}{GROVE_GET_COLOR} takes advantage of this state information.
-Through this situation, there is no \ac{i2c} read transfer in this \ac{io} control command, but the buffer must be copied intothe user's address space.
+Through this situation, there is no \ac{i2c} read transfer in this \ac{io} control command, but the buffer must be copied into user mode accessable addresses.
 As mentioned previously, the kernel helper \mintinline{c}{copy_to_user()} is invoked for this task (see listing~\ref{lst:ioctl}, line 43).
 It differs from its counterpart only in the transfered direction.
 The \mintinline{c}{ioctl()} call argument \texttt{arg} is interpreted as an address in userspace again, but this time as a target address, while the \mintinline{struct color_t} which is stored as a part of the instance data acts as source.

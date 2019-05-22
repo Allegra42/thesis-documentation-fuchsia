@@ -573,7 +573,6 @@ However, a single driver implementation for a composed device is currently only 
   \label{lst:i2c:pdev:common:comp}
 \end{figure}
 
-%TODO read/write
 The implementation of the \ac{fidl} calls is the same, no matter which driver type is used.
 As a single difference, there is a division of the total calls to the corresponding controller specific driver parts.
 But in contrast to a platform device driver, it is more or less meaningful to implement the \mintinline{c}{read()} and \mintinline{c}{write()} systemcalls for those drivers.
@@ -587,10 +586,10 @@ Of course, the driver is free to define the output format but it is not that int
 Apart from this problem, the implementation is rather simple and follows the standard.
 A \mintinline{c}{read()} call in Zircon has, as each one discussed until now, a context pointer as an argument.
 Thus, an additional procedure to make the instance data available as in Linux is not neccessary (see listing~\ref{lst:read}, lines 1 and 3).
-Without different kinds of addresses between driver and user, there is no need for sophisticated buffer transfers between them.
-The data to be read is transfered using the \mintinline{c}{snprintf()} function in line 4 with a defined format.
+Without different execution modes between driver and user, there is no need for check the buffer and its permissions with sophisticated helpers.
+The data to be read is stored using the \mintinline{c}{snprintf()} function in line 4 with a defined format.
 In point of fact, the resulting string should be prepared with this call.
-However, the maximum size to copy is specified in the argument \mintinline{c}{count} and the user buffer is accessable without further ado, thus the call \mintinline{c}{snprintf()} can execute the transfer without any additional steps (see listing~\ref{lst:read}, line 4).
+However, the maximum size to copy is specified in the argument \mintinline{c}{count} and the user buffer is accessable without further ado, thus the call \mintinline{c}{snprintf()} can execute the transfer to the user without any additional steps (see listing~\ref{lst:read}, line 4).
 The original logic behind is again similar to Linux except the names, but both specify an offset on which should be read.
 An example for such an implementation is given in \cite{zircon-simpledrv}.
 Another call argument is the read offset \mintinline{c}{off}.
@@ -620,6 +619,7 @@ static zx_status_t grove_rgb_read(void* ctx, void* buf, size_t count, zx_off_t o
 \end{minted}
 \end{listing}
 
+%TODO write
 
 \subsubsection*{C++ Driver Variants}
  
