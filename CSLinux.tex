@@ -347,7 +347,7 @@ It is a two wired master-slave bus working in a serial tansfer mode.
 Several masters and slaves are allowed, but both roles can also be combined in one.
 A datatransfer is initialized by a master which reaching out for the desired slave using an address.
 For the Grove device, there are two distinct slaves with individual addresses which need to be controlled.
-A device's \ac{i2c} address is usually set by the manufacturer but configurable to avoid conficts on the bus.
+A device's \ac{i2c} address is usually set by the manufacturer but configurable to avoid conflicts on the bus.
 For the Grove device, the default slave addresses are \texttt{0x62} for controlling \ac{rgb} and \texttt{0x3e} for LCD\@.
 Two additional addresses are available on the combined device but they are used on startup and can not be addressed individually\footnote{\url{http://wiki.seeedstudio.com/Grove-LCD_RGB_Backlight/}}.
 Thus, they does not matter for the driver development.
@@ -472,7 +472,7 @@ While it is very clear that a string which is sent to a line display should be s
 It requires a certain non-intuitive format to be understand.
 By implementing distinct drivers, this is to some degree possible without loosing meaning and the intuitive nature of especially the \texttt{write()} call, but a combined driver would imply a sophisticated string parsing to differentiate between both devices.
 Thus, the usage of \texttt{write()} would not be intuitive for users anymore.
-As a result, is implementing those calls does not making sense for this kind of driver.
+As a result, implementing those calls does not making sense for this kind of driver.
 Instead are \texttt{ioctl()} commands or specific defined pseudo-files in sysfs or procfs a more conceivable solution for the Linux driver.
 
 In Zircon, the situation is very similar to Linux.
@@ -538,7 +538,7 @@ Hence, their implementation is very similar to the explicit defined device opera
 In Linux, this would mean the implementation of e.g.\ writing the first line as a part of \texttt{ioctl()} would not differentiate more deeply from the one for \texttt{write()}.
 Only the function signature and thus the copying of data between user and kernel would slightly be different but not general file operation specific issues in Linux, the used helper functions and the actual invokation of the peripheral.
 This does not justify the development of a whole second driver variant in Linux, but the differences in this functions should be mentioned as a part of this work, nevertheless.
-On Ziron are these methods more interesting for this work, especially in the C++ implementation.
+These methods more interesting for this work, especially in the Zircon C++ implementation.
 
 
 \section{Linux Driver Development}\label{sec:cs-linux}
@@ -653,7 +653,7 @@ To take advantage from the new Linux \ac{api} which enables a single driver for 
 Defining, in this case, both partial \ac{i2c} devices within an own node would not work in the context of this \ac{api}.
 Unfortunately, this special requirement is rarely documented right now, maybe because the use of this feature within the mainline kernel is still very limited.
 
-To come back to the tasks of \mintinline{c}{module_i2c_driver()}, the focus returns to how this does to register the module as a driver in the system.
+To come back to the tasks of \mintinline{c}{module_i2c_driver()}, the focus returns on the way a module is registered in the system.
 Thus, the function pointers in listing\ref{lst:init} line 12 and 13 are also decisive.
 The structure given to \mintinline{c}{module_i2c_driver()} contains, besides the matching related entries, function pointers to the driver's implementations for \mintinline{c}{probe()} and \mintinline{c}{release()}.
 After register the driver by the system using this structure and the macro, is exactly this driver's \mintinline{c}{probe()} called for a device with matching compatible string.
@@ -712,31 +712,31 @@ static int grove_probe(struct i2c_client *client)
 
   grove = kzalloc(sizeof(struct grove_t), GFP_KERNEL);
   if (IS_ERR(grove)) {
-  	dev_err(dev, "failed to allocate a private memory area for the device\n");
-	return -ENOMEM;
+    dev_err(dev, "failed to allocate a private memory area for the device\n");
+    return -ENOMEM;
   }
 
   grove_class = class_create(THIS_MODULE, "grove");
   if (IS_ERR(grove_class)) {
     dev_err(dev, "failed to create sysfs class\n");
-	return -ENOMEM;
+    return -ENOMEM;
   }
 
   if (alloc_chrdev_region(&grove->devnum, 0, 1, "grove") < 0) {
-	dev_err(dev, "failed to allocate char dev region\n");
-	goto free_class;
+    dev_err(dev, "failed to allocate char dev region\n");
+    goto free_class;
   }
 
   cdev_init(&grove->cdev, &grove_fops);
   grove->cdev.owner = THIS_MODULE;
 
   if (cdev_add(&grove->cdev, grove->devnum, 1))
-	goto free_cdev;
+    goto free_cdev;
 
   device = device_create(grove_class, NULL, grove->devnum, "%s", "grove");
   if (IS_ERR(device)) {
-	dev_err(dev, "failed to create dev entry\n");
-	goto free_cdev;
+    dev_err(dev, "failed to create dev entry\n");
+    goto free_cdev;
   }
   
   /* continued with device specific initialization */
@@ -766,7 +766,7 @@ As a last action within this part of \mintinline{c}{probe()}, an entry for the p
 It takes the class created in sysfs as a first argument.
 The second one would be the parent device for the newly created one. 
 As this there is no matching one for the Grove-LCD RGB backlight device, the argument stays \mintinline{c}{NULL}.
-To create the device in devfs is only one place the device number needed.
+The creation the device in devfs is only one place where the device number needed in this function.
 Thus, it was neccessary to create it before and save it as a part of the \texttt{grove\_t} structure.
 The last arguments for this call are a format string to define the device' name within devfs and a number of strings or numbers to fill it.
 In this case, it is just the string \texttt{``grove''}.
@@ -774,7 +774,8 @@ As previous, this call needs error checking and handling as well.
 
 
 The device specific part of \mintinline{c}{probe()} starts with saving the \ac{i2c} client which was delivered as an argument within the private \texttt{grove\_t} structure for later use.
-Because it is needed to perform the \ac{i2c} transfers is this structure an essential part of this driver.
+They are needed to perform the \ac{i2c} transfers.
+Thus, it is essential to store them for later use in this driver.
 As listing~\ref{lst:probe-grove} pictures in line 5, the client structure is saved as \mintinline{c}{grove->lcd_client}.
 But how is it known that the structure delivered represents the \ac{lcd} and not the \ac{rgb} controller?
 To answer this, the device tree definition pictured in listing~\ref{lst:devtree} is needed.
@@ -903,7 +904,7 @@ The call to the kernel \ac{api} \mintinline{c}{i2c_master_send()} is as well sli
 It also takes the \texttt{i2c\_device} structure as a first argument, but the second one is a pointer to the char buffer which is to be sent.
 In this context, it is \mintinline{char init[]} defined in listing~\ref{lst:probe-lcdinit}, line 24).
 The last argument is the number of bytes which are to be sent. 
-Usually, this would be the string size including \texttt{\n}.
+Usually, this would be the string size including \texttt{\textbackslash n}.
 But because the \ac{lcd} would try to print this character as well, it is cutted of by decreasing the size by one.
 Unlike the previous call does \mintinline{c}{i2c_master_send()} not return a status code but the number of successfully transfered bytes.
 Thus, the error handling must check for this.
@@ -922,8 +923,7 @@ The resulting \mintinline{c}{struct i2c_client} is stored as a part of \mintinli
 Further steps for the \ac{rgb} device are the same as for the \ac{lcd} one (see listing~\ref{lst:probe-lcdinit}), but the exact implementation of the device specific initialization are of course different and meaningful for the \ac{rgb}.
 
 \subsection{Driver Interfaces}
-
-As designed in section~\ref{sec:cs-driver-concept} is the Linux driver accessed via \ac{io} controls and already the section about this driver's prearrangements~\ref{sec:linux:prearrangements} mentiones they are located besides tha actual source code, within \texttt{include/uapi/linux/grove\_ioctl.h}, to be access from both sides, user and kernel.
+The Linux driver is, as designed in section~\ref{sec:cs-driver-concept}, accessed via \ac{io} controls and already the section about this driver's prearrangements~\ref{sec:linux:prearrangements} mentiones they are located besides tha actual source code, within \texttt{include/uapi/linux/grove\_ioctl.h}, to be access from both sides, user and kernel.
 For real, \ac{io} control call definitions are nothing more than numbers and using pure numbers on both sides works as well.
 But it is error-prone and does not even allow Linux to perform the basic checks, e.g.\ if the size of transfered data matches the definition for these calls.
 However, a well engineered \mintinline{c}{ioctl()} interface needs special care from the programmer.
@@ -984,7 +984,7 @@ The way this macro is implemented is not discussed as part of this work, but the
 To make this \texttt{grove\_t} instance effective available within \mintinline{c}{ioctl()} (and/or \mintinline{c}{open()} and \mintinline{c}{close()}), it must be stored in a way that is accessible from these calls.
 As all of them share \mintinline{c}{struct file *file} as a call argument and it is the only possible location as well.
 The file structure contains an entry \mintinline{c}{void *private_data} which is intended for exactly this use-case (see listing~\ref{lst:open}, line 6). 
-By using this trick, the data must be freed in \mintinline{c}{release()}, the counterpart of \mintinline{c}{open()} right before the file structure is destroyed by the kernel (see listing~\ref{lst:open}, line 12).
+By using this trick, the pointer must be invalidated in \mintinline{c}{release()}, the counterpart of \mintinline{c}{open()} right before the file structure is destroyed by the kernel (see listing~\ref{lst:open}, line 12).
 
 \begin{listing} [H]
     \caption{Implementation of \texttt{open()} and \texttt{release()}}
@@ -1091,7 +1091,7 @@ In cases an error occured, it must be ensured the mutex is unlocked in any situa
 The task of \mintinline{c}{GROVE_SET_COLOR} is to receive user input in a certain format defined by the structure \mintinline{c}{color_t} and set the device' backlight color accordingly.
 Both subtasks, but especially the operation on the \ac{i2c} bus, must be locked.
 
-Nevertheless, the data transfer between user and driver for this is command but for each other one needs special attention as well.
+Nevertheless, the data transfer between user and driver needs special attention as well.
 As discussed in section~\ref{sec:mm:linux} does Linux use different address types between them.
 Thus, the call's argument \mintinline{c}{unsigned long arg} which is interpreted as an address to the user's buffer, is meaningless within kernel.
 Using it without further ado is possibly even dangerous.
