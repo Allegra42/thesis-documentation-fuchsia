@@ -208,13 +208,101 @@
 	year = {2019}
 }
 
-@misc{chat-zircon-arch,
-	author = {Geiselbrecht, Travis (travisg) and Anderson, Chriﬆopher (cja) and Brittain, Ben (bwb) and Marx, Anna-Lena (allegra3141)},
-	editor = {others},
-	howpublished = {Freenode IRC},
-	month = feb,
-	title = {IRC Chat Discussion About the Zircon Microkernel (Architecture, Design Goals, Language Support)},
-	year = {2019}
+@Misc{chat-zircon-arch,
+  author       = {Geiselbrecht, Travis (travisg) and Anderson, Chriﬆopher (cja) and Brittain, Ben (bwb) and Marx, Anna-Lena (allegra3141)},
+  title        = {IRC Chat Discussion About the Zircon Microkernel (Architecture, Design Goals, Language Support)},
+  howpublished = {Freenode IRC},
+  month        = feb,
+  year         = {2019},
+  comment      = {* liuyb2 has quit (Ping timeout: 255 seconds)
+<allegra3141> is the zircon microkernel inspired or influenced by L4? 
+<travisg> not particularly, no
+<travisg> it's fairly different in design than L4
+<travisg> abdulla: oooh, reading about the N2, it's pretty nice. Will definitely snag a few when they go up for order. https://www.hardkernel.com/blog-2/odroid-n2/
+<travisg> if it's like the c2, you will absolutely want to buy a MMC flash module too. it's a massive speedup vs a SD card
+<allegra3141> how did you deal with the cost of context switches? isn't it still an issue on modern cpus?
+* dtb63 (~sopel@pool-173-59-235-228.bltmmd.fios.verizon.net) has joined
+* dtb63 has quit (Ping timeout: 250 seconds)
+<travisg> you make it as fast as possible
+<travisg> it doesn't really change anything per se, except that it's additional overhead that a IPC based system has to deal with
+<travisg> doubleplus so when you're doing KPTI and other meltdown/spectre stuff
+<travisg> but fundamentally that's an overhead that you take, so you try to avoid having as many context switches as you can, and you make sure the ones you have are fast
+<allegra3141> isnt the microkernel approach the opposite of avoiding context switches? (sorry for all that questions, its really interessting for me :) )
+<DrNick> the microkernel approach is deciding that the cost is worth it
+* pelco_ (5e3f1d1c@gateway/web/freenode/ip.94.63.29.28) has joined
+<DrNick> the nice thing about microkernels is that if you design them right, once you've got everything fully debugged, you can transparently combine the HTTP server, the TCP/IP stack, and the NIC driver, the filesystem driver, and the disk driver together in the same process without recompiling any of the binaries
+<travisg> yah basically what DrNick says
+<travisg> we probably wont, since security is a major goal
+<travisg> but you can
+<travisg> it's very hard to make a microkernel based system perform as well as a monolithic system for traditional OSey things, but performance isn't always everything
+* pelco_ has quit (Ping timeout: 256 seconds)
+<travisg> and in many cases the things that matter aren't performance based
+<travisg> ie, putting a ui up in front of someone, making sure it's smooth, etc. if you are careful you can make that not be dependent on low level system details
+<travisg> the way i figure it is hardware as moved on a long way since the late 80s/early 90s when microkernels were all the rage
+<travisg> there is cost to low level context switching and whatnot, but it's relatively speaking lower with modern hardware
+<travisg> and SMP is ubiquitous now to help soak up some of the performance issues, if done correctly
+* Stifler has quit (Ping timeout: 245 seconds)
+<cja> microkernels mean my IOT crap fridge hopefully won't cause my IOT crap toaster to kernel panic
+<travisg> yah, crappy iot devices scare the crap out of me
+<travisg> i draw the line at having huge piles of random untested things sitting on wifi holding sockets out to the interwebs
+<allegra3141> that's a really interessting answer. so you are fully aware of performance issues for all the benefits a microkernel approach comes with?
+<travisg> of courwe
+<travisg> it depends on what lens you look at these things with
+<cja> You design things to avoid the syscall / context switch barrier to mitigate those concerns
+<travisg> it's a tradeoff. you get modularity, security, safety and you lose some performance, potentially. but even then it's not so clear cut
+<cja> vmos for instance handle a lot of heavy lifting for sharing data
+<cja> and for some things we just avoid doing legacy access like ioports because those are slow, privileged, and need kernel side locking in some considerations
+<travisg> it depends a lot on what the code is doing. if it's doing tons of file io, or lots of process creation/shutdown, then you wont perform as well as a monolithic posix system, because posix is extremely tuned for precisely that sort of workload
+<travisg> but if the model is to have a lot of service processes, some of which are fairly long lived, then in that regard having a kernel that's more tuned for it makes sense. it's less of the process model is determined by the kernel, and more that the kernel is designed to implement the process model more directly
+<travisg> it's all designed in concert
+<allegra3141> makes absolutely sense to me. so security was an important design factor to you, right?
+<allegra3141> and one more question: what were the reasons for c++ for the system and drivers? will you also add support for rust or other more modern languages?
+<cja> We started this project in 2015 and rust was not mature enough when we did a language evaluation. Our use of C++ is largely centered around RAII / smart pointers / static checks, and we do have folks working on making Rust drivers possible (we have one almost ready afaik)
+<allegra3141> I'm curious, that sounds very interesstinf
+* bwb_ is adding support for rust drivers right now
+<allegra3141> did you think about even more languages yet?
+<bwb_> we have an IDL that describes the contract between in-process drivers, so no, but it shouldn't be an insane amount of work
+<cja> No one is talking about haskell drivers but that doesn't mean someone can't invest the time to accomplish it
+<bwb_> sometimes I joke about adding wasm or zig driver support
+<cja> s/insane/tremendous/
+<bwb_> ^ that
+<bwb_> D support could be pretty cool
+<bwb_> or even swift
+<bwb_> (subsets of it)
+<bwb_> what about a forth driver :D
+<bwb_> or chicken-scheme. I've joked about that too
+<allegra3141> I just have to laugh a bit. sounds like you are having fun
+<bwb_> yeah, I'm having a blast working on this
+<allegra3141> @bwb_ I'm curious on the result :)
+<cja> The result is him not finishing banjo proxying for me
+<cja> !
+<bwb_> heyyyy. I'm reviewing some fidl/banjo CLs right now
+<bwb_> also, when did I join the DDK team?!
+<bwb_> and we need to think a lot about how proxying will work still.
+<cja> We already had proxying, then banjo became a thing
+<cja> So I guess I'll just to it by hand again?
+<bwb_> s/had proxying/had bespoke proxying/
+<bwb_> uh, the right answer is to ignore it until it gets autogenerated for you :)
+* navidr (uid112413@gateway/web/irccloud.com/x-gaabwomzzxmgrutl) has joined
+<bwb_> travisg / cja
+<cja> what who why what
+<bwb_> I have a crazy design question for y'all
+<bwb_> about rust drivers
+<cja> I can't ignore it
+<cja> proxying is 100% the basis of my entire driver topology, lol
+<bwb_> so, if I had you annotate your rust driver with a #![fuchsia_ddk::driver] annotation
+<bwb_> that did a little bit of magic for you, would you find that "bad"?
+<bwb_> No overhead at runtime, promise
+<bwb_> it just makes sure certain pointers are setup properly in a safe manner
+<bwb_> and de-dups a bit of boiler plate
+<bwb_> (the stuff in the device_ops table)
+<cja> I would immediately wonder how undebuggable it would be because rust macros are a labyrinth of horror when they go wrong
+<bwb_> hmmm
+<cja> decorators aren't a bad idea, but they're very opaque
+<bwb_> yeah, that's my concern
+<bwb_> and I know the normal driver author wants to know what's going on
+<bwb_> suraj thought my proc_macro idea was an abomination, so I have two nays},
+  editor       = {others},
 }
 
 @misc{zircon-vs-lk,
