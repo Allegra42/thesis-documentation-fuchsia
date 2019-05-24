@@ -598,7 +598,7 @@ The full Linux driver source code is available on \url{https://github.com/Allegr
 For the Grove driver, there is no need for additional one time initializations that are commonly done within the regular \mintinline{c}{module_init()} call.
 As already mentioned, the Linux kernel provides macros instead, to register the driver without unneccessary boilerplate code.
 For an \ac{i2c} driver as the Grove it is, the matching macro is \mintinline{c}{module_i2c_driver()} (see listing~\ref{lst:init}, line 17).
-It takes an \mintinline{i2c_driver} structure (listing~\ref{lst:init}, line 8) as an argument which contains function pointers to the driver implementation of \mintinline{c}{probe()} and \mintinline{c}{remove()}, but also driver specific information like its name and a further pointer to an \mintinline{c}{of_device_id} table.
+It takes an \mintinline{i2c_driver} structure\\(listing~\ref{lst:init}, line 8) as an argument which contains function pointers to the driver implementation of \mintinline{c}{probe()} and \mintinline{c}{remove()}, but also driver specific information like its name and a further pointer to an \mintinline{c}{of_device_id} table.
 This table defines a set of properties, e.g.\ so-called \textit{compatible strings} (listing~\ref{lst:init}, line 2}.
 As the Raspberry Pi is an ARM architecture, its actual hardware configuration and thus also firmly attached devices like the Grove are defined in a specific file, the \textit{device tree}. 
 
@@ -667,7 +667,7 @@ Using the \mintinline{c}{module_i2c_driver()} macro also means \mintinline{c}{ex
 
 \subsection{Device Probing and Releasing}
 As already discussed uses the \mintinline{c}{probe()} implementation in listing~\ref{lst:probe} already the new method signature.
-The previously used second argument, the \mintinline{c}{struct i2c_device_id *id}, is not needed for this driver.
+The previously used second argument, the\\\mintinline{c}{struct i2c_device_id *id}, is not needed for this driver.
 As pictured in figure~\ref{pic:linux-lifecycle} is a driver's implementation of probe roughly divisible in to two parts: the driver's own setup including its registration within the system and the device specific initializations.
 The first part is very similar for many drivers.
 It includes i.a.\ allocating private memory regions and device numbers but also creating entries in sysfs and devfs.
@@ -687,7 +687,7 @@ For the Grove peripheral, it is e.g.\
     \item pointers to the \ac{i2c} device instances \mintinline{c}{struct i2c_client *client} for both, \ac{rgb} and \ac{lcd} and 
     \item device specific private data to restore the device's state, i.e.\ a struct to store color information and char buffers for the \ac{lcd} content.
 \end{itemize}
-The reasons for storing exactly these information within the struct defined as \mintinline{c}{struct grove_t} becomes clear in the course of this driver's analysis.
+The reasons for storing exactly these information within the struct defined as\\\mintinline{c}{struct grove_t} becomes clear in the course of this driver's analysis.
 
 As the items within the \texttt{grove\_t} structure should be filled during the \mintinline{c}{probe()} for exactly the device it is called with, is it useful to allocate the needed memory on the heap right from the start using \mintinline{c}{kzalloc()} (see listing~\ref{lst:probe}, line 8).
 Of course, the resulting pointer needs to be checked.
@@ -946,6 +946,9 @@ In cases the transmitted value is a single one, it is enough to use only its typ
 If no transfer at all is needed, e.g.\ if the command should only trigger a specific action without parameters or return values, the \mintinline{c}{_IO(type, number)} macro should be used.
 It does not define a \textit{size} to transfer in contrast to the other ones (see listing~\ref{lst:ioctldefs}, line 11 to 17).
 
+Before diving right into the implementation of \mintinline{c}{ioctl()}, the question is answered why this driver needs to implement the file operations \mintinline{c}{open()} and \mintinline{c}{close()} even if there is no need for a sophisticated access control.
+% The reason is in the function signature of \ac{io} control, \mintinline{c}{ioctl(struct file *file, unsigned int cmd, unsigned long arg)}, more precisely in the \mintinline{c}{struct file}.
+%
 \begin{listing} [H]
     \caption{I/O Control Call Definitions}
     \label{lst:ioctldefs}
@@ -970,8 +973,8 @@ It does not define a \textit{size} to transfer in contrast to the other ones (se
     \end{minted}
 \end{listing}
 
-Before diving right into the implementation of \mintinline{c}{ioctl()}, the question is answered why this driver needs to implement the file operations \mintinline{c}{open()} and \mintinline{c}{close()} even if there is no need for a sophisticated access control.
-The reason is in the function signature of \ac{io} control, \mintinline{c}{ioctl(struct file *file, unsigned int cmd, unsigned long arg)}, more precisely in the \mintinline{c}{struct file}.
+% Before diving right into the implementation of \mintinline{c}{ioctl()}, the question is answered why this driver needs to implement the file operations \mintinline{c}{open()} and \mintinline{c}{close()} even if there is no need for a sophisticated access control.
+The reason is in the function signature of \ac{io} control,\\\mintinline{c}{ioctl(struct file *file, unsigned int cmd, unsigned long arg)}, more\\precisely in the \mintinline{c}{struct file}.
 It does not contain an entry for a private device data structure such as \mintinline{c}{grove_t} is or any other entry which enables the restoration of the related instance of this structure for the called device.
 Even if the signature slightly differs for \mintinline{c}{read()} and \mintinline{c}{write()}, it is the same issue on them.
 However, each time before one of these basic file operations is called, \mintinline{c}{open()} must be invoked as the user must open the file descriptor which represents the device.
