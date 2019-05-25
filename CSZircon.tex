@@ -756,7 +756,7 @@ It calls the constructor of \mintinline{cpp}{PDev} with \mintinline{cpp}{parent}
 The same mechanism is used to instanciate the \ac{i2c} representation \mintinline{cpp}{I2cChannel} in the ordinary variant with two drivers.
 For the pdev one, the \ac{i2c} devices are instanciated during the common device initialization written in the C++ source file.
 The last anomaly which is worth mentioning is the \mintinline{cpp}{fbl} namespace which contains e.g.\ the Zircon C++ mutex implementation pictured in listing~\ref{lst:cppheader}, line 25.
-For C++ drivers provides Zircon specific libraries in contrast to its C drivers and bundles them in exacatly this \mintinline{cpp}{fbl} namespace.
+For C++ drivers, Zircon provides specific libraries in contrast to its C drivers and bundles them in exacatly this \mintinline{cpp}{fbl} namespace.
 Besides the mutex implementation, it contains for example a specific secured string class including helper functions for the use in C++ drivers as well as other re-implementations of the C++ standard library.
 
 \begin{listing} [H]
@@ -794,7 +794,7 @@ Similar to the C driver, the device is added \textit{invisible} even if the init
 The C++ version of this call, the \mintinline{cpp}{DdkAdd()} requires only a name and flags as arguments.
 It is neither needed to provide a version code nor a context or driver operations.
 The context is not needed because the instance specific data is stored as a part of the driver object in C++ while the operations are invoked via the \textit{mixins} specified in the header file.
-However, the actual device initializations which are invoked in line 10 of this listing, are not done using a thead as known from the C driver.
+However, the actual device initializations which are invoked in line 10 of this listing, are not done using a thread as known from the C driver.
 But as the initialization of this device does not require a longrunning threaded setup, is it only a variation without further meaning for driver development. 
 
 For a better modularization is the initialization of the actual devices splitted into three functions: the \mintinline{cpp}{PdevInit()} pictured in listing~\ref{lst:cppinit}, the \mintinline{cpp}{LcdInit()} in listing~\ref{lst:cpplcdinit} and the not shown \mintinline{cpp}{RgbInit()}.
@@ -852,8 +852,9 @@ However, an \ac{i2c} write changes, too.
 In C++, it is a member function of \mintinline{cpp}{I2cChannel} objects and thus, it must be called on such one (see listing~\ref{lst:cpplcdinit}, line 13).
 Accordingly, it is not longer needed to name the \ac{i2c} instance as a call argument.
 Furthermore is the \ac{i2c} write for a \mintinline{cpp}{fbl::String} not longer that simple as before.
-The C++ string representation must be casted to match the \mintinline{cpp}{uint8_t*} which is required in \mintinline{cpp}{WriteSync()}.
-In C are strings or character arrays equivalent to \mintinline{cpp}{uint8_t*}, while C++ requires sophisticated cast operations to cope the situation (see listing~\ref{lst:cpplcdinit}, line 20).
+C++ strings are representated as a class with internal character pointer holding the actual data.
+To match the \mintinline{cpp}{uint8_t*}, which is required in \mintinline{cpp}{WriteSync()}, must this internal data be casted .
+In C are strings or character arrays implicitly interpreted as the unsigned \mintinline{cpp}{uint8_t*}, while C++ requires sophisticated cast operations to cope the situation (see listing~\ref{lst:cpplcdinit}, line 20).
 This results in a more complex and harder readable \ac{lcd} write operations, but the idea behind stays the same.
 
 \begin{listing} [H]
@@ -976,7 +977,7 @@ A comprehensive comparison requires to hold as much parameters as possible stabl
 
 A comprehensive comparison is hardly realizable as part of this work.
 
-\begin{figure} [t]
+\begin{figure} [ht]
     \centering
     \includegraphics[width=\linewidth]{perftest}
     \caption{Performance Comparison}\label{pic:perftest}
