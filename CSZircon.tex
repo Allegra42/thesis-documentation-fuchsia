@@ -942,18 +942,35 @@ zx_status_t GroveDevice::ReadLcd(void* ctx, fidl_txn_t* txn) {
  
 \section{Performance Comparison}
 One of the most named disadvantages of a microkernel architecture in comparison to a monolithic kernel is performance loss and of course, it is an issue in Zircon as well.
-Even \textsc{Travis Geiselbrecht}, one of the main developers behind Zircon, notes that it is difficult to reach the same performance as traditional microkernel based operation systems\cite{chat-zircon-arch}.
+Even \textsc{Travis Geiselbrecht}, one of the main developers behind Zircon, noted that it is difficult to reach the same performance as traditional microkernel based operation systems\cite{chat-zircon-arch}.
 But since this fact is well known and accepted for the resulting advantages like maintainability, security and modularity, the question about the actual cost remains.
+For this work, it is especially interesting how the microkernel architecture affects driver development.
+Therefore, the assumption is made that especially the additional context switches into the actual kernel running in kernel mode which are e.g.\ needed to perform hardware actions, influence the overall driver and system performance.
+Thus, the resulting idea is to measure the elapsing time during a corresponding call, for example toggeling \acp{gpio}.
+A more complete performance analizis of both kernels is hardly practicable as part of this work and the corresponding results can of course not give a complete picture of the kernel performances in each situation.
+But at least, they can convey an idea of the performance loss in Zircon in contrast to Linux.
+
+To make the comparison as meaningful as possible, it must be tried to exclude as many influencing parameters as possible.
+Using different development boards was fine for driver development, because it did not impact driver development as the factual topic of this work at all.
+For a comprehensive kernel performance test is it not suitable at all.
+Differing factors, for example the \acp{cpu}, its architectures, board wiring and various components would influence the results in an inestimable way.
+For Zircon, the choice of development boards is pretty limited to the \textit{HiKey960}.
+The previous issues with this board are neglectable in this situation.
+Instead, it would rather distort results to consider external hardware and measure the performance there due to physical limitations and setup times.
+However, it is not reasonable to use exactly the same \textit{HiKey960} for both measurements.
+Linux requires a completly different board configuration which can not be easily replaced.
+Whether this has an effect on the measurement at all, and if so how, can not be determined without further ado.
+
+The time elapsed must be measured internally for meaningful results without physical implications of the underlying hardware controller which is accessed by the test call.
+On driver side is e.g.\ toggeling a \ac{gpio} only a memory operation on a mapped register while the physical action performed by an according controller takes a longer time.
+Both operating systems provide internal high resolution timers with a microsecond resolution which can be used for the comparison, but particularly the quality of the Zircon timer is difficult to verify.
+Nevertheless are these timers the probably best idea to measure the elaped time during toggeling \acp{gpio}.
+Except for scheduling influences are drivers executed sequentially and without interruptions.
+Taking the elapsed microseconds since system start right before and after the considered systemcalland subtract the start time from the end time should produce a comparable call duration.
+
+%TODO measurements
 
 %TODO 
-- so viel parameter wie möglich gleich
-    - gleiches board
-    - gleicher test -> kein fertiger test möglich
-        - was soll überhaupt verglichen werden:
-            zeit einer typischen treiberaktion die hardware modifiziert, z.b. GPIO
-            (GPIO ist einfach, keine reale hardware erforderlich um nur die call zeit zu testen, aber signal trotzdem evtl über oszi beobachtbar -> exakt gleiche board ist kaum möglich wegen uefi flashen -> scheiße, aber zwei hikey960 (ist ja kein i2c nötig...))
-        - wie soll verglichen werden: High res timer vor und nach dem call die die aktuelle zeit halten und von einander abgezogen werden -> ist ein sequentieller call -> macht sinn
-        (von außen messen (oszi) ist nicht aussagekräftig da schaltzeiten zu beachten sind)
 
     - probleme/einflüsse
         - exakt gleiches board nicht möglich
@@ -973,12 +990,9 @@ But since this fact is well known and accepted for the resulting advantages like
         -> guter eindruck von kosten aber nicht uneingeschränkt aussagefähig
         
 
-A comprehensive comparison requires to hold as much parameters as possible stable.
-
-A comprehensive comparison is hardly realizable as part of this work.
 
 \begin{figure} [ht]
     \centering
-    \includegraphics[width=\linewidth]{perftest}
+    \includegraphics[width=\linewidth]{perfcomp-gnuplot}
     \caption{Performance Comparison}\label{pic:perftest}
 \end{figure}
