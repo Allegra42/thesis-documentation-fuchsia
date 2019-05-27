@@ -1100,18 +1100,26 @@ It is possible to wait for specific signals on several objects\cite{zircon-signa
 
 \subsubsection*{Inter Process Communication}
 \paragraph{Shared Memory}
-Zircon provides so-called \textit{\acfp{vmo}} and \textit{\acfp{vmar}}.
-A \ac{vmar} represents a virtual memory address space in which a \ac{vmo} lives as a contiguous allocated memory region.
-Both terms go together and are mixed up sometimes.
-Generally, the term \ac{vmar} is used for any operating according to address regions, e.g.\ allocate them, map and unmap \acp{vmo} to processes, but also to protect and destroy regions\cite{zircon-vmar}.
-The term \ac{vmo} is used for actions on the memory object, such as create one and read or write it\cite{zircon-vmo}.
-A \ac{vmo} represents a set of physical memory pages on the one hand, but also the potential for pages on-demand via lazy creation on the other.
-Such objects are available on both, kernel and user-space and can be mapped into the address spaces of multiple, distinct processes\cite{zircon-vmo},~\cite{zircon-concepts}.
-\acp{vmar} in Zircon are randomized by default and additionally allows adjusting the permissions of mapped pages\cite{zircon-vmar}.
-The mapped \acp{vmo} are not only directly writable and readable.
-\acp{vmo} also provide an one-shot mechanism to avoid the cost of mapping them more often into address spaces than necessary.
-In such a case, a \ac{vmo} is created and initially written by one process and subsequently handed over to the control of another process\cite{zircon-concepts}.
-Thus, they are very suitable for efficient \ac{ipc} via shared memory.
+% Zircon provides so-called \textit{\acfp{vmo}} and \textit{\acfp{vmar}}.
+% A \ac{vmar} represents a virtual memory address space in which a \ac{vmo} lives as a contiguous allocated memory region.
+% Both terms go together and are mixed up sometimes.
+% Generally, the term \ac{vmar} is used for any operating according to address regions, e.g.\ allocate them, map and unmap \acp{vmo} to processes, but also to protect and destroy regions\cite{zircon-vmar}.
+% The term \ac{vmo} is used for actions on the memory object, such as create one and read or write it\cite{zircon-vmo}.
+% A \ac{vmo} represents a set of physical memory pages on the one hand, but also the potential for pages on-demand via lazy creation on the other.
+% Such objects are available on both, kernel and user-space and can be mapped into the address spaces of multiple, distinct processes\cite{zircon-vmo},~\cite{zircon-concepts}.
+% \acp{vmar} in Zircon are randomized by default and additionally allows adjusting the permissions of mapped pages\cite{zircon-vmar}.
+% The mapped \acp{vmo} are not only directly writable and readable.
+% \acp{vmo} also provide an one-shot mechanism to avoid the cost of mapping them more often into address spaces than necessary.
+% In such a case, a \ac{vmo} is created and initially written by one process and subsequently handed over to the control of another process\cite{zircon-concepts}.
+% Thus, they are very suitable for efficient \ac{ipc} via shared memory.
+Zircon provides an object based model for shared memory which is built on top of its virtual memory implementation.
+It is randomized per default and does not differn in the way the address space layouts of kernel and userspace are handled\cite{zircon-vmo},~\cite{zircon-concepts}.
+Except from permission issues, they are always handled the same\cite{zircon-vmar}.
+A virtual shared memory object can be mapped into the address spaces of one or more distinct processes.
+The \acf{vmo} is read and writable but it allows a \textit{one-shot} mechanism as well.
+This mode hands the control over a \ac{vmo} over to another process directly after it was created and initially written\cite{zircon-concepts}.
+Its underlying idea is to avoid the cost of mapping them more often than necessary into address spaces.
+As a result, this mechanism allows very efficient \ac{ipc} via \acp{vmo} as shared memory implementation\cite{zircon-concepts}.
 
 % \cite{zircon-concepts}
 % shared memory: VMOs

@@ -946,16 +946,15 @@ Even \textsc{Travis Geiselbrecht}, one of the main developers behind Zircon, not
 But since this fact is well known and accepted for the resulting advantages like maintainability, security and modularity, the question about the actual cost remains.
 For this work, it is especially interesting how the microkernel architecture affects driver development.
 Therefore, the assumption is made that especially the additional context switches into the actual kernel running in kernel mode which are e.g.\ needed to perform hardware actions, influence the overall driver and system performance.
-Thus, the resulting idea is to measure the elapsing time during a corresponding call, for example toggeling \acp{gpio}.
-A more complete performance analizis of both kernels is hardly practicable as part of this work and the corresponding results can of course not give a complete picture of the kernel performances in each situation.
+The resulting idea is to measure the elapsing time during a corresponding call, for example toggeling \acp{gpio}.
+A more complete performance analizis of both kernels is hardly practicable as part of this work and thus, the corresponding results can of course not give a complete picture of the kernel performances in each situation.
 But at least, they can convey an idea of the performance loss in Zircon in contrast to Linux.
 
 To make the comparison as meaningful as possible, it must be tried to exclude as many influencing parameters as possible.
 Using different development boards was fine for driver development, because it did not impact driver development as the factual topic of this work at all.
 For a comprehensive kernel performance test is it not suitable at all.
 Differing factors, for example the \acp{cpu}, its architectures, board wiring and various components would influence the results in an inestimable way.
-For Zircon, the choice of development boards is pretty limited to the \textit{HiKey960}.
-The previous issues with this board are neglectable in this situation.
+For Zircon, the choice of development boards is pretty limited to the \textit{HiKey960}, but the previous issues with this board are neglectable in this situation.
 Instead, it would rather distort results to consider external hardware and measure the performance there due to physical limitations and setup times.
 However, it is not reasonable to use exactly the same \textit{HiKey960} for both measurements.
 Linux requires a completly different board configuration which can not be easily replaced.
@@ -963,36 +962,52 @@ Whether this has an effect on the measurement at all, and if so how, can not be 
 
 The time elapsed must be measured internally for meaningful results without physical implications of the underlying hardware controller which is accessed by the test call.
 On driver side is e.g.\ toggeling a \ac{gpio} only a memory operation on a mapped register while the physical action performed by an according controller takes a longer time.
-Both operating systems provide internal high resolution timers with a microsecond resolution which can be used for the comparison, but particularly the quality of the Zircon timer is difficult to verify.
+Both operating systems provide internal high resolution timers with a nanosecond resolution which can be used for the comparison, but particularly the quality of the Zircon timer is difficult to verify.
 Nevertheless are these timers the probably best idea to measure the elaped time during toggeling \acp{gpio}.
 Except for scheduling influences are drivers executed sequentially and without interruptions.
-Taking the elapsed microseconds since system start right before and after the considered systemcalland subtract the start time from the end time should produce a comparable call duration.
+Taking the elapsed nanoseconds since system start right before and after the considered systemcalland subtract the start time from the end time should produce a comparable call duration.
 
-%TODO measurements
+As a result of this considerations is the performance measurement carried out under the following framing conditions:
+\begin{itemize}
+    \item The operating systems to be compared run on a HiKey960 development board, each on a seperated one.
+    \item Both systems are in an idle state. Apart from a driver implementation performing the measurement and the basic operating system itself is no further application running.
+    \item Both system specific driver implementations measure the required time to toggle a \ac{gpio} pin using the \acp{api}:
+        \begin{itemize}
+            \item \mintinline{c}{gpio_set_value()} on Linux and
+            \item \mintinline{c}{gpio_write()} on Zircon.
+        \end{itemize}
+    \item The elapsed time is calculated from on both systems using the calls
+        \begin{itemize}
+            \item \mintinline{c}{getrawmonotonic()} on Linux and
+            \item \mintinline{c}{zx_clock_get_monotonic()} on Zircon.
+        \end{itemize}
+        Both return the value of a monotonic counter running since system start with a nanosecond resolution.
+        They are called twice, once before the \ac{gpio} toggle is done and once right after.
+        Their delta is the elapsed time during the call.
+        Possibly, it is influenced by scheduling, different scheduling strategies, the actual board and as well, the quality of the timer implementation.
+\end{itemize}
 
-%TODO 
-
-    - probleme/einflüsse
-        - exakt gleiches board nicht möglich
-        - verschiedene scheduling strategien -> siehe unterschiedliche zeiten
-        - linux hat userland, zircon ist der reine kernel
-        - unterschiedliche timer implementierungen (die aber beide im us bereich auflösen laut doku)
-
-    - messung
-        - 5 durchläufe a 5 werte (jeweils set/unset von einem pin)
-        - werte von minimaler zu maximaler dauer sortiert -> soll vergleich zwischen minimal(maximal) wert zircon/linux besser erlauben die dauer der messung ist ja nicht vom zeitpunkt abhängig (also ja schon durch scheduling, aber nicht von außen groß beeinflussbar)
-        - systeme sonst idle, nichts anderes auser kernel (linux + userland) läuft aktiv
-        - board beides hikey
-
-    - ergebnis:
-        - kosten von zircon im vergleich zu linux deutlich sichtbar
-        - test allerdings nur bedingt aussagekräftig -> nur begrenzte messung, nur für eine aktion, ...
-        -> guter eindruck von kosten aber nicht uneingeschränkt aussagefähig
-        
-
-
-\begin{figure} [ht]
+\begin{figure} [t]
     \centering
     \includegraphics[width=\linewidth]{perfcomp-gnuplot}
-    \caption{Performance Comparison}\label{pic:perftest}
+    \caption{Performance Comparison between Linux and Zircon}\label{pic:perftest}
 \end{figure}
+
+The resulting values for Linux and Zircon are pictured as a \textit{box-plot} in figure~\ref{pic:perftest}.
+This diagram type allows a comparable statistical representation of the elapsed time in nanoseconds.
+Each colored box has the size of the interquartile range (IQR) for the given values.
+It contains the average 50\% of the datapoints limited by the upper and lower quartile.
+The bigger line within a box represents the median for the given range.
+The lines starting at the box are named \textit{whiskers} and picture the range from the last values within the $1.5 * IQR$ below and above the box.
+Values within this range are also named as milde outlier values in contrast to the ones outside, pictured as dots. 
+
+Figure~\ref{pic:perftest} shows a significat difference in the time needed to toggle a \ac{gpio}.
+The overall span of measured results but especially the box height in Linux is much smaller than in Zircon.
+All in all ranged the Linux values between 520 and 7291 ns with a median on 1562 ns.
+For Zircon, the overall span starts higher, on 8854 ns which is clearly above than the outlier values on Linux.
+At the same time takes the box height as well as the span a wider range with a median on 15625 ns and extreme outliers on up to 32291 ns.
+Considering the median values is Zircons \mintinline{c}{gpio_write()} approximately 10 times slower than Linux' \mintinline{c}{gpio_set_value()}.
+However, the way this difference in performance is exactly influenced by various factors such as the used development board revisions, the scheduling strategies and the additional context changes in the microkernel approch, which is assumed to be a major factor, can not be deducated from the measurement.
+Based on the results of this measurement, it can of course be assumed that the overall performance of both systems behaves similarly in comparison.
+But for reliable statements are more in-depth and comprehensive tests neccessary.
+
