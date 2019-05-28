@@ -25,12 +25,15 @@ The part of operating systems providing this task is commonly referred as the \t
 Even if this distinction is widely uses, especially for Linux, there is hardly no clear and global definition which specific tasks of an operating system are part of the \textit{kernel}.
 \textsc{Albrecht Achilles} named process management, memory management and basic \ac{io} operations as such ones in his book\cite{achilles2006betriebssysteme}.
 Actually, this distinction between a whole operating system and its kernel itself is that hard because it is not even consistent between different operating system architecture concepts.
-The lot of different goals and use-cases for operating systems which have a big impact to the architectural design, and with this to the term \textit{kernel} too. 
+There are a lot of different goals and use-cases for operating systems which have a big impact to the architectural design, and with this to the term \textit{kernel} too. 
 But for a majority of them, at least the central \textit{device drivers} are considered as part of the kernel. 
 
-With \textit{Linux} and \textit{Fuchsia}, two fundamentally different representatives of the two best-known operating system concepts will be considered in this work, the monolith and the microkernels. %, will be considered in this work.
-\textit{Fuchsia}, respectively \textit{Zircon}, as the kernel is named, is a new microkernel operating system which is developed from scratch by \textit{Google}.
-The project is developed in public since 2016\footnote{androidpolice.com, visited on 13.02.2019~\url{https://www.androidpolice.com/2016/08/12/google-developing-new-fuchsia-os-also-likes-making-new-words/}}, but since it gone public, there has been no official announcement about the purpose of the system.
+With \textit{Linux} and \textit{Fuchsia}, two fundamentally different representatives of the two best-known operating system concepts will be considered in this work, the microkernels and the monolithic ones. %, will be considered in this work.
+Both are representatives for very opposing kernel architecture approaches.
+% A monolithic kernel runs entirely within the kernel mode of a \ac{cpu} while a microkernel is splitted up into a small, fundamental kernel running in kernel mode and
+A monolithic kernel runs entirely within the \ac{cpu}'s kernel mode, a privilege execution mode, while microkernels try to reduce their share in kernel mode and swap as much functionality as possible into user mode.
+\textit{Fuchsia}, respectively \textit{Zircon}, as the kernel is named, is a very new microkernel operating system which is developed from scratch by \textit{Google}.
+The project is developed in public since 2016\footnote{androidpolice.com, visited on 13.02.2019~\url{https://www.androidpolice.com/2016/08/12/google-developing-new-fuchsia-os-also-likes-making-new-words/}}, but since it has gone public, there has been no official announcement about the purpose of the system.
 Nevertheless, there are lots of reasons to study \textit{Fuchsia} and especially to its kernel \textit{Zircon}.
 The first one is clearly an architectural one, as \textit{Zircon} is a microkernel.
 Of course are there some industrial used microkernel architectures, but the most and most successful ones are \ac{posix} compatible and targeting real time tasks, such as \textit{QNX} or \textit{FreeRTOS}. % TODO cite?
@@ -65,8 +68,8 @@ This work's aim is to evaluate the differences between monolithic and microkerne
 For this purpose, this work shall focus only on the operating system's kernels, the \textit{Zircon} kernel and the \textit{Linux} kernel.
 In most literature, filesystems are also listed as an essential part of an operating system, but shall be unattended in this work.
 Of course, they are essential, but there exist that much different concepts and implementations for filesystems to form an own research.
-For this particular work is the specific filesystem implementation not crucial due to the focus on kernel and device drivers.
-As a result, the operating systems top layers, neighter Google's \textit{Fuchsia} in its entirety nor the \textit{Linux} userland or desktop environments shall be a part of this thesis.\\
+For this particular work, the specific filesystem implementation is not crucial due to the focus on kernel and device drivers.
+As a result, neither Google's \textit{Fuchsia} nor the \textit{Linux} userland or desktop environments as operating system toplayers shall be a part of this thesis.\\
 \\
 Contrarily, the following topics are to be examined within the scope of this work:
 \begin{itemize}

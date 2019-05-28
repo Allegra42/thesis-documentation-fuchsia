@@ -7,7 +7,7 @@ And roughly spoken are exactly such different problems which needs to be solved 
 Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in many ways of working and architectures. 
 As with the debate, it is rather difficult to impossible to find one architectural concept or implementation which is clearly superior to the other ones in every use-case. 
 Nevertheless, it is a reasonable question why a majority of the operating system kernels which were developed from scratch in the last few years are based on a microkernel concept.
-In 2009, the official statement of the Linux kernel developer \textsc{Richard Gooch} was still that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
+In 2009, the official statement of the Linux kernel developer \textsc{Richard Gooch} was that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
 So the question remains what changed during the last ten years to promote this change, and especially for this work, how this affects device driver development.
 For this reason, this chapter is dedicated to the basic components and functionalities of operating system kernels and how they are implemented in the real world examples \textit{Linux} and \textit{Zircon}.
 
@@ -34,7 +34,7 @@ In this case, the driver should provide the mechanism, \textit{how} such a limit
 The idea behind is that requirements may change over some time and such a distinction makes it easy to adjust the \textit{policy} via some parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
 
 How these design principles fit into the known operating system architectures will be considered in the following sections.
-But before, the terms' \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
+But first, the terms' \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
 
 \subsubsection*{Dual-Mode Execution}
 Modern general purpose \acp{cpu} provide a ring based, hardware enabled security model which had its origin in the Intel x86 processor architecture\cite{tanenbaum-modern-operating-systems}.
@@ -81,7 +81,7 @@ Thus, they have an influence on the whole system, including device driver develo
 
 With this basic knowledge about the \ac{cpu}'s operating modes, the next section researches a selection of different operating system architectures.
 Special attention should be paid to the most common ones, the \textit{monolithic} and the \textit{microkernel} architectures and their implementation in Linux and Zircon.
-On the contrary, this work will not take a particular look on special purpose operating system architectures such as ones for loosely coupled multi-processor systems known from processing clusters.
+On the contrary, this work will not take a particular look on special purpose operating system architectures such as e.g.\ Integrity OS for realtime applications or the Cray Linux Environment which is a Linux adaption for supercomputers.
 Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} cores and most of common modern operating systems are designed to provide support for the de facto standard for tightly coupled systems, \ac{smp}.
 
 
@@ -96,7 +96,7 @@ That means a function or procedure initial developed for scheduling processes co
 In fact, there is no information hiding between kernel functions or procedures.
 Any function in this kernel context has full access to the hardware, such as \ac{io} devices, timers, interrupts and even to the memory. 
 There is no memory protection or validation between different components of a monolithic kernel. 
-Of course, this leads to some serious disadvantages in this architecture, for example could a crash in one single function or procedure crash the entire kernel or the resulting system may become difficult to understand and maintain\cite{tanenbaum-modern-operating-systems},~\cite{silberschatz2009operating}.
+Of course, this leads to some serious disadvantages in this architecture, for example,a crash in one single function or procedure could crash the entire kernel or the resulting system may become difficult to understand and maintain\cite{tanenbaum-modern-operating-systems},~\cite{silberschatz2009operating}.
 The missing memory protecting within the kernel could also be a source for crashes or attacks.
 But in contrast, this design also enables a very efficient kernel design without any unneeded communication overhead or hardware inefficiencies\cite{lfd430}.
 
@@ -233,8 +233,8 @@ In contrast, Little Kernel is designed for embedded applications and amongst oth
 It has 32-bit support, but none of the more sophisticated features Zircon has\cite{zircon-vs-lk}.
 
 The mirokernel architecture is justified by having security, safety, reliability and modularity as major design goals for Zircon.
-According to \textsc{Travis Geiselbrecht} was the architecture a conscious tradeoff between the named goals and performance\cite{chat-zircon-arch}.
-They try avoid costly context switches as much as possible, speed up the remaining ones and take advantage from \ac{smp}, but it is not the focus of Zircon.
+According to \textsc{Travis Geiselbrecht}, the architecture was a conscious tradeoff between the named goals and performance\cite{chat-zircon-arch}.
+They try to avoid costly context switches as much as possible, speed up the remaining ones and take advantage from \acf{smp}, but it is not the focus of Zircon.
 Alike, Zircon does not focus on performing \ac{io} operations or process management which are the key tasks \ac{posix} was designed for\cite{chat-zircon-arch}.
 As a result, Zircon does not claim to be or to become \ac{posix} compatible, they just support a very basic subset of the standard\cite{zircon-libc-posix}.
 % For \ac{ipc} Zircon provides a mechansim based on an \ac{idl} which is widly used within the Zircon kernel but also in Fuchsia as the whole operating system.
@@ -731,7 +731,7 @@ Libraries and runtime environments on top of Zircon may require such an operatio
 % In this one, especially the communication between different processes is to be considered.
 % The one between threads of the same process has previously been discussed.
 The term \acf{ipc} is not only used for the pure communication between different processes but also for the synchronization between processes, threads and data shared between them.
-In this context mentioned already the previous~section~\ref{sec:threads} that the ability of threads to access shared data not only has advantages.
+As already mentioned in the previous~section~\ref{sec:threads} has the ability of threads to access shared data not only advantages in this context.
 As they share storage, e.g.\ main memory, two threads can read and write the same value.
 But what happens if both of them try to access the same, shared value?
 Two threads try to read and modify a shared value are given for example.
