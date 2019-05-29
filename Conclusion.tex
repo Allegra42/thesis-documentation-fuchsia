@@ -1,18 +1,60 @@
-% !TEX root = MasterThesis.tex
+% % !TEX root = MasterThesis.tex
 
-\chapter{Conclusion} \label{ch:conclusion}
-This work focused a lot on operating system concepts used in Linux and Zircon, but as well on the way they were implemented.
+\chapter{Conclusion}\label{ch:conclusion}
+The present work and its evaluation can be divided into a theoretical and a practical part.
+While the former deals with general operating system concepts and their use in Zircon as a newly developed microkernel approach in comparison to the older monolithic Linux kernel, the second part focuses more on their differences in driver development.
+The architectures and objectives of microkernel and monolith systems are fundamentally different, whereas the concepts used for basic operating system tasks are often similar.
+Overall, however, these are optimized for the use in their respective architecture.
+Especially Zircon presents an implementation idea that demonstrates a great deal of knowledge and experience in the field of operating system development and clearly shows that one has learnt from things that are not necessarily optimally solved in Linux, e.g.\ for historical and/or compatibility reasons.
+Examples for this are, amongst other things, the handling of system calls or the memory management.
+Due to the lack of \ac{posix} compatibility enables a more freely design of systemcalls and adapt them to modern needs, but the enforcement of \acp{vdso} and the use of \texttt{libzircon.so} for all systemcall implementations is interesting from a security aspect, as well.
+Regarding memory management, Linux is very architecture dependent.
+The multitude of architectures and their associated terms and concepts makes them difficult to understand and use correctly, even for experienced developers.
+In this context is Zircon, as far as it can be read from the documentation, much more stringent and simpler.
+Without a division into memory areas with explicit meaning for different tasks, both, understanding and development becomes easier for the developer.
+On the other hand, there are also concepts used in Zircon, which, based on the experiences with Linux, can be assumed to fail for maintainability reasons with a possible spread of Zircon.
+An example is the way Zircon deals with board definition files which was already discussed in section~\ref{sec:cs-zircon}.
+
+The circumstances are similar for the actual driver development as well.
+Conceptually, the influences of the microkernel become slightly visible in the lifecycle of a driver, for example when binding the driver to a device and for the selection of the superior device host process.
+Within the driver development itself, the differences to Linux are rather caused by the collected experiences and the selection of more modern approaches.
+Neither the break with the \ac{posix} standard nor the introduction of \ac{fidl} or the support of a wider range of programming languages in kernel and drivers are direct consequences of an operating system kernel architecture, but a reaction to learnings from Linux and other operating systems.
+Nevertheless, exactly these points make the development on Zircon truly pleasant.
+
+% dennoch machen genau diese punkte die entwicklung auf zircon wirklich angenehm.
+%
+% dank der guten dokumentation gelingt der einstieg in die c treiber in zircon sehr gut, einzig dokumentation zur definition von geräten in den boardfiles fehlt.
+% der wechsel zu c++ treibern gestaltet sich dagegen deutlich schwieriger, zum einen da kaum dokumentation vorhanden ist aber auch die fortgeschrittenen konzepte der programmiersprache wie mixins viele zusammenhänge die in c treibern offensichtlich sind abstrahieren.
+% desweiteren wird innerhalb der existierenden cpp treibern oft wild c und c++ gemixt.
+% zum einen weil z.b. für fidl noch keine entsprechenden binding vorhanden sind, zum anderen wohl auch aus inkonsequenz in der verwendeten source code version von Zircon.
+% Sind die zusammenhänge aber klar ist c++ und in der zukunft potentiell rust unheimlich interessant aber auch angenehm für die treiberentwicklung.
+%
+% insgesamt wirkt der workflow für zircon durchdacht und in sich rund, egal ob gcc oder clang als toolchain eingesetzt wird.
+% TODO
+
+nevertheless these points make the development on zircon really pleasant.
+
+thanks to the good documentation the entry into the c drivers in zircon is very successful, only documentation for the definition of devices in the board files is missing.
+the change to c++ drivers is much more difficult, because there is hardly any documentation, but also the advanced concepts of the programming language like mixins abstracts many contexts which are obvious in c drivers.
+furthermore, wild c and c++ are often mixed within the existing cpp drivers. 
+on the one hand because e.g. for fidl no corresponding binding is available yet, on the other hand probably due to inconsistency in the source code version of Zircon.
+But if the connections are clear c++ and in the future rust is potentially very interesting but also nice for driver development.
+
+overall the workflow for zircon looks well thought out and round in itself, no matter if gcc or clang is used as toolchain.
+%TODO
 
 
-- konzepte
-    - how implemented
-- treiber implementierungen
-    - konzeptuelle unterschiede
-    - auswirkungen auf die programmierung
-    - workflow und tools
-- auswirkungen des mikrokernels im betrieb
-    - umgang mit fehlern und ausfällen
-    - benutzung vom user aus
-- performance
-- bewertung im hinblick auf historische entwicklung
+% - konzepte
+    % - how implemented
+% - treiber implementierungen
+    % - konzeptuelle unterschiede
+    % - auswirkungen auf die programmierung
+    % - workflow und tools
+% - auswirkungen des mikrokernels im betrieb
+    % - umgang mit fehlern und ausfällen
+    % - benutzung vom user aus
+% - performance
+% - bewertung im hinblick auf historische entwicklung
+% - frage ob es sich lohnt für die vorzüge aber auch die geschwindigkeitseinbußen auf zircon zu wechseln
+% -> wie wird sich die performance entwickeln, wie wird sich zircon selbst entwickeln, wird es überhaupt tatsächlich eingesetzt und wenn ja wo?...
 
