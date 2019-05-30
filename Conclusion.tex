@@ -21,27 +21,50 @@ Within the driver development itself, the differences to Linux are rather caused
 Neither the break with the \ac{posix} standard nor the introduction of \ac{fidl} or the support of a wider range of programming languages in kernel and drivers are direct consequences of an operating system kernel architecture, but a reaction to learnings from Linux and other operating systems.
 Nevertheless, exactly these points make the development on Zircon truly pleasant.
 
-% dennoch machen genau diese punkte die entwicklung auf zircon wirklich angenehm.
+Because of the good documentation, the transition to C drivers in Zircon is very smooth, only the documentation for the definition of devices and for board files at a whole are missing.
+The change to C++ drivers is much more difficult, because there is hardly any documentation.
+Instead make advanced C++ concepts, such as mixins, these drivers much more difficult to understand while the corresponding situation is obvious in a C implementation.
+Furthermore, C and C++ \acp{api} are often mixed within already existing C++ drivers in the used version level.
+On the one hand because there are no C++ bindings for certain tasks in the used version level, as it is e.g.\ the situation for \ac{fidl}, on the other hand are probably simple inconsistencies an issue.
+But if the connections between C and C++ drivers are clear, C++ becomes very interesting and sufficient for driver development.
+In this context, it is also interesting to see how the development and language prioritization in Zircon will change when the support for \textit{Rust} is ready for use.
+Considering the current Zircon development, the general trend is more to replace C drivers with C++ ones.
+Rust could be even more interesting from a security point of view.
+However, as a programming language is it not as mature and spreas as C and C++.
+Overall, the development workflow for Zircon appears well thought-out and coherent, no matter which programming language or compiler is used.
+However, most of the accompanying tools in Zircon are based on \ac{llvm} and therefore, require a clang build.
+But Linux slowly allows the use of clang and \ac{llvm} as well, justified with the advantages of the dame tools as known from Zircon.
+But none of this toolchains had a noticable influence on the development for what reason a more detailed compiler analysis was skipped.
+
+% seine stärken konnte der mikrokernel vorallem in der tatsächlichen verwendung und dort besonders in ausspielen.
+% wärend ein fehler in linux möglicherweise den ganzen kernel lahm legt, kann zircon als microkernel hier deutlich besser  agieren.
+% leider ist das genaue verhalten in solchen situationen noch nicht dokumentiert.
+% während der entwicklung sind aber zwei situationen ins auge gestochen.
+% zum einen das verhalten des treibers bzw device coordinators bei misslungenen initialisierungen in der bind methode, aber auch der umgang mit fehlerhaft typisierten fidl calls.
+% kann im ersteren fall ein gerät nicht initialisiert werden  und die bind methode des zugehörigen treibers endet mit bestimmten status codes versucht der device coordinator eine gewisse anzahl von re-tries in der hoffnung, dass temporäre probleme dadurch behoben werden können.
+% im anderen fall wird die starke typisierung von fidl calls deutlich. während ein fehlerhafter buffer in einem ioctl call in linux potentiell sehr viel schaden anrichten kann, wird bei der verwendung von fidl schon zu beginn eine prüfung der parameter erfolgt.
+% passen diese nicht zum definierten call, so wird die verbindung zwischen user und fidl interface eines treibers resettet.
+% So ist es zwar notwendig erneut mit dem treiber in kontakt zu treten, aber falsche paramenter können durch den check, aber auch durch das device host konzept kaum bis begrenzten schaden einrichten.
+% In den versuchen der case study bezüglich nutzung der fidl commnads wurde den crashs und fehler nur anhand  informativen logmeldungen des konsole verlangt.
+% weitere effekte waren nicht zu beobachten und auch der treiber konnte wie gewohnt weiter verwendet werden.
 %
-% dank der guten dokumentation gelingt der einstieg in die c treiber in zircon sehr gut, einzig dokumentation zur definition von geräten in den boardfiles fehlt.
-% der wechsel zu c++ treibern gestaltet sich dagegen deutlich schwieriger, zum einen da kaum dokumentation vorhanden ist aber auch die fortgeschrittenen konzepte der programmiersprache wie mixins viele zusammenhänge die in c treibern offensichtlich sind abstrahieren.
-% desweiteren wird innerhalb der existierenden cpp treibern oft wild c und c++ gemixt.
-% zum einen weil z.b. für fidl noch keine entsprechenden binding vorhanden sind, zum anderen wohl auch aus inkonsequenz in der verwendeten source code version von Zircon.
-% Sind die zusammenhänge aber klar ist c++ und in der zukunft potentiell rust unheimlich interessant aber auch angenehm für die treiberentwicklung.
-%
-% insgesamt wirkt der workflow für zircon durchdacht und in sich rund, egal ob gcc oder clang als toolchain eingesetzt wird.
-% TODO
 
-nevertheless these points make the development on zircon really pleasant.
 
-thanks to the good documentation the entry into the c drivers in zircon is very successful, only documentation for the definition of devices in the board files is missing.
-the change to c++ drivers is much more difficult, because there is hardly any documentation, but also the advanced concepts of the programming language like mixins abstracts many contexts which are obvious in c drivers.
-furthermore, wild c and c++ are often mixed within the existing cpp drivers. 
-on the one hand because e.g. for fidl no corresponding binding is available yet, on the other hand probably due to inconsistency in the source code version of Zircon.
-But if the connections are clear c++ and in the future rust is potentially very interesting but also nice for driver development.
+the microkernel was able to play off its strengths mainly in its actual use and especially there in its use.
+while a bug in linux might paralyze the whole kernel, zircon can act much better as a microkernel.
+unfortunately, the exact behavior in such situations is not yet documented.
+but during the development two situations have caught the eye.
+on the one hand the behaviour of the driver or device coordinator in case of failed initializations in the bind method, but also the handling of incorrectly typed fidl calls.
+in the former case a device cannot be initialized and the bind method of the corresponding driver ends with certain status codes the device coordinator tries a certain number of re-tries in the hope that temporary problems can be solved.
+in the other case the strong typing of fidl calls becomes obvious. while a faulty buffer in an ioctl call can potentially cause a lot of damage in linux, when using fidl the parameters are already checked at the beginning.
+If these do not match the defined call, the connection between user and fidl interface of a driver will be reset.
+So it is necessary to get in contact with the driver again, but wrong parameters can cause little to limited damage by the check, but also by the device host concept.
+In the attempts of the case study regarding the use of fidl commnads, the crashes and errors were only requested on the basis of informative log messages from the console.
+no further effects were observed and also the driver could be used as usual.
 
-overall the workflow for zircon looks well thought out and round in itself, no matter if gcc or clang is used as toolchain.
-%TODO
+%TODO genau diese effekte gehören zu denen die man versucht sich mit dem microkernel zu erkaufen. 
+die daraus resultierenden performance einbußen wurden bereits im vorherigen abschnitt diskutiert.
+
 
 
 % - konzepte
