@@ -36,34 +36,36 @@ However, most of the accompanying tools in Zircon are based on \ac{llvm} and the
 But Linux slowly allows the use of clang and \ac{llvm} as well, justified with the advantages of the dame tools as known from Zircon.
 But none of this toolchains had a noticable influence on the development for what reason a more detailed compiler analysis was skipped.
 
-% seine stärken konnte der mikrokernel vorallem in der tatsächlichen verwendung und dort besonders in ausspielen.
-% wärend ein fehler in linux möglicherweise den ganzen kernel lahm legt, kann zircon als microkernel hier deutlich besser  agieren.
-% leider ist das genaue verhalten in solchen situationen noch nicht dokumentiert.
-% während der entwicklung sind aber zwei situationen ins auge gestochen.
-% zum einen das verhalten des treibers bzw device coordinators bei misslungenen initialisierungen in der bind methode, aber auch der umgang mit fehlerhaft typisierten fidl calls.
-% kann im ersteren fall ein gerät nicht initialisiert werden  und die bind methode des zugehörigen treibers endet mit bestimmten status codes versucht der device coordinator eine gewisse anzahl von re-tries in der hoffnung, dass temporäre probleme dadurch behoben werden können.
-% im anderen fall wird die starke typisierung von fidl calls deutlich. während ein fehlerhafter buffer in einem ioctl call in linux potentiell sehr viel schaden anrichten kann, wird bei der verwendung von fidl schon zu beginn eine prüfung der parameter erfolgt.
-% passen diese nicht zum definierten call, so wird die verbindung zwischen user und fidl interface eines treibers resettet.
-% So ist es zwar notwendig erneut mit dem treiber in kontakt zu treten, aber falsche paramenter können durch den check, aber auch durch das device host konzept kaum bis begrenzten schaden einrichten.
-% In den versuchen der case study bezüglich nutzung der fidl commnads wurde den crashs und fehler nur anhand  informativen logmeldungen des konsole verlangt.
-% weitere effekte waren nicht zu beobachten und auch der treiber konnte wie gewohnt weiter verwendet werden.
-%
+The microkernel was able to play off its strengths mainly in its actual use.
+While a bug in Linux might paralyze the whole system, Zircon, as a microkernel, can act much better.
+Unfortunately, the exact behaviour in such situations is not yet documented.
+But during the development, two situations have caught the attention.
+In the first, is it the behaviour of the driver or device coordinator in case of failed initializations during binding, in the second one the handling of incorrectly typed \ac{fidl} calls.
+In the first case, a device can not be initialized and the \mintinline{c}{bind()} method of the corresponding driver ends with certain status codes which signal the device coordinator to try a number of initializations in the hope that a temporary issue can be solved.
+In the other case, the strong typing of \ac{fidl} calls becomes obvious.
+While a faulty buffer in an \mintinline{c}{ioctl()} call can potentially cause a lot of damage in Linux, are \ac{fidl} call arguments already checked at the beginning.
+If these do not match the defined call, the whole connection between user and the \ac{fidl} interface of a driver will be reset.
+Indeed, it is neccessary to reconnect to the driver again, but wrong parameters can only cause little to limited damage by this check and the concept of distinct device hosts at all.
+In the attempts regarding the use of \ac{fidl} calls within the case study was it largely only possible to identify crashes and errors on the basis of informative log messages from the console.
+No further effects were observed and the driver could be used as usual as well.
 
+The observed situations belongs both to the desired effekts of the microkernel or rather \ac{fidl}, even if they are unfortunately not documented at all.
+However, these positive effects also result in the significant speed losses discussed as part of the previous chapter.
+Whether one would accept these depends very much on the application of a kernel respectively a system.
+For Zircon, however, these losses are clearly accepted in favour of the advantages.
+Even though Zircon's impression in this thesis is very positive, this does not mean that Linux would be worse.
+The fundamentally different architectural concept is clearly visible but very much influenced by Linux' origins.
+It can also be easily seen that the developers of Zircon have taken up problems and unattractive issues in Linux and consciously implemented them in a different way.
+Examples are, of course, \ac{fidl}, the context pointers and the whole break with the \ac{posix} standard, as well.
+This development can also be traced back to the history of both systems and especially Linux.
+In addition, Zircon is currently not used for production.
+Thus, there is much more space for experiments.
+Of course, it would be very desirable that some of these experiments and concepts find their way into Linux over time.
+Especially in driver development, these could be context pointers and \ac{fidl} call definitions instead of \ac{io} controlls.
+For both of them is a realization in Linux technically conceivable, independent of the underlying operating system kernel architecture, but how likely a realization is, remains open.
+Accordingly, a kernel architecture has less influence on driver development than the use of modern concept that address issues of other kernels such as Linux.
+However, the architecture and resulting effects of a kernel have a significant effect on its intended use.
 
-the microkernel was able to play off its strengths mainly in its actual use and especially there in its use.
-while a bug in linux might paralyze the whole kernel, zircon can act much better as a microkernel.
-unfortunately, the exact behavior in such situations is not yet documented.
-but during the development two situations have caught the eye.
-on the one hand the behaviour of the driver or device coordinator in case of failed initializations in the bind method, but also the handling of incorrectly typed fidl calls.
-in the former case a device cannot be initialized and the bind method of the corresponding driver ends with certain status codes the device coordinator tries a certain number of re-tries in the hope that temporary problems can be solved.
-in the other case the strong typing of fidl calls becomes obvious. while a faulty buffer in an ioctl call can potentially cause a lot of damage in linux, when using fidl the parameters are already checked at the beginning.
-If these do not match the defined call, the connection between user and fidl interface of a driver will be reset.
-So it is necessary to get in contact with the driver again, but wrong parameters can cause little to limited damage by the check, but also by the device host concept.
-In the attempts of the case study regarding the use of fidl commnads, the crashes and errors were only requested on the basis of informative log messages from the console.
-no further effects were observed and also the driver could be used as usual.
-
-%TODO genau diese effekte gehören zu denen die man versucht sich mit dem microkernel zu erkaufen. 
-die daraus resultierenden performance einbußen wurden bereits im vorherigen abschnitt diskutiert.
 
 
 
