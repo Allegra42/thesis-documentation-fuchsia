@@ -2,6 +2,37 @@
 
 \chapter{Outlook} \label{ch:outlook}
 
-https://www.googlewatchblog.de/2019/05/fuchsia-daempfer-ist-googles/
-https://www.heise.de/newsticker/meldung/Googles-Betriebssystem-Fuchsia-wird-kein-Android-Ersatz-4419509.html
-
+% https://www.googlewatchblog.de/2019/05/fuchsia-daempfer-ist-googles/
+% https://www.heise.de/newsticker/meldung/Googles-Betriebssystem-Fuchsia-wird-kein-Android-Ersatz-4419509.html
+%
+% https://www.googlewatchblog.de/2018/04/kompatibilitaet-nachfolger-android-bruecke/
+%
+% zum aktuellen zeitpunkt gibt es über die zukunft von zircon bzw von fuchsia als gesamtsystem keine gesicherten aussagen aber viele spekulationen.
+% Ob und wenn ja, wann, Zircon tatsächlich aus dem status eines forschungsprojekts heraustritt bleibt demnach offen.
+% aktuell erscheint die spekulation über den einsatz als betriebssystem für größere iot geräte, eventuell sogar mit display, am vielversprechendsten.
+% das konzept des microkernels inkl der vorgestellten scheduling policy passt dazu.
+% ob in einem solchen einsatzgebiet der gezeigte performance nachteil gegenüber linux problematisch ist bleibt fraglich, interessant ist jedoch die frage ob dieser punkt mit der zeit noch weiter optimiert werden kann.
+%
+% bedeutend für die frage nach der zukunft von zircon bzw von fuchsia ist aber auch das thema dieser arbeit.
+% das Zircon ohne weiteres ein sehr weit verbreitetes system wie zb android ersetzen kann erscheint schon allein durch die inkompatibilität der kernel fraglich.
+% zwar wird auf der fuchsia seite an kompatibilitätsschichten auf anwendungsebene für andere wichtige systeme wie android und  linux gearbeitet, doch noch bedeutsamer ist vermutlich die hardware bzw treiber unterstützung.
+% gerade für android geräte wird eine vielzahl von unterschiedlicher hardware und dadurch auch treiber eingesetzt, über die google als hersteller von android keinerlei kontrolle hat.
+% aber auch geräteherstelle sind an dieser stelle oft auf soc hersteller und so genannte board support packages mit den notwendigen treibern angewiesen.
+% für einen umstieg auf zircon müssten gerade diese mitziehen und entsprechende treiber und boardfiles bereitstellen.
+% während der umstieg von linux auf zircon aus sicht der treiberentwicklung unproblematisch ist, könnten hier vorallem wirtschaftliche interessen hinderlich wirken, auch wenn sich für resultierende produkte womöglich vorteile ergeben könnten.
+% ein solcher umstieg bedeutet nämlich, dass sämtliche treiber und board beschreibungen von grunde auf neu geschrieben werden müssen.
+% auch mit den geringen hürden die der umstieg mit sich bringt würden hieraus enorme kosten resultieren.
+% wahrscheinlicher ist, dass google zircon bzw fuchsia an eigenen produkten die vollständig unter kontrolle sind und begrenzt kosten verursachen testet und weiter entwickelt.
+%
+% auch schwierig zu beurteilen bleibt die frage, wie zircon/fuchsia von unabhängigen entwicklern angenommen würde.
+% der reiz von linux und wahrscheinlich auch ein großer punkt für die weite verbreitung ist die offene entwicklung.
+% Zircon wird zwar ebenfalls open source, aber nicht vollkommen offen entwickelt. aktuell sind an der aktiven entwicklung ausschließlich angestellte von google beteiligt, kleinere fehlerkorrekturen werden zwar laut offizieller doku angenommen, größere änderungen aber nicht.
+% damit könnte ein nachteil gegenüber linux entstehen oder auch abspaltungen von googles fuchsia/zircon, die entsprechend den bedürfnissen verschiedener gruppen entwickelt werden könnten.
+%
+% zusammenfassend ist die zukunft von zircon noch sehr offen und wage.
+% der kernel ist hochinteressant und folgt einem durchdachten konzept für ein modernes, nutzerzentriertes betriebssystem.
+% die effekte der kernelarchitektur auf die treiberentwicklung werden hauptsächlich in der nutzung auf positive weise sichtbar während die treiberentwicklung selbst eher von durchdachten implementierungsdetails beeinflusst wird.
+% dem umstieg von linux auf zircon stehen grundsätzlich eher firmenpolitische und monetäre gründe als technische schwierigkeiten im wege.
+% durch gute dokumentation ist vorallem der umstieg von linux zu zircon c treibern sehr einfach, cpp treiber erfordern aktuell noch eine höhere einarbeitungszeit durch fehlende doku.
+% dafür entlohnt der umstieg durch eine sehr effiziete, sichere programmierung sowie die vorteile des microkernels, bringt aber auch die zugehörigen performance einbußen mit sich.
+% mit sicherheit gibt es hierfür passende anwendungsgebiete, ob der kernel aber verbreitung finden kann bleibt zum aktuellen zeitpunkt eine spekulation.

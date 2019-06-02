@@ -7,11 +7,11 @@ The architectures and objectives of microkernel and monolith systems are fundame
 Overall, however, these are optimized for the use in their respective architecture.
 Especially Zircon presents an implementation idea that demonstrates a great deal of knowledge and experience in the field of operating system development and clearly shows that one has learnt from things that are not necessarily optimally solved in Linux, e.g.\ for historical and/or compatibility reasons.
 Examples for this are, amongst other things, the handling of system calls or the memory management.
-Due to the lack of \ac{posix} compatibility enables a more freely design of systemcalls and adapt them to modern needs, but the enforcement of \acp{vdso} and the use of \texttt{libzircon.so} for all systemcall implementations is interesting from a security aspect, as well.
-Regarding memory management, Linux is very architecture dependent.
+Due to the lack of \ac{posix} compatibility, Zircon enables a more freely design of systemcalls and adapt them to modern needs, but the enforcement of \acp{vdso} and the use of \texttt{libzircon.so} for all systemcall implementations is interesting from a security aspect, as well.
+Linux is very architecture dependent regarding memory management.
 The multitude of architectures and their associated terms and concepts makes them difficult to understand and use correctly, even for experienced developers.
-In this context is Zircon, as far as it can be read from the documentation, much more stringent and simpler.
-Without a division into memory areas with explicit meaning for different tasks, both, understanding and development becomes easier for the developer.
+In this context is Zircon, as far as it can be read from the documentation, much more stringent and as well, simpler.
+Without a division into memory areas with explicit meaning for different tasks, both, understanding and development becomes easier.
 On the other hand, there are also concepts used in Zircon, which, based on the experiences with Linux, can be assumed to fail for maintainability reasons with a possible spread of Zircon.
 An example is the way Zircon deals with board definition files which was already discussed in section~\ref{sec:cs-zircon}.
 
@@ -25,24 +25,24 @@ Because of the good documentation, the transition to C drivers in Zircon is very
 The change to C++ drivers is much more difficult, because there is hardly any documentation.
 Instead make advanced C++ concepts, such as mixins, these drivers much more difficult to understand while the corresponding situation is obvious in a C implementation.
 Furthermore, C and C++ \acp{api} are often mixed within already existing C++ drivers in the used version level.
-On the one hand because there are no C++ bindings for certain tasks in the used version level, as it is e.g.\ the situation for \ac{fidl}, on the other hand are probably simple inconsistencies an issue.
+On the one hand is this reasoned with missing C++ bindings for certain tasks in the used version level, as it is e.g.\ the situation for \ac{fidl}, on the other hand are probably simple inconsistencies an issue.
 But if the connections between C and C++ drivers are clear, C++ becomes very interesting and sufficient for driver development.
 In this context, it is also interesting to see how the development and language prioritization in Zircon will change when the support for \textit{Rust} is ready for use.
 Considering the current Zircon development, the general trend is more to replace C drivers with C++ ones.
 Rust could be even more interesting from a security point of view.
-However, as a programming language is it not as mature and spreas as C and C++.
+As a programming language is it not as mature and spread as C and C++.
 Overall, the development workflow for Zircon appears well thought-out and coherent, no matter which programming language or compiler is used.
 However, most of the accompanying tools in Zircon are based on \ac{llvm} and therefore, require a clang build.
-But Linux slowly allows the use of clang and \ac{llvm} as well, justified with the advantages of the dame tools as known from Zircon.
+Linux slowly allows the use of clang and \ac{llvm} as well, justified with the advantages of the dame tools as known from Zircon.
 But none of this toolchains had a noticable influence on the development for what reason a more detailed compiler analysis was skipped.
 
 The microkernel was able to play off its strengths mainly in its actual use.
 While a bug in Linux might paralyze the whole system, Zircon, as a microkernel, can act much better.
 Unfortunately, the exact behaviour in such situations is not yet documented.
 But during the development, two situations have caught the attention.
-In the first, is it the behaviour of the driver or device coordinator in case of failed initializations during binding, in the second one the handling of incorrectly typed \ac{fidl} calls.
-In the first case, a device can not be initialized and the \mintinline{c}{bind()} method of the corresponding driver ends with certain status codes which signal the device coordinator to try a number of initializations in the hope that a temporary issue can be solved.
-In the other case, the strong typing of \ac{fidl} calls becomes obvious.
+In the first, is it the behaviour of the driver respectively of the device coordinator in case of failed initializations during binding, in the second one the handling of incorrectly typed \ac{fidl} calls.
+In the first situation, a device can not be initialized and the \mintinline{c}{bind()} method of the corresponding driver ends with certain status codes which signal the device coordinator to try a number of initializations in the hope that a temporary issue can be solved.
+In the other one, the strong typing of \ac{fidl} calls becomes obvious.
 While a faulty buffer in an \mintinline{c}{ioctl()} call can potentially cause a lot of damage in Linux, are \ac{fidl} call arguments already checked at the beginning.
 If these do not match the defined call, the whole connection between user and the \ac{fidl} interface of a driver will be reset.
 Indeed, it is neccessary to reconnect to the driver again, but wrong parameters can only cause little to limited damage by this check and the concept of distinct device hosts at all.
