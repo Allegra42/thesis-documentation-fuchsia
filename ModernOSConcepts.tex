@@ -943,7 +943,7 @@ One example for connection-oriented communication is a telephone call.
 But there are also good reasons for \textit{connectionless} communication.
 For example if the overhead of the connection setup is too costly for little data to be transferred or rather few data is sent to a large amount of receivers.
 A real world example for \textit{connectionless} communication is radio.
-The order of messages cannot be guaranteed for this connection type and also the loss of them is possible, but this has not neccessarily further impact on the application.
+The order of messages cannot be guaranteed for this connection type and also the loss of them is possible, but this has not necessarily further impact on the application.
 For a multimedia application, a retry could be a greater damage than the package loss.
 But for other application purposes, a retry is maybe needed and must be triggered from the application itself\cite{glatz2015betriebssysteme},~\cite{brause2017betriebssysteme}.
 Nevertheless, the recipient must be addressed anew in every single message.
@@ -1012,17 +1012,17 @@ While in userspace the grown structure of Linux, its openness, but also standard
 Within the actual Linux kernel, only \textit{spinlocks} and \textit{mutexes} are available besides \textit{atomic data operations} like \texttt{atomic\_set()}, \texttt{atomic\_inc()}, \texttt{atomic\_dec()} and others\cite{achilles2006betriebssysteme}.
 As mentioned in the general section~\ref{sec:synchro}, a spinlock uses busy waiting while the kernel's implementation of mutexes allows to schedule another task.
 Both are blocking binary semaphore versions that only differ in terms of waiting behavior\cite{linux-locking}.
-Linux versions compiled for single processing core systems and without preemption support do not provide spinlocks.
+Linux' versions compiled for single processing core systems and without preemption support do not provide spinlocks.
 They are not needed in this case.
 Mutexes are still available to ensure a shared resource is only accessed from one process at a time.
-Preemptive single core systems provide spinlocks but they only disable preemption during a critical region\cite{linux-locking}.
+Preemptive single core systems provide spinlocks, but they only disable preemption during a critical region\cite{linux-locking}.
 
 \subsubsection*{Signals}
 \textit{Signals} are a special concept of UNIX and Unix-like operating systems, located somewhere between process synchronization and \ac{ipc}.
 They are used to transmitting events or information between the kernel and processes similar to hardware interrupts\cite{glatz2015betriebssysteme}.
 The most known usecase of signals is to interrupt or terminate one processes from another one, but actually they are also used for signaling and handling errors, \ac{io} events or to trigger even user-defined actions\cite{achilles2006betriebssysteme}.
-Signals are in common send between the kernel and a procces, e.g.\ to indicate illegal instructions or memory access, arithmetic errors, expiring timers and much more.
-Only \texttt{SIGUSR1} and \texttt{SIGTERM} are send between processes.
+Signals are in common send between the kernel and a process, e.g.\ to indicate illegal instructions or memory access, arithmetic errors, expiring timers and much more.
+Only \texttt{SIGUSR1} and \texttt{SIGTERM} are sent between processes.
 The most of them are ignorable and/or handable by the receiving process, except from the \texttt{SIGKILL} and \texttt{SIGSTOP} signals\cite{achilles2006betriebssysteme}.
 
 Signal handlers are commonly used to grateful terminate a process or handle the indicated situation.
@@ -1083,7 +1083,7 @@ Thus, normal users and user applications are rarely directly in touch with futex
 The Zircon futex implementation is very efficient.
 It does not enter the kernel space or allocate any kernel resources in the uncontested case.
 In contrast to the Linux futex implementation do Zircon futex operations key off of the virtual address of an userspace pointer while Linux differentiate private futex actions from the ones shared across the address spaces of more than one process.
-Futher, Zircon futex operations do not modify the futex from the kernel, such an action is not required in the current implementation\cite{zircon-futex}.
+Further, Zircon futex operations do not modify the futex from the kernel, such an action is not required in the current implementation\cite{zircon-futex}.
 
 \subsubsection*{Events and Event Pairs}
 Events are described as \textit{signalable event for concurrent programming}\cite{zircon-event} and \textit{user signalable kernel objects}\cite{zircon-event}.
@@ -1113,7 +1113,7 @@ It is possible to wait for specific signals on several objects\cite{zircon-signa
 % In such a case, a \ac{vmo} is created and initially written by one process and subsequently handed over to the control of another process\cite{zircon-concepts}.
 % Thus, they are very suitable for efficient \ac{ipc} via shared memory.
 Zircon provides an object based model for shared memory which is built on top of its virtual memory implementation.
-It is randomized per default and does not differn in the way the address space layouts of kernel and userspace are handled\cite{zircon-vmo},~\cite{zircon-concepts}.
+It is randomized per default and does not differ in the way the address space layouts of kernel and userspace are handled\cite{zircon-vmo},~\cite{zircon-concepts}.
 Except from permission issues, they are always handled the same\cite{zircon-vmar}.
 A virtual shared memory object can be mapped into the address spaces of one or more distinct processes.
 The \acf{vmo} is read and writable but it allows a \textit{one-shot} mechanism as well.
@@ -1138,7 +1138,7 @@ As a result, this mechanism allows very efficient \ac{ipc} via \acp{vmo} as shar
 
 \paragraph{Channels}
 Channels are Zircon \ac{ipc} objects, comparable with Pipes in Linux.
-But in contrast to Linux, they are bidirectional, ordered message queues with two handles, each one refers to on end of the channel.
+But in contrast to Linux, they are bidirectional, ordered message queues with two handles, each one refers to one end of the channel.
 Channels provide a datagram oriented message based communication between arbitrary and unrelated processes\cite{zircon-channel},~\cite{zircon-concepts}.
 The maximum number of handles referring to a channel respectively its ends and its message size are limited.
 In common, there are two steps in sending a message over a Zircon channel.
@@ -1181,7 +1181,7 @@ The sending process dequeues the matching response identified by its first four 
 There are two main differences between Zircon channels and sockets.
 At first, sockets offer stream-oriented message passing instead of the datagram oriented one known of channels.
 Besides, sockets can not transfer object handles\cite{zircon-concepts},~\cite{zircon-socket}.
-Just as channels, sockets allow a bidirection communication with two ends.
+Just as channels, sockets allow a bidirectional communication with two ends.
 The data is written to one handle and read from the other one. 
 Both ends can fulfill both jobs, but they can also been shutdown for reading or writing\cite{zircon-socket}.
 Unlike channels, sockets provide short writes if the internal message buffer is almost filled and short reads if more data than available is requested\cite{zircon-concepts}.
@@ -1322,7 +1322,7 @@ One speaks of \textit{starvation}\cite{glatz2015betriebssysteme}.
 Multilevel scheduling also allows some variants.
 The actual scheduling strategy for each queue itself is variable.
 \ac{rr} can be used to provide a fair scheduling between all jobs on a single priority level.
-For realtime systems with one or just a few jobs in the highest level, \textit{fcfs} could be more appropriated in certain cases.
+For realtime systems with one or just a few jobs in the highest level, \textit{\ac{fcfs}} could be more appropriated in certain cases.
 Generally is an additional reassignment of the \ac{cpu} core as soon as a high prioritized job enters its queue reasonable in realtime system using multilevel scheduling as a strategy\cite{glatz2015betriebssysteme}.
 
 \paragraph{Fair Share Scheduling}
@@ -1454,9 +1454,9 @@ The priority of jobs in Zircon is determined on the basis of three criteria:
     \item A base priority from 0 to 31.
     \item A priority boost. 
         \begin{itemize}
-            \item A job is rewarded with an one level upgrade when it unblocks after waiting for a resource or sleeping. 
-            \item A job is penalized with an one level downgrade if it voluntary give up the control. The minimum priority value in this situation is 0.
-            \item A job is penalized with an one level downgrade if it is preempted after using up its entire time slice. In this situation, the priority value may become negative.
+            \item A job is rewarded with a one level upgrade when it unblocks after waiting for a resource or sleeping. 
+            \item A job is penalized with a one level downgrade if it voluntary give up the control. The minimum priority value in this situation is 0.
+            \item A job is penalized with a one level downgrade if it is preempted after using up its entire time slice. In this situation, the priority value may become negative.
         \end{itemize}
     \item Priority inheritance is a special criteria. If a job controls a resource which is needed by one with a higher priority, the job's priority is temporary boosted up to the priority level of the other job to prevent priority inversion (see~\ref{sec:priority-inversion}). 
 \end{itemize}
@@ -1552,7 +1552,7 @@ A process, respectively a programmer, only see a contiguous memory region starti
 Such a virtual view to the actual main memory also enables pretending more available memory than actually present to an application.
 Since the entire memory region of a program is rarely needed in main memory at a time, the concept of virtual memory together with a sophisticated mechanism to load certain memory regions from disk which enables the execution of processes, even if they can not be completely loaded into the main memory.
 The operating system tries to hold currently needed data in the main memory while the other information is stored in hard drives.
-As a result, the overall memory consumption may become greater than the physical available main memory and virtual memory is not neccessarily mapped to physical memory\cite{mandl2014Grundkurs}.
+As a result, the overall memory consumption may become greater than the physical available main memory and virtual memory is not necessarily mapped to physical memory\cite{mandl2014Grundkurs}.
 An operating system unit called \textit{memory manager} visualizes each process for itself.
 Virtual memory is only a logical construct until the memory manager maps it to physical available one during runtime.
 The purpose of this unit is, besides the already mentioned, implementing
@@ -1575,12 +1575,12 @@ A physically available page frame can be mapped into several virtual page tables
 Shared libraries and shared memory \ac{ipc} mechanisms are implemented in this way\cite{brause2017betriebssysteme}.
 
 Pages, respectively page frames, represent the memory blocks which are transported between hard drives and the main memory by the \textit{memory manager}.
-The policies implemented the memory management take advantage from sophisticated concepts like \textit{demand paging}, i.e.\ a page is only loaded if there is a need for, and \textit{prepaging} with use of the so-called \textit{locality effects}.
+The policies implemented the memory management take advantage from sophisticated concepts like \textit{demand paging}, i.e.\ a page is only loaded if there is a need for, and \textit{pre-paging} with use of the so-called \textit{locality effects}.
 The two most important ones are the \textit{temporal locality} and the \textit{spartial} or \textit{memory locality}.
 They state that pages which were often needed in a temporal proximity in the past will continue to be needed together with a high probability in the future, respectively that virtual pages located close to each other are often used together.
 In accordance, the memory manager tries to load pages which are needed with a high probability in near future in advance\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
 
-Above all, virtual memory enables the sophisticated memory management requirements needed for a efficient and secure operating system with process isolation, shared memory and a contiguous view to a program's address space for example. 
+Above all, virtual memory enables the sophisticated memory management requirements needed for an efficient and secure operating system with process isolation, shared memory and a contiguous view to a program's address space for example. 
 Memory protection mechanisms like process isolation and access rights to a process's address space are implemented based on virtual memory, too (refer to \textsc{Brause}\cite{brause2017betriebssysteme} for more details).
 But thus, a translation between virtual addresses and the physical equivalents which considers the fact that a physical memory region may be mapped into several virtual address spaces, is needed. 
 To speed up this costly translations, current application-oriented \acp{cpu} are supported by two on-chip hardware mechanisms, the \acf{mmu} and the \acf{tlb}.
@@ -1597,7 +1597,7 @@ The \ac{tlb} works together with the \ac{mmu}.
 It is an additional fast cache to speed up the lookup between virtual and physical memory addresses. 
 As described previously is accessing a cache still considerably faster than accessing the main memory itself.
 Similar to common L1 and L2 \ac{cpu} caches is there an own \ac{tlb} per \ac{cpu} core.
-If the needed address translation is already stored in the \ac{tlb}, no further access to the main memory is needed, if not must the \ac{mmu} itself be invoked and not only its caching component, the \ac{tlb}.
+If the needed address translation is already stored in the \ac{tlb}, no further access to the main memory is needed, if not must the \ac{mmu} itself be invoked and not only it's caching component, the \ac{tlb}.
 Just like caches and the main memory, a replacement strategy for the \ac{tlb} is needed to ensure its efficient use.
 A more detailed introduction to these hardware support mechanisms and related strategies can be consulted at \textsc{Mandl}\cite{mandl2014Grundkurs} or \textsc{Brause}\cite{brause2017betriebssysteme}.
 
@@ -1608,7 +1608,7 @@ While a usual Linux kernel with virtual memory system needs an address translati
 But more common and focused in this work is the use of virtual memory enabled systems\cite{lfd430}.
 In general is (virtual) memory management in Linux a very complex and highly architectural dependent matter.
 As \textit{32-bit x86} was the most common architecture for a long time, it is often used to describe the mechanisms, but it is also very specific in a way that even the memory management for \textit{64-bit x86} architectures differs a lot.
-Nevertheless, this work focuses on \textit{32-bit x86} due to the spread of the correspond terms and mentions important differences in 64-bit x86 and ARM architectures.
+Nevertheless, this work focuses on \textit{32-bit x86} due to the spread of the corresponding terms and mentions important differences in 64-bit x86 and ARM architectures.
 
 The Linux virtual memory management mechanism divides the available memory in various different sections.
 The most basic and wide-spread terms in this context are \textit{high memory} and \textit{low memory}.
@@ -1629,7 +1629,7 @@ Figure~\ref{pic:high-low-mem} illustrates the context.
 \end{figure}
 %
 Actually, the division in high and low memory just one from several ones. 
-Linux uses additionally a \textit{zone allocator} memory algorithm to partition its address space more fine granular.
+Linux uses additionally a \textit{zone allocator} memory algorithm to partition its address space finer granular.
 Each zone differs in its usage and comes with own methods to perform basic memory operations like allocate and free memory pages\cite{lfd430}.
 On 32-bit x86 architectures, the zones are:
 \begin{itemize}
@@ -1671,14 +1671,14 @@ The kernel is invoked to load the proper page into main memory using demand pagi
 
 Figure~\ref{pic:linux-mem} illustrates the most important terms and concepts of memory management in Linux at a glance.
 The graphic is inspired by the one done by \textsc{John Bonesio} during a \textit{Developing Linux Device Drivers} Linux foundation training class.
-On the left hand side of the graphic, the view to the (virtual) memory from two distinct applications A and B is pictured.
+On the left-hand side of the graphic, the view to the (virtual) memory from two distinct applications A and B is pictured.
 Both see their own virtual address space using \textit{user virtual addresses}, marked in turquoise and red.
 The view on the kernel's address space is the same for both of them.
-On the right hand side, the graphic pictures the connection between \ac{cpu} and \ac{mmu} (including but not pictured the \ac{tlb}),  the physical main memory divided into \textit{low} and \textit{high memory} and the peripherals as well as the address types used in between.
+On the right-hand side, the graphic pictures the connection between \ac{cpu} and \ac{mmu} (including but not pictured the \ac{tlb}),  the physical main memory divided into \textit{low} and \textit{high memory} and the peripherals as well as the address types used in between.
 The physical memory is divided into the known memory zones, the \textit{\ac{dma}} zone in green, the \textit{\ac{dma}32 zone} in orange, the \textit{normal zone} or low memory in blue and the \textit{high zone} or high memory in \textit{pink}.
 Additionally, the graphic symbolizes how pages in different contexts are mapped into the physical main memory.
-Both user processes have numbered pages which can also be found in the right hand side \ac{ram} representation.
-Furthermore are some kernel pages marked in grey with the characters \textit{z, y and x} which are 1:1 mapped into the normal memory (kernel logical addresses) and a page in purple (kernel virtual address), mapped into the high memory zone. 
+Both user processes have numbered pages which can also be found in the right-hand side \ac{ram} representation.
+Furthermore, some kernel pages are marked in gray with the characters \textit{z, y and x} which are 1:1 mapped into the normal memory (kernel logical addresses) and a page in purple (kernel virtual address), mapped into the high memory zone. 
 
 Linux memory management is, as already named, a very complex topic.
 This section is only an introduction to the most important terms and concepts.
@@ -1725,7 +1725,7 @@ For the use within device drivers or other processes with special purposes is it
 \section{I/O}\label{sec:io} 
 The term \acf{io} is commonly used to describe the interactions between a computer itself and several devices types such as disks, keyboards, displays, clocks and much more which are usually referred as \textit{peripheral devices}.
 Thus, it enters the actual topic of this work: device driver development.
-The majority of device driver development deals with \ac{io} devices and related issues, such as control the device via a defined interface, reacts to an interrupts from a device and handles it.
+The majority of device driver development deals with \ac{io} devices and related issues, such as control the device via a defined interface, reacts to an interrupt from a device and handles it.
 Finally, an \ac{io} system, respectively device drivers for \ac{io} devices as part of an operating system, have to provide simple and consistent abstractions between the actual device and the user\cite{tanenbaum-modern-operating-systems}.
 Nevertheless, this section will focus on the communication mechanisms between \ac{io} devices and operating systems, but not about the physical connection between computer and peripherals or protocols.
 The actual implementation of \ac{io} drivers in both considered systems follows in the next chapter of this work.
@@ -1812,7 +1812,7 @@ As a result, there is not \textit{one} single Linux kernel but a number of varia
 Zircon is more radical in many aspects.
 It is developed in public by a team from a large company for a certain, but at the moment not further specified purpose, but not open to receive contributions from outside.
 Even if the concepts used do not differ that much, the implementation does.
-This is justified on the microkernel architecture and its effects but also with the used programming languages and above all with learnings from concurring operating system, especially the ones used in Google's environment like Android or Chromeium OS which are based on Linux.
+This is justified on the microkernel architecture and its effects but also with the used programming languages and above all with learnings from concurring operating system, especially the ones used in Google's environment like Android or Chromium OS which are based on Linux.
 Zircon is considerable less broadly positioned than Linux but the fewer concepts used and their implementation are very well selected and executed to suit the needs and design goals of the overlying Fuchsia system. 
 It is basically one resulting kernel with only a few configurations but the focus is on modularity, security, safety and stability anyway\cite{chat-zircon-arch}.
 Thus, the Zircon kernel is designed from scratch for the use in an interactive or realtime operating system, probable for a new mobile OS, where exactly these design goals predominate the advantages of a Linux kernel. 

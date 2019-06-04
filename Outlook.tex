@@ -8,12 +8,12 @@
 
 At the present time, there are no reliable statements about the future of Zircon or Fuchsia as an overall operating system, but there are many speculations\footnote{googlewatchblog.de, visited on 03.06.2019 \url{https://www.googlewatchblog.de/2019/05/fuchsia-daempfer-ist-googles/}}.
 Whether and if so, when, Zircon will actually step out of the status of a research project remains open.
-Currently, speculation about the the use of it as an operating system for larger \ac{iot} devices, possibly even with a display, seems to be the most promising.
+Currently, speculation about the use of it as an operating system for larger \ac{iot} devices, possibly even with a display, seems to be the most promising.
 The concept of the microkernel including the present scheduling policy would fit.
 If the shown performance disadvantage compared to Linux is problematic in such an application remains uncertain, but interesting is as well the question if this point can be further optimized over time.
 
 Important for the question about the future of Zircon and Fuchsia is, as well, the topic of this work.
-That Zircon can easily replace a widespread system like Android is doubtful, just because of the incompatiblity of the kernels.
+That Zircon can easily replace a widespread system like Android is doubtful, just because of the incompatibility of the kernels.
 Although the Fuchsia site is working on compatibility layers at application level for other important systems, the hardware and driver support is probably even more important.
 But there is no such compatibility layer for drivers.
 They would have to be re-developed from scratch.
@@ -23,19 +23,19 @@ At this point, device manufacturers are often dependent on \ac{soc} manufacturer
 While the switch from Linux to Zircon is uncomplicated from a driver development point of view, economic interests in particular could be an obstacle here, even if there might be advantages for resulting products.
 It is more probable that Google will be testing and evolving Zircon respectively Fuchsia on their own products which are completely under control before attempting a major market launch.
 
-Difficult to judge is, as well, the question how Zircon respectively Fuchsia would be accepted by independent developers.
-The issue is less on on application development as the acceptance of the Zircon kernel itself.
+Difficult to judge is, as well, the question of how Zircon respectively Fuchsia would be accepted by independent developers.
+The issue is less on application development as the acceptance of the Zircon kernel itself.
 There are already enough approaches for compatibility in application development, so that hardly any difficulties are to be expected at this point\footnote{googlewatchblog.de, visited on 03.06.2019 \url{https://www.googlewatchblog.de/2018/04/kompatibilitaet-nachfolger-android-bruecke/}}.
 However, the attraction of Linux and probably a point for its widespread use lies in open development.
 Zircon is development open source as well, but not completely open as Linux.
-Currently only employees of Google are involved in the active development.
+Currently, only employees of Google are involved in the active development.
 Minor error corrections from uninvolved ones might become accepted according to official contribution documentation, but major changes are not.
-This could be a disadvantage compared to Linux and maybe also favour branches of Google's Fuchsia respectively Zircon in order to be able to integrate functionality needed by some interest groups.
+This could be a disadvantage compared to Linux and maybe also favor branches of Google's Fuchsia respectively Zircon in order to be able to integrate functionality needed by some interest groups.
 \\
 \\
 In summary, the future of Zircon is still very open and daring.
-The kernel itself is highly interesting and follows a well designed concept for a modern, user-centered operating system.
-The effects of its architecture on driver development are mainly visible in a positive way during usage, while driver development itself is rather influenced by  elaborate implementation details.
+The kernel itself is fascinating and follows a well-designed concept for a modern, user-centered operating system.
+The effects of its architecture on driver development are mainly visible in a positive manner during usage, while driver development itself is rather influenced by  elaborate implementation details.
 The switch from Linux or similar operating systems to Zircon is basically more influenced by corporate policy and monetary considerations than by technical difficulties.
 Due to the good documentation, the change between C drivers becomes very easy, C++ drivers require currently a longer learning period due to missing information.
 For this, the transition is rewarded by efficient, secure programming as well as the advantages of the microkernel architecture, but also the associated performance losses.

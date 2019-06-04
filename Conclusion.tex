@@ -5,7 +5,7 @@ The present work and its evaluation can be divided into a theoretical and a prac
 While the former deals with general operating system concepts and their use in Zircon as a newly developed microkernel approach in comparison to the older monolithic Linux kernel, the second part focuses more on their differences in driver development.
 The architectures and objectives of microkernel and monolith systems are fundamentally different, whereas the concepts used for basic operating system tasks are often similar.
 Overall, however, these are optimized for the use in their respective architecture.
-Especially Zircon presents an implementation idea that demonstrates a great deal of knowledge and experience in the field of operating system development and clearly shows that one has learnt from things that are not necessarily optimally solved in Linux, e.g.\ for historical and/or compatibility reasons.
+Especially Zircon presents an implementation idea that demonstrates a great deal of knowledge and experience in the field of operating system development and clearly shows that one has learned from things that are not necessarily optimally solved in Linux, e.g.\ for historical and/or compatibility reasons.
 Examples for this are, amongst other things, the handling of system calls or the memory management.
 Due to the lack of \ac{posix} compatibility, Zircon enables a more freely design of systemcalls and adapt them to modern needs, but the enforcement of \acp{vdso} and the use of \texttt{libzircon.so} for all systemcall implementations is interesting from a security aspect, as well.
 Linux is very architecture dependent regarding memory management.
@@ -23,7 +23,7 @@ Nevertheless, exactly these points make the development on Zircon truly pleasant
 
 Because of the good documentation, the transition to C drivers in Zircon is very smooth, only the documentation for the definition of devices and for board files at a whole are missing.
 The change to C++ drivers is much more difficult, because there is hardly any documentation.
-Instead make advanced C++ concepts, such as mixins, these drivers much more difficult to understand while the corresponding situation is obvious in a C implementation.
+By taking advantage from advanced C++ concepts, such as mixins become these drivers much more difficult to understand while the corresponding situation is obvious in a C implementation.
 Furthermore, C and C++ \acp{api} are often mixed within already existing C++ drivers in the used version level.
 On the one hand is this reasoned with missing C++ bindings for certain tasks in the used version level, as it is e.g.\ the situation for \ac{fidl}, on the other hand are probably simple inconsistencies an issue.
 But if the connections between C and C++ drivers are clear, C++ becomes very interesting and sufficient for driver development.
@@ -34,34 +34,34 @@ As a programming language is it not as mature and spread as C and C++.
 Overall, the development workflow for Zircon appears well thought-out and coherent, no matter which programming language or compiler is used.
 However, most of the accompanying tools in Zircon are based on \ac{llvm} and therefore, require a clang build.
 Linux slowly allows the use of clang and \ac{llvm} as well, justified with the advantages of the dame tools as known from Zircon.
-But none of this toolchains had a noticable influence on the development for what reason a more detailed compiler analysis was skipped.
+But none of this toolchains had a noticeable influence on the development for what reason a more detailed compiler analysis was skipped.
 
 The microkernel was able to play off its strengths mainly in its actual use.
 While a bug in Linux might paralyze the whole system, Zircon, as a microkernel, can act much better.
-Unfortunately, the exact behaviour in such situations is not yet documented.
+Unfortunately, the exact behavior in such situations is not yet documented.
 But during the development, two situations have caught the attention.
-In the first, is it the behaviour of the driver respectively of the device coordinator in case of failed initializations during binding, in the second one the handling of incorrectly typed \ac{fidl} calls.
+In the first, is it the behavior of the driver respectively of the device coordinator in case of failed initializations during binding, in the second one, the handling of incorrectly typed \ac{fidl} calls.
 In the first situation, a device can not be initialized and the \mintinline{c}{bind()} method of the corresponding driver ends with certain status codes which signal the device coordinator to try a number of initializations in the hope that a temporary issue can be solved.
 In the other one, the strong typing of \ac{fidl} calls becomes obvious.
 While a faulty buffer in an \mintinline{c}{ioctl()} call can potentially cause a lot of damage in Linux, are \ac{fidl} call arguments already checked at the beginning.
 If these do not match the defined call, the whole connection between user and the \ac{fidl} interface of a driver will be reset.
-Indeed, it is neccessary to reconnect to the driver again, but wrong parameters can only cause little to limited damage by this check and the concept of distinct device hosts at all.
+Indeed, it is necessary to reconnect to the driver again, but wrong parameters can only cause little to limited damage by this check and the concept of distinct device hosts at all.
 In the attempts regarding the use of \ac{fidl} calls within the case study was it largely only possible to identify crashes and errors on the basis of informative log messages from the console.
 No further effects were observed and the driver could be used as usual as well.
 
-The observed situations belongs both to the desired effekts of the microkernel or rather \ac{fidl}, even if they are unfortunately not documented at all.
+The observed situations belong both to the desired effects of the microkernel or rather \ac{fidl}, even if they are unfortunately not documented at all.
 However, these positive effects also result in the significant speed losses discussed as part of the previous chapter.
-Whether one would accept these depends very much on the application of a kernel respectively a system.
-For Zircon, however, these losses are clearly accepted in favour of the advantages.
+Whether one would accept these depend very much on the application of a kernel respectively a system.
+For Zircon, however, these losses are clearly accepted in favor of the advantages.
 Even though Zircon's impression in this thesis is very positive, this does not mean that Linux would be worse.
 The fundamentally different architectural concept is clearly visible but very much influenced by Linux' origins.
-It can also be easily seen that the developers of Zircon have taken up problems and unattractive issues in Linux and consciously implemented them in a different way.
+It can also be easily seen that the developers of Zircon have taken up problems and unattractive issues in Linux and consciously implemented them in a different manner.
 Examples are, of course, \ac{fidl}, the context pointers and the whole break with the \ac{posix} standard, as well.
 This development can also be traced back to the history of both systems and especially Linux.
 In addition, Zircon is currently not used for production.
 Thus, there is much more space for experiments.
 Of course, it would be very desirable that some of these experiments and concepts find their way into Linux over time.
-Especially in driver development, these could be context pointers and \ac{fidl} call definitions instead of \ac{io} controlls.
+Especially in driver development, these could be context pointers and \ac{fidl} call definitions instead of \ac{io} controls.
 For both of them is a realization in Linux technically conceivable, independent of the underlying operating system kernel architecture, but how likely a realization is, remains open.
 Accordingly, a kernel architecture has less influence on driver development than the use of modern concept that address issues of other kernels such as Linux.
 However, the architecture and resulting effects of a kernel have a significant effect on its intended use.
