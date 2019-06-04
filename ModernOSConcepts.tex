@@ -96,7 +96,7 @@ That means a function or procedure initial developed for scheduling processes co
 In fact, there is no information hiding between kernel functions or procedures.
 Any function in this kernel context has full access to the hardware, such as \ac{io} devices, timers, interrupts and even to the memory. 
 There is no memory protection or validation between different components of a monolithic kernel. 
-Of course, this leads to some serious disadvantages in this architecture, for example,a crash in one single function or procedure could crash the entire kernel or the resulting system may become difficult to understand and maintain\cite{tanenbaum-modern-operating-systems},~\cite{silberschatz2009operating}.
+Of course, this leads to some serious disadvantages in this architecture, for example, a crash in one single function or procedure could crash the entire kernel or the resulting system may become difficult to understand and maintain\cite{tanenbaum-modern-operating-systems},~\cite{silberschatz2009operating}.
 The missing memory protecting within the kernel could also be a source for crashes or attacks.
 But in contrast, this design also enables a very efficient kernel design without any unneeded communication overhead or hardware inefficiencies\cite{lfd430}.
 
@@ -113,7 +113,7 @@ Just like ordinary kernel functions or procedures, (malicious) programming error
 Contrary, the modular concept provides some advantages over regular monolitic kernels.
 It allows slimming down the actual kernel by providing the chance to reload only the actually needed functionality dynamically and e.g.\ security patches within such an extension is possible without restarting the entire system\cite{brause2017betriebssysteme}.
 As the extensions become a part of the operating system running in kernel mode, no additional communication effort between the actual kernel and the modules is required.
-Figure~\ref{pic:monolith} pictures an exemplarly architecture for an monolithic kernel using optional modules.
+Figure~\ref{pic:monolith} pictures an exemplary architecture for a monolithic kernel using optional modules.
 Thus, concept of modules is quite popular for basically monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
 
 \subsection{Microkernel Architectures}\label{sec:microkernel-archs}
@@ -141,7 +141,7 @@ Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernel b
 A device driver has to invoke the actual kernel to perform the needed action substitional.
 But thus, the kernel is able to check the action and whether the driver is authorized to executed them.
 Resulting, the microkernel design is more reliable and secure as such a division enables the kernel to intercept erroneous actions such as accidental memory writes to important regions\cite{tanenbaum-modern-operating-systems}.
-Equally, a crash in a userspace system component like a driver is not able to crash the entire kernel in such an approach. 
+Equally, a crash in an userspace system component like a driver is not able to crash the entire kernel in such an approach. 
 And as an additional advantage facilitate the microkernel architecture porting the operating system kernel to another target architecture as the most hardware dependencies are part of the small kernel\cite{silberschatz2009operating},~\cite{lfd430}.
 
 With all the named advantages microkernels offer, the question remains why microkernels are only spread in real-time, avionics or military but not for desktop operating systems.
@@ -258,7 +258,7 @@ Unlike Linux, Zircon provided support for both, the \ac{gcc} and the Clang compi
 System calls were already marginally mentioned in this work as the mechanism to switch the program execution between user and kernel mode, because  applications running in user mode have only restricted rights.
 Thus, this special calls are needed for the interaction with basic hardware devices like the \ac{cpu}, the memory, peripherals or filesystems and for invoke the actual operating system's kernel for management operations like process management\cite{lfd430}. 
 System calls are to a high degree hardware dependent and differ between various operating system implementations.
-% Even operating systems which comply the \acf{posix} standard may differ in the typ and number of available system calls.
+% Even operating systems which comply the \acf{posix} standard may differ in the type and number of available system calls.
 % The wide-spread \ac{posix} standard is only an \ac{api} definition but not one for system calls.
 % An operating system may implement the \ac{posix} standard functions within a library which often involve system calls, but it has not to do so\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 % Equally, a system is not constrained to a single \ac{api} and may implement different ones using its existing set of system calls\cite{glatz2015betriebssysteme}.
@@ -273,7 +273,7 @@ As switching the \ac{cpu}'s execution mode also means a new context, a system ca
 In user mode, the so-called entry code stores the system call's parameters in a defined way.
 One is to store the parameters and the call's number in defined registers (see~\ref{pic:syscalls}), another one is to store them on stack, according the C/C++ calling in reverse order\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.
 The exact one depends on the actual \ac{cpu} architecture but also on the operating system kernel itself.
-Linux, for example, has in general an other convention for system calls than Windows. 
+Linux, for example, has in general another convention for system calls than Windows. 
 The following instruction triggers a special software interrupt containing the order to switch the context.
 It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch.
@@ -288,7 +288,7 @@ The user application has to clean up the stack like for each procedure call at t
 
 % Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86\_64 for Linux\cite{decade-linux-syscalls}.
 More modern versions use the special instructions \texttt{SYSENTER} and \texttt{SYSEXIT} (Intel) or \texttt{SYSCALL} and \texttt{SYSRET} (AMD) instead of the slower trap interrupts\cite{decade-linux-syscalls}.
-Figure~\ref{pic:syscalls} uses a x86\_64 like assemby and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number 0x80.
+Figure~\ref{pic:syscalls} uses a x86\_64 like assembly and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number 0x80.
 
 \begin{figure} [t]
 	\centering
@@ -458,7 +458,7 @@ The following sections take a closer look at these concepts and answer the remai
 % - terminated/killed by other process (not voluntary involuntary)
 
 
-The term \textit{process} describes an instance of a program in execution, including all its required resources to enable a model for the pseudoparallel execution of multiple programs based thereon\cite{silberschatz2009operating},~\cite{tanenbaum-modern-operating-systems}.
+The term \textit{process} describes an instance of a program in execution, including all its required resources to enable a model for the pseudo parallel execution of multiple programs based thereon\cite{silberschatz2009operating},~\cite{tanenbaum-modern-operating-systems}.
 Each program in execution is modeled as a separate process which is assigned to a, from its point of view, private \ac{cpu} including \ac{cpu} registers, above all the program counter (PC) and a virtual private address space\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 Especially by using virtual private memory, processes are not only modeled individually, but are also isolated from each other in reality in order to prevent errors or deliberate attacks between programs\cite{brause2017betriebssysteme}.
 But since in reality more processes, respectively programs, have to be executed than \acp{cpu} exists, a mechanism is needed to switch between processes and allow the execution of all them.
@@ -466,7 +466,7 @@ This mechanism behind, the \textit{multiprogramming model} (formerly also known 
 
 However, for a change between the execution of programs to succeed, a process must contain information about its state at the moment it is interrupted to run another one.
 Which information need to be stored and the way it is done slightly depends on an effective system's design and its implementation.
-In general, these informations are stored in a structure called \textit{process control block} in literature\cite{tanenbaum-modern-operating-systems}.
+In general, these information are stored in a structure called \textit{process control block} in literature\cite{tanenbaum-modern-operating-systems}.
 Depending on the implementation, it contains for example
 \begin{itemize}
     \item a process id, 
@@ -595,7 +595,7 @@ They cause a \textit{race condition} which possibly result in inconsistent or wr
 
 Nevertheless, the advantages of using \textit{threads} (multithreaded programming) predominate.
 The most important one is resource sharing. 
-The fact multiple threads using the same resources by default, e.g.\ files, in pseudoparallel are the biggest advantage but at the same time the biggest problem of this concept.
+The fact multiple threads using the same resources by default, e.g.\ files, in pseudo parallel are the biggest advantage but at the same time the biggest problem of this concept.
 Threads enable responsive, interactive applications and increase the performance especially on multiprocessor architectures they can run truly parallel\cite{silberschatz2009operating}.
 Another reason is an economic one.
 While allocating an address space and physical resources to create a process is an expensive operation, creating a thread is not as they inherit exactly these components from their corresponding process\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
@@ -731,7 +731,7 @@ Libraries and runtime environments on top of Zircon may require such an operatio
 % In this one, especially the communication between different processes is to be considered.
 % The one between threads of the same process has previously been discussed.
 The term \acf{ipc} is not only used for the pure communication between different processes but also for the synchronization between processes, threads and data shared between them.
-As already mentioned in the previous~section~\ref{sec:threads} has the ability of threads to access shared data not only advantages in this context.
+As already mentioned in the previous~section~\ref{sec:threads}, the ability of threads to access shared data has not only advantages in this context.
 As they share storage, e.g.\ main memory, two threads can read and write the same value.
 But what happens if both of them try to access the same, shared value?
 Two threads try to read and modify a shared value are given for example.
@@ -805,14 +805,14 @@ In this case, it is better to use blocking waits and bring another thread in exe
 
 \subsubsection*{Semaphores and Mutexes}
 \textsc{Dijkstra} suggested in 1965 a possibly blocking lock mechanism called \textit{semaphores} based on a \ac{cpu}'s \ac{tsl} instruction and easier to use for application developers.
-A \textit{semaphore} is a new integer typ with two related operations called \textit{P} and \textit{V} in the original paper or \textit{down} and \textit{up} in some literature and implementations\cite{glatz2015betriebssysteme}.
+A \textit{semaphore} is a new integer type with two related operations called \textit{P} and \textit{V} in the original paper or \textit{down} and \textit{up} in some literature and implementations\cite{glatz2015betriebssysteme}.
 The semaphore is initially initialized with a value greater 0, the exact one depends on a system's implementation or can be defined by a programmer.
 If the \textit{P} or \textit{down} operation is executed on a semaphore, it is checked whether the value is greater than 0, decrements the counter if it is the case and continues. 
 If not, the thread is put to sleep.
 The operation remains unfinished until a \textit{V} or \textit{up} operation was executed and incremented the semaphores value.
 One of the possibly multiple threads sleeping on a semaphore is randomly or by a certain rule chosen by the operating system and gets the clearance to complete the \textit{P} or \textit{down} operation\cite{tanenbaum-modern-operating-systems}.
 For a semaphore, the fact updates on its value must be performed in an atomic operation is essential\cite{silberschatz2009operating}.
-Neighter the decrementing of the value performed in the \textit{P} operation nor the incrementing in \textit{V} may be interrupted.
+Neither the decrementing of the value performed in the \textit{P} operation nor the incrementing in \textit{V} may be interrupted.
 
 Semaphores are a generic approach to control access to a \textit{critical section} for a number of threads, but the often required mutual exclusion is only given if the semaphore is initialized with the value 1.
 These particular case of a binary semaphore is also referred as \textit{mutex}.
@@ -828,9 +828,9 @@ In these cases, its is potentially more efficient to use busy waiting with spinl
 Another variant of semaphores is the \ac{futex}. 
 It targets the issue that neither busy waiting nor block and reschedule another thread is very efficient on modern multicore \acp{cpu}.
 On a very parallel system, there are many contentions for resources which would require frequent switching of the active threads, but scheduling another thread respectively process requires as well expensive switches to the kernel\cite{tanenbaum-modern-operating-systems}.
-\acp{futex} are not a pure userspace construct even if the name suggests. 
+Futexes are not a pure userspace construct even if the name suggests. 
 They still need a wait queue in kernel to manage the contenting threads waiting on a lock, schedule another thread (futexes are blocking by design) and putting a thread into the queue requires a system call as well.
-An user library tests a lock variable using a \ac{tsl} instruction.
+A user library tests a lock variable using a \ac{tsl} instruction.
 If the lock is already held by another thread, the library has to put the thread to the queue.
 But if there is no contention is there also no need to involve the kernel\cite{tanenbaum-modern-operating-systems}.
 The less actual competitive situations occur, the more efficient are futexes compared to common mutexes.
@@ -1082,7 +1082,7 @@ High level implementations of mutexes and semaphores such as \texttt{pthread\_mu
 Thus, normal users and user applications are rarely directly in touch with futexes\cite{zircon-concepts},~\cite{zircon-futex}.
 The Zircon futex implementation is very efficient.
 It does not enter the kernel space or allocate any kernel resources in the uncontested case.
-In contrast to the Linux futex implementation do Zircon futex operations key off of the virtual address of a userspace pointer while Linux differentiate private futex actions from the ones shared across the address spaces of more than one process.
+In contrast to the Linux futex implementation do Zircon futex operations key off of the virtual address of an userspace pointer while Linux differentiate private futex actions from the ones shared across the address spaces of more than one process.
 Futher, Zircon futex operations do not modify the futex from the kernel, such an action is not required in the current implementation\cite{zircon-futex}.
 
 \subsubsection*{Events and Event Pairs}
