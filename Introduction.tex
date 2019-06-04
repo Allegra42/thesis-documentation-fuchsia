@@ -19,43 +19,43 @@
         %   (includes tooling, workflow, ...)
 
 Modern application \acp{cpu}, as used for e.g.\ desktop computers or smartphones, are highly complex circuits consisting of at least two independent actual processing units.
-It is hardly possible to master these multicore processors, associated memory and \ac{io} devices in their full complexity nor take advantage of their actual computing power or security mechanisms without using an operating system as an abstraction layer between the actual hardware and its user.
-As such an operating system, to manage a computer's physical resources and share them between an amount of user programs in a fair and safe way, is the central task.
-The part of operating systems providing this task is commonly referred as the \textit{kernel}.  
-Even if this distinction is widely uses, especially for Linux, there is hardly no clear and global definition which specific tasks of an operating system are part of the \textit{kernel}.
+It is hardly possible to master these multicore processors, associated memory and \ac{io} devices in their full complexity nor take advantage of their actual computing power or security mechanisms without using an operating system as an abstraction layer between the actual hardware and their user.
+As such an operating system, to manage a computer's physical resources and share them between a multitude of user programs in a fair and safe way, is the central task.
+The part of operating systems providing this task is commonly referred to as the \textit{kernel}.  
+Even if this distinction is widely used, especially for Linux, there is no clear and global definition which specific tasks of an operating system are part of the \textit{kernel}.
 \textsc{Albrecht Achilles} named process management, memory management and basic \ac{io} operations as such ones in his book\cite{achilles2006betriebssysteme}.
-Actually, this distinction between a whole operating system and its kernel itself is that hard because it is not even consistent between different operating system architecture concepts.
-There are a lot of different goals and use-cases for operating systems which have a big impact to the architectural design, and with this to the term \textit{kernel} too. 
+Actually, this distinction between a whole operating system and its kernel itself is so difficult to draw because it is not even consistent between different operating system architecture concepts.
+There are a lot of different goals and use-cases for operating systems which have a big impact on the architectural design, and thereforethe term \textit{kernel} too. 
 But for a majority of them, at least the central \textit{device drivers} are considered as part of the kernel. 
 
 With \textit{Linux} and \textit{Fuchsia}, two fundamentally different representatives of the two best-known operating system concepts will be considered in this work, the microkernels and the monolithic ones. %, will be considered in this work.
 Both are representatives for very opposing kernel architecture approaches.
 % A monolithic kernel runs entirely within the kernel mode of a \ac{cpu} while a microkernel is splitted up into a small, fundamental kernel running in kernel mode and
-A monolithic kernel runs entirely within the \ac{cpu}'s kernel mode, a privilege execution mode, while microkernels try to reduce their share in kernel mode and swap as much functionality as possible into user mode.
+A monolithic kernel runs entirely within the \ac{cpu}'s kernel mode, a privileged execution mode, while microkernels try to reduce their share in kernel mode and swap as much functionality as possible into user mode.
 \textit{Fuchsia}, respectively \textit{Zircon}, as the kernel is named, is a very new microkernel operating system which is developed from scratch by \textit{Google}.
 The project is developed in public since 2016\footnote{androidpolice.com, visited on 13.02.2019~\url{https://www.androidpolice.com/2016/08/12/google-developing-new-fuchsia-os-also-likes-making-new-words/}}, but since it has gone public, there has been no official announcement about the purpose of the system.
-Nevertheless, there are lots of reasons to study \textit{Fuchsia} and especially to its kernel \textit{Zircon}.
+Nevertheless, there are a lot of reasons to study \textit{Fuchsia} and especially its kernel \textit{Zircon}.
 The first one is clearly an architectural one, as \textit{Zircon} is a microkernel.
-Of course are there some industrial used microkernel architectures, but the most and most successful ones are \ac{posix} compatible and targeting real time tasks, such as \textit{QNX} or \textit{FreeRTOS}. % TODO cite?
+Of course there are some industrially used microkernel architectures, but the most successful ones are \ac{posix} compatible and targeting real time tasks, such as \textit{QNX} or \textit{FreeRTOS}. % TODO cite?
 But apart from the unknown use-case, \textit{Zircon} differs in this very important aspect, the \ac{posix} compatibility which provides a global standard (DIN 9945, IEEE1003.2) for UNIX-like operating systems\cite{wolf2009c}.
 That is a very brave decision as \ac{posix} compatibility is a common part of public tenders for software.
 Beside this, one further point making \textit{Zircon} an interesting research topic is \textit{C++} as preferred programming language for the kernel, which is a rather unusual choice\cite{tanenbaum-modern-operating-systems}.
 
-\textit{Linux} is in many issues very opposite to \textit{Zircon}.
+\textit{Linux} is in many issues the very opposite to \textit{Zircon}.
 It was started as a hobby project by \textsc{Linus Torvalds} in 1991 and grew over the years to a widely spread, powerful kernel.
-Today, it is, due to its use in \textit{Android}, the most used operating system kernel at all\footnote{netmarkedshared.com, visited on 13.02.2019~\url{https://bit.ly/2S0s4lM}}. 
+Today, it is, due to its use in \textit{Android}, the most used operating system kernel overall\footnote{netmarkedshared.com, visited on 13.02.2019~\url{https://bit.ly/2S0s4lM}}. 
 % https://netmarketshare.com/operating-system-market-share.aspx?options=%7B%22filter%22%3A%7B%7D%2C%22dateLabel%22%3A%22Trend%22%2C%22attributes%22%3A%22share%22%2C%22group%22%3A%22platform%22%2C%22sort%22%3A%7B%22share%22%3A-1%7D%2C%22id%22%3A%22platformsDesktop%22%2C%22dateInterval%22%3A%22Monthly%22%2C%22dateStart%22%3A%222018-02%22%2C%22dateEnd%22%3A%222019-01%22%2C%22segments%22%3A%22-1000%22%7D
-Since Linux was published, it is actively developed by a divers community and is not subject to the interests of a single company. 
-Presumably, that is a powerful factor for its spread besides its licensing.
+Since Linux was published, it is actively developed by a diverse community and is not subject to the interests of a single company. 
+Presumably, that is a major factor for its spread besides its licensing.
 Nevertheless, \textit{Linux} is a grown software project.
-Architectural decisions, for example the one for its implementation as a monolithic kernel and its relation to \textit{UNIX}, are based in the very beginnings of \textit{Linux} as a personal hobby project and affect it still today.
-In a well-known mailing list discussion with \textsc{Andrew S. Tanenbaum} in 1992, \textsc{Torvalds} even admit the theoretical superiority of microkernels over monolithic ones\cite{linux-is-obsolete}.
-But some years later, in 2006, the Linux contributor \textsc{Richard Gooch} justified the question of why \textit{Linux} won't change to a microkernel architecture with performance drawbacks of them compared to monolithic ones due to privilege barriers\cite{why-linux-monolith}.
+Architectural decisions, for example the one for its implementation as a monolithic kernel and its relation to \textit{UNIX}, were taken in the very beginnings of \textit{Linux} as a personal hobby project and affect it still today.
+In a well-known mailing list discussion with \textsc{Andrew S. Tanenbaum} in 1992, \textsc{Torvalds} even admitted the theoretical superiority of microkernels over monolithic ones\cite{linux-is-obsolete}.
+But some years later, in 2006, the Linux contributor \textsc{Richard Gooch} justified the question of why \textit{Linux} won't change to a microkernel architecture with performance drawbacks compared to monolithic ones due to privilege barriers\cite{why-linux-monolith}.
 % However, the monolithic \textit{Linux} kernel has an enourmous market share right now, especially in the mobile and embedded sector.
 
-Along with the guess \textit{Zircon} will target the same sector as \textit{Linux}, especially the mobile and embedded sector, both of them make an interesting comparison to examine the impacts of kernel concepts to an essential part of them, the \textit{device driver} development.
-In this process, the date of origin should be concerned as an additional factor.
-It is to be assumed the \textit{Zircon} team is aware to especially historical based, rather poor decisions in \textit{Linux} and other operating systems, and seizes the chance of a completely new product.
+Along with the guess that \textit{Zircon} will target the same sector as \textit{Linux}, especially the mobile and embedded sector, both of them make for an interesting comparison to examine the impacts of kernel concepts on an essential part of them, the \textit{device driver} development.
+In this process, the date of origin should be taken into account as an additional factor.
+It is to be assumed the \textit{Zircon} team is aware to historic, rather poor decisions in \textit{Linux} and other operating systems, and seizes the chance of a completely new product.
 
 
 
@@ -64,24 +64,24 @@ It is to be assumed the \textit{Zircon} team is aware to especially historical b
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Research Objectives}\label{sec:research-objectives}
-This work's aim is to evaluate the differences between monolithic and microkernel architectures for operating systems and how they influence the development of device drivers.
+This work's goal is to evaluate the differences between monolithic and microkernel architectures for operating systems and how they influence the development of device drivers.
 For this purpose, this work shall focus only on the operating system's kernels, the \textit{Zircon} kernel and the \textit{Linux} kernel.
-In most literature, filesystems are also listed as an essential part of an operating system, but shall be unattended in this work.
-Of course, they are essential, but there exist that much different concepts and implementations for filesystems to form an own research.
+In most literature, filesystems are also listed as an essential part of an operating system, but shall be out of scope of this work.
+Of course, they are essential, but they form their entirely own field of research.
 For this particular work, the specific filesystem implementation is not crucial due to the focus on kernel and device drivers.
-As a result, neither Google's \textit{Fuchsia} nor the \textit{Linux} userland or desktop environments as operating system toplayers shall be a part of this thesis.\\
+As a result, neither Google's \textit{Fuchsia} nor the \textit{Linux} userland or desktop environments as the users of the operating system kernel shall be a part of this thesis.\\
 \\
 Contrarily, the following topics are to be examined within the scope of this work:
 \begin{itemize}
     \item Introducing basic concepts of operating system kernels and examine how they are implemented in the specific realizations, \textit{Linux} and \textit{Zircon}.
     \item Examining the effects of the architectural differences of the two well-known approaches \textit{monolithic} and \textit{microkernel} on device driver development using the example of the non-academic, specific implementations, \textit{Linux} and \textit{Zircon}. This includes:  
         \begin{itemize}
-            \item The analysis of the driver models and how they are integrated to the kernel.
+            \item The analysis of the driver models and how they are integrated into the kernel.
             \item Examining the driver development itself on both architectures with the aid of a hands-on case study.
-            \item The inspection of the driver development workflow, especially with a view on available tooling. 
+            \item The inspection of the driver development workflow, especially with a focus on available tooling. 
             \item A consideration on the way the drivers are used by the kernel itself, especially by other kernel components, and the actual users.
         \end{itemize}
-    \item Evaluating the results of these examinations based on the theoretical concepts and its actual realizations with respect to the temporal evolving of \textit{Linux} and \textit{Zircon}.
+    \item Evaluating the results of these examinations based on the theoretical concepts and its actual realizations with respect to the historic timeline of \textit{Linux} and \textit{Zircon}.
 \end{itemize}
 
 %TODO better ending here?

@@ -1,13 +1,13 @@
 % !TEX root = MasterThesis.tex
 
 \section*{Kurzfassung}
-Monolithische Betriebssystem Kerne waren für lange Zeit der Stand der Technik für beinahe alle Anwendungsgebiete.
-Für speziellere Bereiche, beispielsweise für Echtzeit-Betriebssysteme, sind dagegen seit einigen Jahren vor allem Mikrokernel basierte Systeme auf dem Vormarsch.
-Nun ist mit Googles Fuchsia beziehungsweise seinem Kernel Zircon ein weiteres Mikrokernel basiertes Betriebssystem veröffentlicht worden, bei dem zwar der Einsatzbereich bislang unbekannt, aber entsprechendes Potenzial verbreitete monolithische Betriebssysteme zu verdrängen vorhanden ist.
+Monolithische Betriebssystemkerne waren lange Zeit der Stand der Technik in beinahe allen Anwendungsgebieten.
+Für speziellere Bereiche, beispielsweise für Echtzeit-Betriebssysteme, sind dagegen seit einigen Jahren vor allem Mikrokernel-basierte Systeme auf dem Vormarsch.
+Nun ist mit Googles Fuchsia beziehungsweise seinem Kernel Zircon ein weiteres Mikrokernel-basiertes Betriebssystem veröffentlicht worden, bei dem zwar der Einsatzbereich bislang unbekannt, aber entsprechendes Potenzial, verbreitete monolithische Betriebssysteme zu verdrängen, vorhanden ist.
 Die vorliegende Arbeit untersucht daher die Unterschiede zwischen Linux als monolithischen Vertreter und Zircon als Mikrokernel bezüglich grundlegender Konzepte der Betriebssysteme-Theorie und deren Umsetzung mit einem Schwerpunkt in der Treiber-Entwicklung.
-Zu diesem Zweck wurde im zweiten Teil der Arbeit eine Fall-Studie anhand einer exemplarischen Gerätetreiber-Entwicklung durchgeführt, die aber auch den Hauptkritikpunkt an Mikrokernel basierten Betriebssystemen, die Leistungsfähigkeit, mit einbezieht.
+Zu diesem Zweck wurde im zweiten Teil der Arbeit eine Fall-Studie anhand einer exemplarischen Gerätetreiber-Entwicklung durchgeführt, die aber auch den Hauptkritikpunkt an Mikrokernel-basierten Betriebssystemen, die Leistungsfähigkeit, mit einbezieht.
 Die Betrachtung kommt zum Ergebnis, dass die Kernel-Architektur selbst kaum Einfluss auf die Treiberentwicklung hat, sich dafür aber positiv, wenn auch verborgen, auf die Handhabung und Stabilität eines Betriebssystems auswirkt.
-Allerdings kann auch die verminderte Leistungsfähigkeit gegenüber monolithischen Betriebssystemen durch einen primitiven Test bezüglich der Dauer einer Systemaktion aus einem Treiber heraus bestätigt werden.
+Allerdings kann auch die verminderte Leistungsfähigkeit gegenüber monolithischen Betriebssystemen aufgrund einer simplen Analyse bezüglich der Dauer einer Systemaktion aus einem Treiber heraus bestätigt werden.
 Ein bemerkenswerter Vorteil des Zircon Kernels gegenüber Linux liegt in zahlreichen Implementierungsdetails, die einige historisch bedingte, umständliche Programmierkonstrukte in der Linux Treiberentwicklung obsolet machen.
 Die Arbeit richtet sich vor allem an System- und Gerätetreiber-Entwickler, die an den Unterschieden zwischen monolithischen und Mikrokernel-basierten Systemen interessiert sind und eventuell sogar Inspiration zur Verbesserung von bereits bestehenden Kernels suchen.
 
@@ -15,14 +15,14 @@ Die Arbeit richtet sich vor allem an System- und Gerätetreiber-Entwickler, die 
 
 \newpage
 \section*{Abstract}
-Monolithic operating system kernels were the state of art for almost all fields of application for a long time.
+Monolithic operating system kernels were the state of art in almost all fields of application for a long time.
 For more specific areas, such as real-time operating systems, microkernel based systems have been gaining ground for some years now.
-With Google's Fuchsia, respectively its kernel Zircon, another microkernel based operating system has been released, which has the potential to replace monolithic systems, even if the field of application is still not known right now.
-Therefore, the present work examines the differences between Linux as a monolithic representative and Zircon as microkernel with respect to basic concepts of operating system theory and its implementation with a focus on device driver development.
-The second part of this thesis therefore includes a case study based on an exemplary device driver implementation, which includes the main issue of microkernel based operating systems as well, the performance.
+With Google's Fuchsia, respectively its Zircon kernel, another microkernel based operating system has been released which has the potential to replace monolithic systems, even if the field of application is still not known right now.
+Therefore, the present work examines the differences between Linux as a monolithic representative and Zircon as a microkernel with respect to basic concepts of operating system theory and its implementation with a focus on device driver development.
+The second part of this thesis therefore includes a case study based on an exemplary device driver implementation, which analyzes the main issue of microkernel based operating systems as well, the performance.
 The analysis comes to the conclusion that the kernel architecture itself has hardly any influence on driver development, although it has a positive but hidden effect on the handling and stability of an operating system.
-However, the reduced performance compared to monolithic operating systems can be confirmed by a primitive test regarding the duration of a system action from a driver as well.
-An additional, notable advantage of the Zircon kernel over Linux resides in numerous implementation details that make some historically conditioned, cumbersome programming constructs in Linux driver development obsolete.
+However, the reduced performance compared to monolithic operating systems can be confirmed by a simple test examining the duration of a system action from a driver as well.
+An additional, notable advantage of the Zircon kernel over Linux is caused by numerous implementation details that make some, for historcal reasons, cumbersome programming constructs in Linux driver development obsolete.
 The work is primarily aimed at system and device driver developers who are interested in the differences between monolithic and microkernel based operating systems and may even seek inspiration to improve existing kernels.
 
 \paragraph{Keywords} operating systems, monolith, microkernel, device driver, Zircon, Linux
