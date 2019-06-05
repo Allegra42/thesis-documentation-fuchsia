@@ -2,20 +2,21 @@
 
 \chapter{Modern Operating System Concepts}\label{ch:modern-os-concepts}
 This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by referring to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992.
-Besides the discussion is quite interesting from today's view on different operating systems, the forecasts on their future and the actual development, are both, \textsc{Tanenbaum} and \textsc{Torvalds} underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
+The discussion being quite interesting from today's point of view on different operating systems and their future.
+Besides are both, \textsc{Tanenbaum} and \textsc{Torvalds}, underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
 And roughly spoken are exactly such different problems which needs to be solved with an operating system one reason for their diversity. 
 Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in many ways of working and architectures. 
-As with the debate, it is rather difficult to impossible to find one architectural concept or implementation which is clearly superior to the other ones in every use-case. 
+As with the debate, it is impossible to find one architectural concept or implementation which is clearly superior to the other in every use-case. 
 Nevertheless, it is a reasonable question why a majority of the operating system kernels which were developed from scratch in the last few years are based on a microkernel concept.
 In 2009, the official statement of the Linux kernel developer \textsc{Richard Gooch} was that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
-So the question remains what changed during the last ten years to promote this change, and especially for this work, how this affects device driver development.
+So the question remains what changed during the last ten years to promote this change, and specially in the context of this work, how this affects device driver development.
 For this reason, this chapter is dedicated to the basic components and functionalities of operating system kernels and how they are implemented in the real world examples \textit{Linux} and \textit{Zircon}.
 
 \section{Operating System Architectures}\label{sec:kernel-arch-concepts}
 
-As already pointed out are architectural decisions for operating systems commonly influenced by the issues they are intended to solve.
-By giving priority to some design objectives that are pertinent to the underlying issue, different concepts and architectures are the outcome.
-According to \textsc{Glatz}\cite{glatz2015betriebssysteme} are some of them:
+As already pointed out, architectural decisions for operating systems are commonly influenced by the issues they are intended to solve.
+By giving priority to some design objectives that are pertinent to the underlying issue, different concepts and architectures are the most appropriated choice.
+According to \textsc{Glatz}\cite{glatz2015betriebssysteme}, some of them are:
 \begin{itemize}
     \item Providing a reliable, crash-proof environment.
     \item Providing a portable operating system.
@@ -27,24 +28,21 @@ According to \textsc{Glatz}\cite{glatz2015betriebssysteme} are some of them:
     \item Providing a maintainable operating system, e.g.\ by the division of policy and mechanism. 
 \end{itemize}\ \\
 %
-In addition, operating systems should also pay attention to the common software design issue \textit{mechanism vs.\ policy}.
-That means an operating system design should provide a clear distinction between the \textit{mechanism}, that means the capable abilities that can be performed (how is something done) and the \textit{policy}, which controls how the available capabilities are used (what is done)\cite{lfd430},~\cite{silberschatz2009operating}.
+In addition, operating systems should also pay attention to the common software design issue \textit{mechanism vs.\ policy}, i.e.\ an operating system design should provide a clear distinction between the \textit{mechanism}, the capable abilities that can be performed (how is something done) and the \textit{policy}, which controls how the available capabilities are used (what is done)\cite{lfd430},~\cite{silberschatz2009operating}.
 An example for driver development could be controlling the number of processes that can use a device at once.
 In this case, the driver should provide the mechanism, \textit{how} such a limitation could be done, but not \textit{what}, the actual number of allowed processes. 
-The idea behind is that requirements may change over some time and such a distinction makes it easy to adjust the \textit{policy} via some parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
+The idea behind being that requirements may change over some time and such a distinction makes it easy to adjust the \textit{policy} via some parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
 
 How these design principles fit into the known operating system architectures will be considered in the following sections.
-But first, the terms' \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
+But first, the terms \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
 
 \subsubsection*{Dual-Mode Execution}
 Modern general purpose \acp{cpu} provide a ring based, hardware enabled security model which had its origin in the Intel x86 processor architecture\cite{tanenbaum-modern-operating-systems}.
 It is usually made of four different security levels, the rings 0 to 3 which are illustrated in Figure~\ref{pic:x86rings}.
 In this theoretical model, ring 3 is the least secure level, used for common user applications (even if started with extended privileges (\textit{root} for the UNIX-like world)), while ring 2 is used for libraries shared between user applications and ring 1 is for system calls\cite{glatz2015betriebssysteme}.
 Actual operating system implementations may not use all of them.
-Linux for example utilize ring 3 for user-space applications, shared libraries and ring 0 for system calls and the kernel.
+Linux for example utilizes ring 3 for user-space applications and shared libraries and ring 0 for system calls and the kernel.
 System calls provide the transition to ring 0, the one with the topmost security level, which is used for the operating system kernel.
-Actual operating system implementations may not use all of them.
-Linux for example utilize ring 3 for user-space applications, shared libraries and ring 0 for system calls and the kernel.
 As a crucial part of an operating system, system calls will be discussed in more detail later in this work.
 %
 \begin{figure} [t]
@@ -62,15 +60,15 @@ As a crucial part of an operating system, system calls will be discussed in more
 Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
 It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
 Just the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operations or memory mappings\cite{lfd430}.
-User applications in ring 3, running in the \textit{user mode}, are not allowed to them so directly, they have limited privileges and a limited instruction set.
+User applications in ring 3, running in the \textit{user mode}, are not allowed use them directly, they have limited privileges and a limited instruction set.
 As named above, they need to use a mechanism called \textit{system calls} to transfer the execution to the \textit{kernel mode} where the privileged actions are performed.
 Lastly, the execution is transferred back to the calling user process and with this, the mode changes back to \textit{user mode}.
 Figure~\ref{pic:mode-switches} pictures the operating flow of a system call including the mode switches between \textit{user} and \textit{kernel mode}.
 
 The \ac{cpu}'s operating mode is usually controlled by a specific bit in the \ac{psw}\cite{tanenbaum-modern-operating-systems}.
-\ac{psw} is term on x86 \ac{cpu} architectures. 
-It is corresponding to the \ac{cpsr} on ARM architectures\footnote{http://infocenter.arm.com, visited on 08.03.2019 \url{http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473f/CHDFAEID.html}}.
-But since in literature is always spoken of the \ac{psw} regardless of the concrete \ac{cpu}'s architecture, this should also be done in this work.
+\ac{psw} is the term on x86 \ac{cpu} architectures. 
+It is corresponding to the \ac{cpsr} on ARM architectures\footnote{http://infocenter.arm.com, visited on 08.03.2019\\ \url{http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473f/CHDFAEID.html}}.
+But since the literature is always spoken of the \ac{psw} regardless of the concrete \ac{cpu}'s architecture, this should also be done in this work.
 It influences the state of each \ac{cpu} core itself in a multi-processor system, but not the operating system kernel.
 As a result, different \ac{cpu} cores may be in a different execution mode\cite{lfd430}.
 With this separation, any privileged instruction is forbidden in \textit{user mode} and will not be executed.
