@@ -1,21 +1,20 @@
 % !TEX root = MasterThesis.tex
 
 \chapter{Modern Operating System Concepts}\label{ch:modern-os-concepts}
-This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by referring to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992.
-The discussion being quite interesting from today's point of view on different operating systems and their future.
-Besides are both, \textsc{Tanenbaum} and \textsc{Torvalds}, underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problems. 
-And roughly spoken are exactly such different problems which needs to be solved with an operating system one reason for their diversity. 
-Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in many ways of working and architectures. 
+This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by referring to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992 and the discussion being quite interesting from today's point of view on different operating systems and their future.
+\textsc{Tanenbaum} and \textsc{Torvalds}, both are underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problem spaces. 
+And roughly spoken, exactly these different problem spaces which need to be addressed by an operating system are one reason for their diversity. 
+Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in many different implementations and architectures. 
 As with the debate, it is impossible to find one architectural concept or implementation which is clearly superior to the other in every use-case. 
 Nevertheless, it is a reasonable question why a majority of the operating system kernels which were developed from scratch in the last few years are based on a microkernel concept.
 In 2009, the official statement of the Linux kernel developer \textsc{Richard Gooch} was that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
-So the question remains what changed during the last ten years to promote this change, and specially in the context of this work, how this affects device driver development.
+So the question remains what changed during the last ten years to promote this change, and specifically in the context of this work, how this affects device driver development.
 For this reason, this chapter is dedicated to the basic components and functionalities of operating system kernels and how they are implemented in the real world examples \textit{Linux} and \textit{Zircon}.
 
 \section{Operating System Architectures}\label{sec:kernel-arch-concepts}
 
 As already pointed out, architectural decisions for operating systems are commonly influenced by the issues they are intended to solve.
-By giving priority to some design objectives that are pertinent to the underlying issue, different concepts and architectures are the most appropriated choice.
+By giving priority to some design objectives that are pertinent to the underlying issue, different concepts and architectures are the most appropriate choice.
 According to \textsc{Glatz}\cite{glatz2015betriebssysteme}, some of them are:
 \begin{itemize}
     \item Providing a reliable, crash-proof environment.
@@ -28,10 +27,10 @@ According to \textsc{Glatz}\cite{glatz2015betriebssysteme}, some of them are:
     \item Providing a maintainable operating system, e.g.\ by the division of policy and mechanism. 
 \end{itemize}\ \\
 %
-In addition, operating systems should also pay attention to the common software design issue \textit{mechanism vs.\ policy}, i.e.\ an operating system design should provide a clear distinction between the \textit{mechanism}, the capable abilities that can be performed (how is something done) and the \textit{policy}, which controls how the available capabilities are used (what is done)\cite{lfd430},~\cite{silberschatz2009operating}.
+In addition, operating systems should also pay attention to the common software design issue \textit{mechanism vs.\ policy}, i.e.\ an operating system design should provide a clear distinction between the \textit{mechanism}, the capabilities that can be performed (how is something done) and the \textit{policy}, which controls how the available capabilities are used (what is done)\cite{lfd430},~\cite{silberschatz2009operating}.
 An example for driver development could be controlling the number of processes that can use a device at once.
 In this case, the driver should provide the mechanism, \textit{how} such a limitation could be done, but not \textit{what}, the actual number of allowed processes. 
-The idea behind being that requirements may change over some time and such a distinction makes it easy to adjust the \textit{policy} via some parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
+The idea behind being that requirements may change over some time and such a distinction makes it easy to adjust the \textit{policy} via parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
 
 How these design principles fit into the known operating system architectures will be considered in the following sections.
 But first, the terms \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
@@ -68,19 +67,19 @@ Figure~\ref{pic:mode-switches} pictures the operating flow of a system call incl
 The \ac{cpu}'s operating mode is usually controlled by a specific bit in the \ac{psw}\cite{tanenbaum-modern-operating-systems}.
 \ac{psw} is the term on x86 \ac{cpu} architectures. 
 It is corresponding to the \ac{cpsr} on ARM architectures\footnote{http://infocenter.arm.com, visited on 08.03.2019\\ \url{http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473f/CHDFAEID.html}}.
-But since the literature is always spoken of the \ac{psw} regardless of the concrete \ac{cpu}'s architecture, this should also be done in this work.
-It influences the state of each \ac{cpu} core itself in a multi-processor system, but not the operating system kernel.
+But since the literature always uses the \ac{psw} regardless of the concrete \ac{cpu}'s architecture, this should also be done in this work.
+This bit influences the state of each \ac{cpu} core itself in a multi-processor system, but not the operating system kernel.
 As a result, different \ac{cpu} cores may be in a different execution mode\cite{lfd430}.
 With this separation, any privileged instruction is forbidden in \textit{user mode} and will not be executed.
 
 Based on the dual mode execution on the \ac{cpu}, different architectural concepts for operating systems evolved.
 They differ e.g.\ in the share of the operating system respectively the operating system's kernel actually running within the \ac{cpu}'s \textit{kernel mode}. 
-Thus, they have an influence on the whole system, including device driver development but also on performance and security issues.
+Thus, they influence on the whole system, including device driver development but also performance and security issues.
 
 With this basic knowledge about the \ac{cpu}'s operating modes, the next section researches a selection of different operating system architectures.
 Special attention should be paid to the most common ones, the \textit{monolithic} and the \textit{microkernel} architectures and their implementation in Linux and Zircon.
-On the contrary, this work will not take a particular look on special purpose operating system architectures such as e.g.\ Integrity OS for realtime applications or the Cray Linux Environment which is a Linux adaption for supercomputers.
-Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} cores and most of common modern operating systems are designed to provide support for the de facto standard for tightly coupled systems, \ac{smp}.
+Importantly, this work will not discuss special purpose operating system architectures such as e.g.\ Integrity OS for realtime applications or the Cray Linux Environment which is a Linux adaption for supercomputers.
+Today, even the majority of general purpose computing systems are driven by more than one \ac{cpu} core and most common modern operating systems are designed to provide support for the de facto standard for tightly coupled systems, \ac{smp}.
 
 
 \subsection{Monolithic Architectures}\label{sec:monolithic-archs}
@@ -90,12 +89,12 @@ But it does not necessarily have to be the case.
 Above all, monolithic operating system (kernel) architectures have in common that they form one single binary program which is running entirely in kernel mode.
 User programs, running in user mode, interact with the kernel only through a well-defined set of \textit{system calls}\cite{lfd430}. 
 Within the kernel itself, all parts are free to use and access each other but also the hardware, without any limitation, e.g.\ regarding the access of kernel functionalities of another component or hardware access. 
-That means a function or procedure initial developed for scheduling processes could be used in a completely different context if its functionality is useful to solve another issue.
+So a function or procedure initially developed for scheduling processes could be used in a completely different context if its functionality is useful to solve another issue.
 In fact, there is no information hiding between kernel functions or procedures.
 Any function in this kernel context has full access to the hardware, such as \ac{io} devices, timers, interrupts and even to the memory. 
 There is no memory protection or validation between different components of a monolithic kernel. 
 Of course, this leads to some serious disadvantages in this architecture, for example, a crash in one single function or procedure could crash the entire kernel or the resulting system may become difficult to understand and maintain\cite{tanenbaum-modern-operating-systems},~\cite{silberschatz2009operating}.
-The missing memory protecting within the kernel could also be a source for crashes or attacks.
+The missing memory protection within the kernel could also be a source for crashes or attacks.
 But in contrast, this design also enables a very efficient kernel design without any unneeded communication overhead or hardware inefficiencies\cite{lfd430}.
 
 \begin{figure} [ht]
@@ -105,19 +104,19 @@ But in contrast, this design also enables a very efficient kernel design without
 \end{figure} \ \\
 %
 An extension of the monolithic architecture are the so-called \textbf{modular operating systems}.
-They provide additional, defined interfaces for (in common) dynamically loadable and unloadable extensions, e.g.\ for device drivers or filesystems. 
+They provide additional, defined interfaces for (usually) dynamically loadable and unloadable extensions, e.g.\ for device drivers or filesystems. 
 Sometimes, such extensions or modules are just allowed to use a limited function set of the operating system, but they are still running as a part of the kernel in kernel mode\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}. 
-Just like ordinary kernel functions or procedures, (malicious) programming errors in extensions may lead to a kernel crash or manipulate or damage other components.
-Contrary, the modular concept provides some advantages over regular monolitic kernels.
-It allows slimming down the actual kernel by providing the chance to reload only the actually needed functionality dynamically and e.g.\ security patches within such an extension is possible without restarting the entire system\cite{brause2017betriebssysteme}.
+Just like ordinary kernel functions or procedures, (malicious) programming errors in extensions may lead to a kernel crash, manipulation or damage to other components.
+On the other hand, the modular concept provides some advantages over regular monolitic kernels.
+It allows slimming down the actual kernel by providing the ability to reload only the actually needed functionality dynamically and e.g.\ security patches within such an extension are possible without restarting the entire system\cite{brause2017betriebssysteme}.
 As the extensions become a part of the operating system running in kernel mode, no additional communication effort between the actual kernel and the modules is required.
 Figure~\ref{pic:monolith} pictures an exemplary architecture for a monolithic kernel using optional modules.
-Thus, concept of modules is quite popular for basically monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
+Such a concept of modules is quite popular for monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
 
 \subsection{Microkernel Architectures}\label{sec:microkernel-archs}
-The microkernel architecture focuses on very opposite design goals compared to the monolithic one. 
-Some of them are to cope the complexity, rather poor maintainability and susceptibility to errors by a massively modular approach. 
-To archive this, the core idea behind microkernels is to provide only a very small kernel running in kernel mode which only provides the core functionalities while all the other important functions of an operating system are running in user mode.
+The microkernel architecture focuses on very different design goals compared to the monolithic one. 
+Some of them are to cope with the complexity, rather poor maintainability and susceptibility to errors by a massively modular approach. 
+To achieve this, the core idea behind microkernels is to provide only a very small kernel running in kernel mode which only provides the core functionalities while all the other important functions of an operating system are running in user mode.
 Thereby, the microkernel architecture is excellently suited to implement a proper division of mechanism and policy.
 The kernel provides just the most basic mechanisms needed for an operating system, while the userspace modules implement the policy.
 This decoupling makes it easier to change the policy in userspace for altering requirements without touching the actual kernel\cite{tanenbaum-modern-operating-systems}.
@@ -128,33 +127,33 @@ This decoupling makes it easier to change the policy in userspace for altering r
 	\caption{A Microkernel Architecture according to~\cite{lfd430}}\label{pic:microkernel}
 \end{figure}
 
-What is part of this core functionality differs between miscellaneous sources, but all considered ones are in agreement that a simple mechanism for process scheduling is as well a core functionality as providing an \ac{ipc} mechanism\cite{lfd430},~\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.  
+What is part of this core functionality differs between the various sources, but all considered ones are in agreement that a simple mechanism for process scheduling is as well a core functionality as providing an \ac{ipc} mechanism\cite{lfd430},~\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.  
 In contrast, the sources disagree whether memory management and virtualization, device drivers or synchronization facilities are a part of the actual kernel.
 The \textit{Mach} microkernel, which formed the first generation of microkernels in 1985, named process and thread administration, an extensible and secure \ac{ipc} mechanism, virtual memory management and scheduling as its core tasks, while everything else needed has to run in usermode\cite{rashidMach}.
 Functional enhancements of the system do not require changes to the kernel itself, too.
 This concerns, depending on the exact realization, device drivers, memory management, system call handlers and even more system components\cite{lfd430},~\cite{silberschatz2009operating}.
 Figure~\ref{pic:microkernel} tries to picture this situation.
-In academic microkernel approaches, all components in user mode run within an own userspace process as small, well-defined modules, while the communication is done through copious message passing via the actual kernel\cite{tanenbaum-modern-operating-systems},~\cite{lfd430}.
-Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernel based operating systems is it not allowed to device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
-A device driver has to invoke the actual kernel to perform the needed action substitional.
-But thus, the kernel is able to check the action and whether the driver is authorized to executed them.
-Resulting, the microkernel design is more reliable and secure as such a division enables the kernel to intercept erroneous actions such as accidental memory writes to important regions\cite{tanenbaum-modern-operating-systems}.
+In academic microkernel approaches, all components in user mode run within their own userspace process as small, well-defined modules, while the communication is done through copious message passing via the actual kernel\cite{tanenbaum-modern-operating-systems},~\cite{lfd430}.
+Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernel based operating systems is it not allowed for device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
+A device driver has to invoke the actual kernel to perform the needed action in substition.
+But thus, the kernel is able to check the action and whether the driver is authorized to execute them.
+As a result, the microkernel design is more reliable and secure as such a division enables the kernel to intercept erroneous actions such as accidental memory writes to important regions\cite{tanenbaum-modern-operating-systems}.
 Equally, a crash in an userspace system component like a driver is not able to crash the entire kernel in such an approach. 
-And as an additional advantage facilitate the microkernel architecture porting the operating system kernel to another target architecture as the most hardware dependencies are part of the small kernel\cite{silberschatz2009operating},~\cite{lfd430}.
+And as an additional advantage, the microkernel architecture facilitates porting the operating system kernel to another target architecture as most hardware dependencies are part of the small kernel\cite{silberschatz2009operating},~\cite{lfd430}.
 
-With all the named advantages microkernels offer, the question remains why microkernels are only spread in real-time, avionics or military but not for desktop operating systems.
-One reason is that all these advantages are bought at the high price of microkernel message costs.
-For the named application areas, especially the reliability that comes with the microkernel architecture is more desirable than the performance costs of the lot more context switches in comparison to monolithic architectures\cite{tanenbaum-modern-operating-systems}.
+With all the described advantages of microkernels, the question remains why microkernels are primarily used in real-time environments, avionics or military, but not for desktop operating systems.
+One reason is that all these advantages are paid by the high price of microkernel message costs.
+For the mentioned application areas, especially the reliability that comes with the microkernel architecture is more desirable than the performance costs of the more frequent context switches in comparison to monolithic architectures\cite{tanenbaum-modern-operating-systems}.
 Since a lot of the operating system's functionality has been moved to the userspace, microkernel architectures need to perform noticeable more context switches to invoke the actual kernel for privileged actions. 
-The performance losses are not only caused by the large amount of context switches themselves, but also by the fact that modern \acp{cpu}, particularly the caches are not designed for them. 
-Every context switch causes cache misses which trigger that the required data has to be loaded from the slower main memory and cached. 
-The data of the previous context (e.g.\ the user mode context) will be displaced from the cache and the \ac{cpu} is largely blocked in the meantime.
-By rapidly switching back to the previous context, as is usual for e.g.\ a short kernel invocation to perform an \ac{io} operation on microkernel architectures, the cache is no longer suitable for the new context and has to be replaced\cite{lfd430}.
+The performance losses are not only caused by the large amount of context switches themselves, but also by the fact that modern \acp{cpu}, particularly the caches, are not designed for them. 
+Every context switch causes cache misses which triggers that the required data has to be loaded from the slower main memory and cached. 
+The data of the previous context (e.g.\ the user mode context) will be dismissed from the cache and the \ac{cpu} is largely blocked in the meantime.
+By rapidly switching back to the previous context, as it is usual for e.g.\ a short kernel invocation to perform an \ac{io} operation on microkernel architectures, the cache is no longer suitable for the new context and has to be replaced\cite{lfd430}.
 
-First of all, the \textit{L4} kernel, a second generation microkernel was able to get close to the performance of a monolithic kernel as \textit{Linux} it is\cite{Hrtig1997}.   
+First of all, the \textit{L4} kernel, a second generation microkernel was able to get close to the performance of a monolithic kernel like \textit{Linux}\cite{Hrtig1997}.   
 This has been achieved by improving the \acf{ipc} mechanism, a fundamental component of microkernel architectures on which other communication mechanisms are based.
 % by improving ipc performance, only synchronous ipc
-Nevertheless, are pure microkernels mainly used for systems with high reliability requirements but unusual for desktop application. 
+Nevertheless, pure microkernels are mainly used for systems with high reliability requirements but unusual for desktop application. 
 Some industry examples are \textit{Integrity}, \textit{QNX} and \textit{seL4}, a mathematically verified version of the \textit{L4} kernel\cite{tanenbaum-modern-operating-systems}. 
 
 %TODO ? reincarnation server : check if all modules are up running and work correctly -> if not it replaces them without user interaction \cite{tanenbaum}
@@ -1446,7 +1445,7 @@ If a job blocks, it is completely removed from the \ac{cpu}'s queue and added to
 The stays there until the required resource becomes available and thus its status changes to runnable again.
 The job is put back to, whenever possible the previous \ac{cpu} core's, queue with the right priority.
 Was the job blocked before its time slice was finished, it becomes rewarded by being inserted at the front of the queue to resume as soon as possible\cite{zircon-scheduling}.
-
+%
 The priority of jobs in Zircon is determined on the basis of three criteria:
 \begin{itemize}
     \item A base priority from 0 to 31.
@@ -1461,19 +1460,19 @@ The priority of jobs in Zircon is determined on the basis of three criteria:
 As a result, the effective priority is either calculated from the base value in combination with the boost or it is the inherit one\cite{zircon-scheduling}.
 This policy is designed for an interactive system.
 Rewarding short and non-\ac{cpu} intensive jobs affects most of all \ac{ui} related tasks which are often blocked by waiting for user interaction, while \ac{cpu} intensive background tasks are penalized for using the whole time slice and hindering the ability to react.
-
+%
 Zircon is per design capable for realtime tasks.
 Within the scheduler is it considered by a special flag for them: \texttt{THREAD\_FLAG\_REAL\_TIME}.
 Such a job is allowed to run within its priority level without being preempted until it blocks, yields or is manually rescheduled\cite{zircon-scheduling}.
-
+%
 A special role belongs to the \textit{idle thread}.
 It lives besides the normal \ac{fifo} queues and is runned by the scheduler if there are not any other jobs ready to be assigned.
-The purpose of the idle thread is to keep track of idle times, but some platform implementions may use it to implement a low power consumption wait mode\cite{zircon-scheduling}.\\
-\\
+The purpose of the idle thread is to keep track of idle times, but some platform implementions may use it to implement a low power consumption wait mode\cite{zircon-scheduling}.
+
 At the time of writing, an additional \ac{cfs} is in work.
 Its \ac{api} is compatible to the one Linux uses.
 Is it not merged into the standalone Zircon repository yet, but to the development master branch of the Zircon kernel within Fuchsia.
-Further information is available in the according documentation within this repository\footnote{Zircon Fair Scheduler, visited on 11.04.2019 \url{https://fuchsia.googlesource.com/fuchsia/+/refs/heads/master/zircon/docs/fair_scheduler.md}}.
+Further information is available in the according documentation within this repository\footnote{Zircon Fair Scheduler, visited on 11.04.2019\\ \url{https://fuchsia.googlesource.com/fuchsia/+/refs/heads/master/zircon/docs/fair_scheduler.md}}.
 
 
 \section{Memory Management}\label{sec:memory-management}
