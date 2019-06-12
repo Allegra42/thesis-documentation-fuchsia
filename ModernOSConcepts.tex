@@ -1,10 +1,10 @@
 % !TEX root = MasterThesis.tex
 
 \chapter{Modern Operating System Concepts}\label{ch:modern-os-concepts}
-This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by referring to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992 and the discussion being quite interesting from today's point of view on different operating systems and their future.
+This thesis' introduction already picked up the discussion about which operating system architecture is the superior one by referring to the \textit{Tanenbaum-Torvalds debate}\cite{linux-is-obsolete} in 1992, a discussion being quite interesting from today's point of view on different operating systems and their future.
 \textsc{Tanenbaum} and \textsc{Torvalds}, both are underpinning their arguments with the origins of their implementations \textit{MINIX} and \textit{Linux} in different problem spaces. 
 And roughly spoken, exactly these different problem spaces which need to be addressed by an operating system are one reason for their diversity. 
-Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in many different implementations and architectures. 
+Over the years, they had to fit in solving very different kinds of problems on very different kinds of hardware, which resulted in very different implementations and architectures. 
 As with the debate, it is impossible to find one architectural concept or implementation which is clearly superior to the other in every use-case. 
 Nevertheless, it is a reasonable question why a majority of the operating system kernels which were developed from scratch in the last few years are based on a microkernel concept.
 In 2009, the official statement of the Linux kernel developer \textsc{Richard Gooch} was that monolithic kernels are superior for performance reasons\cite{why-linux-monolith}.
@@ -30,7 +30,7 @@ According to \textsc{Glatz}\cite{glatz2015betriebssysteme}, some of them are:
 In addition, operating systems should also pay attention to the common software design issue \textit{mechanism vs.\ policy}, i.e.\ an operating system design should provide a clear distinction between the \textit{mechanism}, the capabilities that can be performed (how is something done) and the \textit{policy}, which controls how the available capabilities are used (what is done)\cite{lfd430},~\cite{silberschatz2009operating}.
 An example for driver development could be controlling the number of processes that can use a device at once.
 In this case, the driver should provide the mechanism, \textit{how} such a limitation could be done, but not \textit{what}, the actual number of allowed processes. 
-The idea behind being that requirements may change over some time and such a distinction makes it easy to adjust the \textit{policy} via parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
+The idea behind being that requirements may change over time and such a distinction makes it easy to adjust the \textit{policy} via parameters without touching the underlying \textit{mechanism}\cite{silberschatz2009operating}.
 
 How these design principles fit into the known operating system architectures will be considered in the following sections.
 But first, the terms \textit{kernel mode} and \textit{user mode} will be explained as they are fundamental for this work.
@@ -58,9 +58,9 @@ As a crucial part of an operating system, system calls will be discussed in more
 %
 Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
 It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
-Just the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operations or memory mappings\cite{lfd430}.
-User applications in ring 3, running in the \textit{user mode}, are not allowed use them directly, they have limited privileges and a limited instruction set.
-As named above, they need to use a mechanism called \textit{system calls} to transfer the execution to the \textit{kernel mode} where the privileged actions are performed.
+Only the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operations or memory mappings\cite{lfd430}.
+User applications in ring 3, running in the \textit{user mode}, are not allowed to use them directly, they have limited privileges and a limited instruction set.
+As mentioned above, they need to use a mechanism called \textit{system calls} to transfer the execution to the \textit{kernel mode} where the privileged actions are performed.
 Lastly, the execution is transferred back to the calling user process and with this, the mode changes back to \textit{user mode}.
 Figure~\ref{pic:mode-switches} pictures the operating flow of a system call including the mode switches between \textit{user} and \textit{kernel mode}.
 
@@ -74,7 +74,7 @@ With this separation, any privileged instruction is forbidden in \textit{user mo
 
 Based on the dual mode execution on the \ac{cpu}, different architectural concepts for operating systems evolved.
 They differ e.g.\ in the share of the operating system respectively the operating system's kernel actually running within the \ac{cpu}'s \textit{kernel mode}. 
-Thus, they influence on the whole system, including device driver development but also performance and security issues.
+Thus, they influence the whole system, including device driver development but also performance and security issues.
 
 With this basic knowledge about the \ac{cpu}'s operating modes, the next section researches a selection of different operating system architectures.
 Special attention should be paid to the most common ones, the \textit{monolithic} and the \textit{microkernel} architectures and their implementation in Linux and Zircon.
@@ -88,7 +88,7 @@ As they are indeed most commonly grown structures, started in a completely diffe
 But it does not necessarily have to be the case.
 Above all, monolithic operating system (kernel) architectures have in common that they form one single binary program which is running entirely in kernel mode.
 User programs, running in user mode, interact with the kernel only through a well-defined set of \textit{system calls}\cite{lfd430}. 
-Within the kernel itself, all parts are free to use and access each other but also the hardware, without any limitation, e.g.\ regarding the access of kernel functionalities of another component or hardware access. 
+Within the kernel itself, all parts are free to use and access each other even the hardware, without any limitation, e.g.\ regarding the access of kernel functionalities of another component or hardware access. 
 So a function or procedure initially developed for scheduling processes could be used in a completely different context if its functionality is useful to solve another issue.
 In fact, there is no information hiding between kernel functions or procedures.
 Any function in this kernel context has full access to the hardware, such as \ac{io} devices, timers, interrupts and even to the memory. 
@@ -108,7 +108,7 @@ They provide additional, defined interfaces for (usually) dynamically loadable a
 Sometimes, such extensions or modules are just allowed to use a limited function set of the operating system, but they are still running as a part of the kernel in kernel mode\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}. 
 Just like ordinary kernel functions or procedures, (malicious) programming errors in extensions may lead to a kernel crash, manipulation or damage to other components.
 On the other hand, the modular concept provides some advantages over regular monolitic kernels.
-It allows slimming down the actual kernel by providing the ability to reload only the actually needed functionality dynamically and e.g.\ security patches within such an extension are possible without restarting the entire system\cite{brause2017betriebssysteme}.
+It allows slimming down the actual kernel by providing the ability to load only the actually needed functionality dynamically and e.g.\ security patches within such an extension are possible without restarting the entire system\cite{brause2017betriebssysteme}.
 As the extensions become a part of the operating system running in kernel mode, no additional communication effort between the actual kernel and the modules is required.
 Figure~\ref{pic:monolith} pictures an exemplary architecture for a monolithic kernel using optional modules.
 Such a concept of modules is quite popular for monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
@@ -134,9 +134,9 @@ Functional enhancements of the system do not require changes to the kernel itsel
 This concerns, depending on the exact realization, device drivers, memory management, system call handlers and even more system components\cite{lfd430},~\cite{silberschatz2009operating}.
 Figure~\ref{pic:microkernel} tries to picture this situation.
 In academic microkernel approaches, all components in user mode run within their own userspace process as small, well-defined modules, while the communication is done through copious message passing via the actual kernel\cite{tanenbaum-modern-operating-systems},~\cite{lfd430}.
-Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernel based operating systems is it not allowed for device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
-A device driver has to invoke the actual kernel to perform the needed action in substition.
-But thus, the kernel is able to check the action and whether the driver is authorized to execute them.
+Since the restrictions by the \ac{cpu}'s dual mode still apply for microkernel based operating systems it is not allowed for device drivers running in user mode to have direct physical access to \ac{io} ports as a consequence.
+A device driver has to invoke the actual kernel to perform the needed action in substitution.
+But thus, the kernel is able to check the actions and whether the driver is authorized to execute them.
 As a result, the microkernel design is more reliable and secure as such a division enables the kernel to intercept erroneous actions such as accidental memory writes to important regions\cite{tanenbaum-modern-operating-systems}.
 Equally, a crash in an userspace system component like a driver is not able to crash the entire kernel in such an approach. 
 And as an additional advantage, the microkernel architecture facilitates porting the operating system kernel to another target architecture as most hardware dependencies are part of the small kernel\cite{silberschatz2009operating},~\cite{lfd430}.
@@ -162,17 +162,17 @@ Some industry examples are \textit{Integrity}, \textit{QNX} and \textit{seL4}, a
 \subsection{Layered Architectures}
 Layered operating system architectures are usually organized in hierarchical layers, but sometimes the chosen model is described as a series of concentric rings.
 Each layer or ring provides a group of functionality while it is only allowed to use the functions of the one directly below. 
-The cooperating between the layers or rings is regulated by clearly defined interfaces\cite{brause2017betriebssysteme}.
-This is usually accompanied by the fact that the lower layers or inner rings are more privileged as the outer ones.
+The cooperation between the layers or rings is regulated by clearly defined interfaces\cite{brause2017betriebssysteme}.
+This is usually accompanied by the fact that the lower layers or inner rings are more privileged than the outer ones.
 However, there is no uniform and universally accepted approach for division in layers and their count according to this pattern\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 In fact, a meaningful division is not that easy.
 Functionalities may have to be divided artificially and the harmonious arrangement can have its pitfalls caused by the access requirements this architecture is based on.
-Is the layered access model considered properly to get a clean architecture, it that can unfold its advantages.
+Is the layered access model applied properly to get a clean architecture, only then it is able to unfold its advantages.
 These are for example the interchangeability of the layers if they and their interfaces were properly designed or the resulting concept for debugging.
 As the layers are constructed on top of each other, it is possible to debug  and verify each one for its own, starting at the lowest layer up to the top most one\cite{silberschatz2009operating}.
 But also the costs for system calls are comparatively high, because they have to be passed though all layers while each one adds overhead to such a call\cite{silberschatz2009operating}.  
 
-In general, layered operating system architectures are related to monolithic ones, but it is conceivable to adopt the idea for microkernel approaches, e.g.\ is the MINIX userspace divided into layers. 
+In general, layered operating system architectures are related to monolithic ones, but it is conceivable to adopt the idea for microkernel approaches, e.g.\ the MINIX userspace is divided into layers. 
 Examples for this architecture are \textit{OS/2} or newer \textit{Unix} variants, while \textit{Multics} is one for a concentric ring based model\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 
 
@@ -180,7 +180,7 @@ Examples for this architecture are \textit{OS/2} or newer \textit{Unix} variants
 
 
 \subsection{Hybrid Architectures}
-Hybrid operating system architectures based on monolithic, microkernels and may be the layered ones are common approach to combine the advantages of these concepts.
+Hybrid operating system architectures based on monolithic concepts, microkernels and maybe layeres are a common approach to combine the advantages of these concepts.
 They try to pair the performance of the monolithic design with the modularity and reliability of microkernels\cite{microkernels},~\cite{silberschatz2009operating}.
 How both worlds interact is very different depending on the exact implementation.
 \textsc{Silberschatz} explains one of them in his book \textit{Operating System Concepts}\cite{silberschatz2009operating} using Apple's \textit{OS X} (today named \textit{macOS}) as an example.
@@ -191,12 +191,11 @@ Further examples for hybrid architectures are \textit{Windows NT} and \textit{Be
 \subsection{The Linux Kernel's Monolithic Architecture}
 
 Linux is the perfect example for an extremely grown operating system.
-Starting as a pure hobby project to learn about a specific \ac{cpu} and connect to the Unix computers at \textsc{Linus Torvalds}, its initial author's, university, it becomes strongly related to its archetype, \textit{Unix}\cite{DiamondTorvalds2002}. 
-They share fundamental design goals, just like being capable of multiple processors and user at the same time, but Linux is not based on the origin Unix source code\cite{tanenbaum-modern-operating-systems}.
-The overall architecture of the Linux kernel is, as already named, monolithic and also inspired by Unix\cite{lfd430},~\cite{DiamondTorvalds2002}.
+Starting as a pure hobby project to learn about a specific \ac{cpu} and connect to the Unix computers at \textsc{Linus Torvalds}, its initial author, university, it became strongly related to its archetype, \textit{Unix}\cite{DiamondTorvalds2002}. 
+They share fundamental design goals, just like being capable of multiple processors and users at the same time, while not being based on the origin Unix source code\cite{tanenbaum-modern-operating-systems},~\cite{lfd430},~\cite{DiamondTorvalds2002}.
 It is entirely running in kernel mode and all built-in layers have full access to the internal kernel \ac{api} using common function calls like in C.
-A sophisticated concept of kernel modules which can be dynamically loaded to a running kernel makes a limited number of microkernel advantages available for Linux.
-Modules in Linux are only allowed to use a restricted (exported) set of functions to use, but once loaded to the running kernel, they become a part of the monolith running in kernel mode\cite{lfd430}.
+A sophisticated concept of kernel modules which can be dynamically loaded into a running kernel makes a limited number of microkernel advantages available for Linux.
+Modules in Linux are only allowed to use a restricted (exported) set of functions to use, but once loaded into the running kernel, they become a part of the monolith running in kernel mode\cite{lfd430}.
 Linux is largely compatible to the \ac{posix} standard which was initially created for Unix.
 Initially, it was because \textsc{Torvalds} could not get a version of the standard, while today it is rather a conscious decision\cite{DiamondTorvalds2002},~\cite{tanenbaum-modern-operating-systems}. 
 Also, the decision for the monolithic architecture is today consciously supported by the kernel community and justified with its performance and efficiency over microkernels due to the \textit{privilege barrier} between user and kernel mode which has to be passed quite often in microkernel architecture\cite{why-linux-monolith},~\cite{lfd430}.
@@ -210,9 +209,9 @@ They are:
     \item Networking\cite{lfd430}.
 \end{itemize}
 By structuring this tasks and further components into \textit{subsystems} like \textit{drivers/}, \textit{fs/} (filesystems), \textit{net/} or \textit{kernel/}, the Linux kernel remains comprehensible and in some ways modular. 
-A closer look to the most of them in general but also their implementation in Linux is done in the following sections.
+A closer look at most of them in general but also their implementation in Linux is done in the following sections.
 
-The Linux kernel is mainly written in C but some very hardware dependent part are in Assembly. 
+The Linux kernel is mainly written in C but some very hardware dependent parts are in Assembly. 
 Additionally, especially the Assembly parts were strongly dependent on the \ac{gcc}.
 Today, there are some efforts to reduce the share of Assembly for maintenance and readability since modern compilers do not generate less efficient code as hand-written Assembly is\cite{programming-religion}.
 This also reduces the dependency to \ac{gcc} and enables the use of alternative compilers, especially Clang\cite{linux-clang},~\cite{fosdem-linux-llvm}.
@@ -223,19 +222,19 @@ Nevertheless, the Linux kernel's principal language is C and it only provides su
 % design goals, architecture, interface posix, parts, language/compiler
 In contrast to the Linux kernel, Zircon is not a grown structure.
 Started in 2015, it was largely developed from scratch by Google for a so far undisclosed field of application\cite{chat-zircon-arch}.
-Nevertheless, Zircon emerged from a branch of \textit{Little Kernel} (LK) by \textsc{Travis Geiselbrecht} which is also a part of the Zircon Team at Google\cite{zircon-vs-lk}. 
+Nevertheless, Zircon emerged from a branch of \textit{Little Kernel} (LK) by \textsc{Travis Geiselbrecht} who is also a part of the Zircon Team at Google\cite{zircon-vs-lk}. 
 Despite its origin, Zircon is very different to Little Kernel.
 It targets powerful devices such as modern computers and phones and provides for this reason only 64-bit support, first class user-mode support and a capability-based security model. 
 In contrast, Little Kernel is designed for embedded applications and amongst others used as bootloader for \textit{Android} and as \textit{Android Trusted Execution Environment (Trusty TEE)}\cite{lk-intro}.
 It has 32-bit support, but none of the more sophisticated features Zircon has\cite{zircon-vs-lk}.
 
-The mirokernel architecture is justified by having security, safety, reliability and modularity as major design goals for Zircon.
+The microkernel architecture is justified by having security, safety, reliability and modularity as major design goals for Zircon.
 According to \textsc{Travis Geiselbrecht}, the architecture was a conscious tradeoff between the named goals and performance\cite{chat-zircon-arch}.
-They try to avoid costly context switches as much as possible, speed up the remaining ones and take advantage from \acf{smp}, but it is not the focus of Zircon.
+They try to avoid costly context switches as much as possible, speed up the remaining ones and take advantage of \acf{smp}, but it is not the focus of Zircon.
 Alike, Zircon does not focus on performing \ac{io} operations or process management which are the key tasks \ac{posix} was designed for\cite{chat-zircon-arch}.
 As a result, Zircon does not claim to be or to become \ac{posix} compatible, they just support a very basic subset of the standard\cite{zircon-libc-posix}.
 % For \ac{ipc} Zircon provides a mechansim based on an \ac{idl} which is widly used within the Zircon kernel but also in Fuchsia as the whole operating system.
-The Zircon kernel itself is splitted up into the actual microkernel running in kernel mode (\textit{kernel/}) and services, drivers and core libraries running in user mode (\textit{system/})\cite{zircon-intro}.
+The Zircon kernel itself is split up into the actual microkernel running in kernel mode (\textit{kernel/}) and services, drivers and core libraries running in user mode (\textit{system/})\cite{zircon-intro}.
 The kernel part provides the basic operating system mechanisms: 
 \begin{itemize}
     \item Process Management,
@@ -246,14 +245,14 @@ The kernel part provides the basic operating system mechanisms:
 The part running in user mode contains core services for, amongst others, booting, device management and networking, device drivers respectively hardware related code and user libraries.
 
 Zircon is for the most parts written in C++ and less in C.
-It provides native support for device drivers in both languages but due to the fact Zircon provides an \ac{idl} which defines a contract for in-process drivers, other languages are conceivable as well.
+It provides native support for device drivers in both languages but due to the fact that Zircon provides an \ac{idl} which defines a contract for in-process drivers, other languages are conceivable as well.
 In fact, support for Rust drivers is currently being worked on\cite{chat-zircon-arch}.
 Unlike Linux, Zircon provided support for both, the \ac{gcc} and the Clang compiler, from the beginning caused by the sophisticated tools around Clang and LLVM\@.
 
 
 \section{System Calls}\label{sec:system-calls}
 System calls were already marginally mentioned in this work as the mechanism to switch the program execution between user and kernel mode, because  applications running in user mode have only restricted rights.
-Thus, this special calls are needed for the interaction with basic hardware devices like the \ac{cpu}, the memory, peripherals or filesystems and for invoke the actual operating system's kernel for management operations like process management\cite{lfd430}. 
+Thus, these special calls are needed for the interaction with basic hardware devices like the \ac{cpu}, the memory, peripherals or filesystems and for invoking the actual operating system's kernel for management operations like process management\cite{lfd430}. 
 System calls are to a high degree hardware dependent and differ between various operating system implementations.
 % Even operating systems which comply the \acf{posix} standard may differ in the type and number of available system calls.
 % The wide-spread \ac{posix} standard is only an \ac{api} definition but not one for system calls.
@@ -265,22 +264,22 @@ System calls are to a high degree hardware dependent and differ between various 
 %
 
 A system call has its origin in an application running in user mode.
-If the application has to invoke the operating system kernel, e.g.\ to perform an action on memory in substition, it has to use one for switching the operating mode\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+If the application has to invoke the operating system kernel, e.g.\ to perform an action on memory in substitution, it has to use one for switching the operating mode\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 As switching the \ac{cpu}'s execution mode also means a new context, a system call to the kernel differs from a common procedure call.
 In user mode, the so-called entry code stores the system call's parameters in a defined way.
-One is to store the parameters and the call's number in defined registers (see~\ref{pic:syscalls}), another one is to store them on stack, according the C/C++ calling in reverse order\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.
+One is to store the parameters and the call's number in defined registers (see~\ref{pic:syscalls}), another one is to store them on stack, according the C/C++ calling convention in reverse order\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.
 The exact one depends on the actual \ac{cpu} architecture but also on the operating system kernel itself.
 Linux, for example, has in general another convention for system calls than Windows. 
 The following instruction triggers a special software interrupt containing the order to switch the context.
 It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch.
 They are \texttt{0x80} on Linux as pictured in~\ref{pic:syscalls} and \texttt{0x2e} on Windows systems\cite{glatz2015betriebssysteme}.
-But right before switching it is needed to save the \acf{psw}, which contains the actual processors state includes the mode bit, to the stack.
+But right before switching it is needed to save the \acf{psw}, which contains the actual processors state including the mode bit, to the stack.
 The same number is used in kernel mode as an index within the interrupt vector table (or \acf{idt}) which contains the start address of the system service dispatcher routine (compare to~\ref{pic:syscalls}).
-This tables content, the system service dispatcher routine, is loaded as next instruction to the new \ac{psw}\cite{brause2017betriebssysteme}.
-Jumping to this routine, the system call's parameters and its number are restored to examine the actual call and invoke the matching service routine from the system service dispatching table which finally fulfills the requested action as simplified pictured in~\ref{pic:syscalls}\cite{glatz2015betriebssysteme}.
+This table's content, the system service dispatcher routine, is loaded as next instruction to the new \ac{psw}\cite{brause2017betriebssysteme}.
+Jumping to this routine, the system call's parameters and its number are restored to examine the actual call and invoke the matching service routine from the system service dispatching table which finally fulfills the requested action as pictured in simplified form in~\ref{pic:syscalls}\cite{glatz2015betriebssysteme}.
 Conclusively, the control flow jumped back to the system service dispatcher which hands the control back to user space including switching back to user mode in the common way to return\cite{glatz2015betriebssysteme}.
-The previous \ac{psw} is restored from stack containing the bit for \ac{cpu}'s user mode execution.
+The previous \ac{psw} is restored from the stack containing the bit for the \ac{cpu}'s user mode execution.
 The user application has to clean up the stack like for each procedure call at the very end\cite{tanenbaum-modern-operating-systems}.
 
 % Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86\_64 for Linux\cite{decade-linux-syscalls}.
@@ -296,7 +295,7 @@ Figure~\ref{pic:syscalls} uses a x86\_64 like assembly and thus, this modern syn
 
 \subsubsection{POSIX}
 The basic idea behind the \acf{posix} standard is to define a stable interface between the user-space and the operating system kernel to achieve portability for applications on systems meeting this standard.
-But even if an operating system comply them, it may differ in the type and number of available system calls.
+But even if an operating system complies, it may differ in the type and number of available system calls.
 \ac{posix} is only an \ac{api} definition but not one for system calls.
 An operating system may implement the \ac{posix} standard functions within a library which often involve system calls, but it has not to do so\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 System calls are rarely used directly by user applications without an abstraction layer such as libraries. An example is the \textit{libc} on Unix-like systems\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}.
@@ -308,12 +307,12 @@ Another example for an \ac{api} is Win32 used by Windows to abstract their syste
 
 
 \subsection{System Calls in Linux}
-In fact, the way system calls are working in Linux was already described as part of the general section. 
-The exact mechanism, the calling convention but also the number of system calls is highly depending on the \ac{cpu}'s architecture.
-While a 32-bit Linux kernel in version 4.8 for the x86 architecture offered 379 calls, the 64-bit version for x86\_64 offered only 328\cite{lfd430}.
-The \textit{man-pages} project documents gives an overview (\texttt{man 2 syscall}) about architectural differences and the calling conventions.
+The way system calls are working in Linux was already described as part of the general section. 
+The exact mechanism, the calling convention but also the number of system calls is highly dependent on the \ac{cpu}'s architecture.
+While a 32-bit Linux kernel in version 4.8 for the x86 architecture offeres 379 calls, the 64-bit version for x86\_64 offeres only 328\cite{lfd430}.
+The \textit{man-pages} project documents give an overview (\texttt{man 2 syscall}) about architectural differences and the calling conventions.
 How far Linux is actually compatible to the \ac{posix} standard is not only related to the kernel and the number of system calls itself, but for the most part to its abstraction layer, the used \ac{posix}/C standard library.
-One of the most spread ones, the \textit{glibc} (GNU C Library) aims to follow POSIX.1\-2008 amongst other standards\footnote{\url{https://www.gnu.org/software/libc/}} while the \textit{musl} library does not implement it in complete\footnote{\url{https://repo.or.cz/w/musl-tools.git/blob_plain/HEAD:/tab_posix.html}}.
+One of the most widespread ones, the \textit{glibc} (GNU C Library) aims to follow POSIX.1\-2008 amongst other standards\footnote{\url{https://www.gnu.org/software/libc/}} while the \textit{musl} library does not implement it in complete\footnote{\url{https://repo.or.cz/w/musl-tools.git/blob_plain/HEAD:/tab_posix.html}}.
 
 
 
@@ -322,12 +321,12 @@ One of the most spread ones, the \textit{glibc} (GNU C Library) aims to follow P
 % http://research.cs.queensu.ca/~cordy/Papers/BKBHDC_ESE_Linux.pdf
 % for vdso
 In Zircon, system calls are bounded to the concept of \textit{handles}, a construct which allows applications running in user mode to reference an object in kernel mode\cite{zircon-handle}.
-Interactions between user applications and kernel objects are still done using system calls but the most of them are using a handle which describes the kernel object to work on\cite{zircon-concepts}. 
+Interactions between user applications and kernel objects are still done using system calls but most of them are using a handle which describes the kernel object to work on\cite{zircon-concepts}. 
 Handles are checked by the kernel each time a system call is triggered.
 For additional security, the kernel checks whether
 \begin{itemize}
     \item a handle has the correct type for the system call, 
-    \item a kernel handles parameters refers to one existing within the calling process's handle table and
+    \item a kernel handle's parameters refer to an existing within the calling process's handle table and
     \item a handle has the necessary rights for the triggered action\cite{zircon-concepts}.
 \end{itemize}
 % 
@@ -336,12 +335,12 @@ It is a \acf{vdso} directly provided by the kernel and not stored as a physical 
 For the reason that \acp{vdso} are accessible from both, kernel and user mode, without switching the context, they are a perfect concept to implement system calls in a very performant way\cite{vdso-linuxjournal}.
 Thus, the Zircon \ac{vdso} is the only way to perform system calls\cite{zircon-vdso}, which is a very elegant solution to cope with performance issues in a microkernel architecture.
 
-The system calls are defined by using an abstract definition syntax and the matching tool \textit{abigen} which generates header files and code for the libzircon and the kernel's system call implementation\cite{zircon-concepts}.
-Also in contrast to Linux does Zircon respectively Fuchsia not aim for \ac{posix} compatibility.
+The system calls are defined by using an abstract definition syntax and the matching tool \textit{abigen} which generates header files and code for the libzircon's and the kernel's system call implementation\cite{zircon-concepts}.
+Also in contrast to Linux, Zircon respectively Fuchsia does not aim for \ac{posix} compatibility.
 It implements only a very limited subset of \ac{posix} consisting of basic \ac{io} operations and pthreads.
 Zircon does not support Unix-like signals, symbolic links and much more\cite{zircon-libc-posix}.
 The libzircon.so does not support directly \ac{io} operations. 
-They are performed by the \textit{fdio.so} library which overwrites weak symbols of the libzircon\cite{zircon-libc-posix}.
+They are performed by the \textit{fdio.so} library which overwrites weak symbols of libzircon\cite{zircon-libc-posix}.
 All available system calls in Zircon from the version this thesis is working on are documented in \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/docs/syscalls}. 
 
 \section{Processes and Threads}\label{sec:processes-threads}
@@ -350,9 +349,9 @@ Modern operating systems are characterized by their ability to perform various t
 So far, this fact has simply been accepted within this work, but it was not questioned what is special about it and how this multitasking is achieved by an operating system.
 In general, parallelization of tasks can take place on different levels, e.g.\ as hardware or software parallelism.
 While the physical resources for the first case are actually available to execute the tasks really simultaneously, it only seems to be so for software parallelism\cite{glatz2015betriebssysteme}.
-Hardware parallelism is realized by independent, may specialized execution units such as multiple processing cores or controllers which are able to perform particular parallel to the main \ac{cpu}.
+Hardware parallelism is realized by independent, maybe specialized execution units such as multiple processing cores or controllers which are able to perform particular parallel to the main \ac{cpu}.
 This could be USB, network or graphics controller, for example\cite{glatz2015betriebssysteme}.
-In order to create the impression of parallelism on a single \ac{cpu} and to use their available computing power as good as possible, an abstraction to provide pseudo concurrency for the execution of several tasks is required.
+In order to create the impression of parallelism on a single \ac{cpu} and to use their available computing power as efficient as possible, an abstraction to provide pseudo concurrency for the execution of several tasks is required.
 According to \textsc{Tanenbaum}, this concept called \textit{process model}, is the most central one of operating systems\cite{tanenbaum-modern-operating-systems}.
 The term \textit{process} is often defined as a program in execution\cite{achilles2006betriebssysteme}.
 The process model is complemented by the thread model which provides a simplified version for parallelism within a process or an application\cite{glatz2015betriebssysteme}.
@@ -462,8 +461,8 @@ But since in reality more processes, respectively programs, have to be executed 
 This mechanism behind, the \textit{multiprogramming model} (formerly also known as \textit{time-sharing model}), and the policies called \textit{process scheduling} will be considered hereafter.
 
 However, for a change between the execution of programs to succeed, a process must contain information about its state at the moment it is interrupted to run another one.
-Which information need to be stored and the way it is done slightly depends on an effective system's design and its implementation.
-In general, these information are stored in a structure called \textit{process control block} in literature\cite{tanenbaum-modern-operating-systems}.
+Which information needs to be stored and the way it is done slightly depends on an effective system's design and its implementation.
+In general, this information is stored in a structure called \textit{process control block} in literature\cite{tanenbaum-modern-operating-systems}.
 Depending on the implementation, it contains for example
 \begin{itemize}
     \item a process id, 
@@ -484,11 +483,11 @@ The process is ready to run, but has to wait until the system allocates a \ac{cp
 Is that the case, the process changes its state to \textit{running} and performs its calculations.
 If a process is interrupted (preempted) by the operating system without having fulfilled its task completely, there can be two reasons for this which result in different subsequent states.
 Was the process interrupted just to run another one, the process's state changes back to \textit{ready}. 
-It only lacks on \ac{cpu} time to run the process again.
-If the reason was instead that resources like the process is waiting for an external event or required \ac{io} devices are used by another process, so it changes its state to \textit{waiting} or \textit{blocked}. 
+It only lacks \ac{cpu} time to run the process again.
+If the reason was instead that resources - like the process is waiting for an external event or required \ac{io} devices - are used by another process, then it changes its state to \textit{waiting} or \textit{blocked}. 
 Only when the blocking resource needed by the process is available again, the operating system changes the status of the process to \textit{ready} again.
 The process is prepared to get reassigned to a \ac{cpu}.
-A running process finishing its task during its computing time has reached the end of its life, its state changes to \textit{terminate}.
+A running process finishing its task during its computing time has reached the end of its life, its state changes to \textit{terminated}.
 The operating system destroys the process and frees related resources\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
 
 \begin{figure} [t]
@@ -505,30 +504,30 @@ The policy, that is the strategy to decide which process should run next, should
 It not only allows the impression of parallelism on a single processing core, but also increases its utilization, as many processes spend a lot of time waiting for external events such as keyboard inputs\cite{tanenbaum-modern-operating-systems}.
 
 Principally, the mechanism behind scheduling does not differ fundamentally from the treatment of an ordinary interrupt.
-First, the \acf{pc} is saved prior to the new \ac{pc} is loaded from the interrupt vector and the \ac{cpu}'s registers are saved.
+First, the \acf{pc} is saved prior to the new \ac{pc} loading from the interrupt vector and the \ac{cpu}'s registers are saved.
 After a new stack was setup, the actual interrupt service runs before the scheduling policy decides which process is to run next and the selected one is started\cite{tanenbaum-modern-operating-systems}.
 
 \subsubsection*{Process Creation}
 There are several reasons why a new process should be started and scheduled at all.
 The most basic one is the systems start-up.
-To initialize an operating system are numerous processes created to execute parts of the system itself.
-The user perceives very few of them directly, since the most of them are \textit{background processes} performing specific tasks like accepting incoming mails.
-Often, long running processes without user interaction are referred as \textit{deamon processes}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
+To initialize an operating system, numerous processes are created to execute parts of the system itself.
+The user perceives very few of them directly, since most of them are \textit{background processes} performing specific tasks like accepting incoming mails.
+Often long running processes without user interaction are referred to as \textit{daemon processes}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 They are mostly generated from the \textit{init process}, the first one running and bringing up the system.
 Foreground processes, the ones a user interacts with, are more often started on behalf of the user.
 Besides, a process can also be started by a system service call from an existing process.
-The last option, that a process is started to execute a batch job is rare today apart from scientific high performance computers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
+The last option that a process is started to execute a batch job is rare today apart from scientific high performance computers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 
-Also, for the way how a new process can be started there are several options.
+Also for the way how a new process can be started there are several options.
 Using \textit{process chaining}, a running process starts an independent new one, a new \ac{pcb}, and destroys itself\cite{achilles2006betriebssysteme}.
 This option is pictured in figure~\ref{pic:processcreation}, a.
 An example in Unix-like systems is calling \texttt{exec()} on an already running process to replace the current program with another one\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
-By \textit{forking a process} (figure~\ref{pic:processcreation}, b), a second one that is, at least in the beginning, a copy of the original one.
-Both remains exiting and share the same environment such as program code, address space and resources\cite{tanenbaum-modern-operating-systems}.
-As a result, both processes have access to the exactly same resources like opened files or \ac{io} devices\cite{achilles2006betriebssysteme}.
+By \textit{forking a process} (figure~\ref{pic:processcreation}, b), a second one is created that is, at least in the beginning, a copy of the original one.
+Both keep exiting and share the same environment such as program code, address space and resources\cite{tanenbaum-modern-operating-systems}.
+As a result, both processes have access to exactly the same resources like opened files or \ac{io} devices\cite{achilles2006betriebssysteme}.
 The Unix implementation of \texttt{fork()} is an example for this way of process creation.
 Process \textit{forking} and \textit{chaining} are usually used combined in Unix-like systems to create a new, independent process which is running in parallel to the first one\cite{tanenbaum-modern-operating-systems}.
-In contrast, Windows offers a third way the \textit{process creation} (figure~\ref{pic:processcreation}, c) which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
+In contrast, Windows offers a third way of \textit{process creation} (figure~\ref{pic:processcreation}, c) which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
 
 \begin{figure} [t]
 	\centering
@@ -536,22 +535,22 @@ In contrast, Windows offers a third way the \textit{process creation} (figure~\r
 	\caption{Ways of Process Creation according to~\cite{glatz2015betriebssysteme}}\label{pic:processcreation}
 \end{figure}
 
-Are the newly created process and its parent share the same program code, the new one can simply inherit all needed data from its parent like it is done by \textit{process forking}\cite{achilles2006betriebssysteme}.
+As the newly created process and its parent share the same program code, the new one can simply inherit all needed data from its parent like it is done by \textit{process forking}\cite{achilles2006betriebssysteme}.
 Each process has its own virtual address space if it is not shared through inheritance.
 
 As a result, the data cannot be copied between processes without further ado.
 This is not only necessary for the multiprogramming model, but also a security mechanism that encapsulates and protects applications in execution against each other, called \textit{process isolation}.
-Is it the case, e.g.\ for the once created via \textit{process creation}, an operating system needs a mechanism to pass data to the created process.
-As a solution, a mechanism for the communication between processes with which the parent process communicated the new data to the child one via a buffer is just as conceivable as the use of initial parameters which are transmitted during the process creation, e.g.\ via a system call\cite{glatz2015betriebssysteme}.
-The first option is used by the \texttt{popen()} call of Unix-like systems while the mechanism behind the \textit{\ac{ipc}} takes a major role in modern operating systems and therefore is treated in a separate section.
+In this case, i.e.\ for the one created via \textit{process creation}, an operating system needs a mechanism to pass data to the created process.
+As a solution a mechanism for the communication between processes with which the parent process communicated the new data to the child via a buffer is just as conceivable as the use of initial parameters which are transmitted during the process creation, e.g.\ via a system call\cite{glatz2015betriebssysteme}.
+The first option is used by the \texttt{popen()} call of Unix-like systems while the mechanism behind the \textit{\ac{ipc}} plays a major role in modern operating systems and therefore is treated in a separate section.
 The second one is more often used for \textit{threads} which are the topic of the following section.
 
 \subsubsection*{Process Termination}
 Reaching the end of its lifecycle (see figure~\ref{pic:process-lifecycle}), a process terminates itself regularly and voluntary (\textit{normal exit})\cite{tanenbaum-modern-operating-systems}.
 In addition, a process can terminate itself prematurely for various scenarios or be terminated by the operating system or other processes.
 For example, a process may detect an internal error and voluntary terminates itself ahead of time or the operating system detects such an error and terminates the process involuntary to avoid major damage\cite{tanenbaum-modern-operating-systems}.
-Besides, a process may gets involuntary terminated or killed by another process. 
-Killing another process is in common a privileged task which require an authorization or extended rights\cite{tanenbaum-modern-operating-systems}.
+Besides, a process may get involuntarily terminated or killed by another process. 
+Killing another process is usually a privileged task which requires an authorization or extended rights\cite{tanenbaum-modern-operating-systems}.
 
 
 \subsection{Threads}\label{sec:threads}
@@ -585,28 +584,28 @@ This means processes only group the resources together while \textit{threads} re
 A program is still abstracted as a process while (parallel) sequences within the program correspond to threads.
 As a result, \textit{threads} can be considered as slimmed down processes sharing the same address space and physical resources.
 Each thread has its own \acp{pc}, register set, stack and state, but the address space, global variables, open files and accounting information are shared\cite{tanenbaum-modern-operating-systems}.
-A thread's lifecycle is equivalent to process's ones, but in contrast to them are threads not isolated and protected against each other\cite{glatz2015betriebssysteme}.
+A thread's lifecycle is equivalent to process' ones, but in contrast to them threads are not isolated and protected against each other\cite{glatz2015betriebssysteme}.
 As they share the same address space, one thread can read, write or even destroy another thread's private stack\cite{tanenbaum-modern-operating-systems}.
 Another issue are competing threads that try to write the same global data.
-They cause a \textit{race condition} which possibly result in inconsistent or wrong data\cite{brause2017betriebssysteme}.
+They cause a \textit{race condition} which possibly results in inconsistent or wrong data\cite{brause2017betriebssysteme}.
 
 Nevertheless, the advantages of using \textit{threads} (multithreaded programming) predominate.
 The most important one is resource sharing. 
-The fact multiple threads using the same resources by default, e.g.\ files, in pseudo parallel are the biggest advantage but at the same time the biggest problem of this concept.
-Threads enable responsive, interactive applications and increase the performance especially on multiprocessor architectures they can run truly parallel\cite{silberschatz2009operating}.
+The fact that multiple threads are using the same resources by default, e.g.\ files, in pseudo parallel are the biggest advantage but at the same time the biggest problem of this concept.
+Threads enable responsive, interactive applications and increase the performance especially on multiprocessor architectures in that they can run truly parallel\cite{silberschatz2009operating}.
 Another reason is an economic one.
 While allocating an address space and physical resources to create a process is an expensive operation, creating a thread is not as they inherit exactly these components from their corresponding process\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
 Threads only need to set up their own \ac{pc}, registers, stack and a state within a process. 
 That's why they are also known as \acf{lwp}\cite{mandl2014Grundkurs}.
 
-How \textit{light-weight} they actually are depends on a lot to their implementation in an operating system.
+How \textit{light-weight} they actually are depends on a lot on their implementation in an operating system.
 Conceivable options are thread implementation in userspace or kernel space, but also hybrid ones. 
-Implementing them as user library requires an own mechanism to schedule threads within a process which is often realized as a kind of runtime environment including a \ac{tcb} (according to \ac{pcb}) for each single process\cite{mandl2014Grundkurs},~\cite{tanenbaum-modern-operating-systems}.
+Implementing them as user library requires an own mechanism to schedule threads within a process which is often realized as a kind of runtime environment including a \ac{tcb} (corresponding to \ac{pcb}) for each single process\cite{mandl2014Grundkurs},~\cite{tanenbaum-modern-operating-systems}.
 There is no need to invoke the operating system to switch a thread, but as a result all threads within a process block become blocked if a single one waits for a resource\cite{tanenbaum-modern-operating-systems},~\cite{brause2017betriebssysteme}. 
 The operating system's schedule just do not know about the runtime environment and possible other runnable threads within a process.
-The implementation in kernel space is not that light-weight, but multicore architectures benefits more from this variant.
+The implementation in kernel space is not that light-weight, but multicore architectures benefit more from this variant.
 If the operating system's kernel has the control over threads, these are managed just like processes.
-Instead of one \ac{tcb} within each process, the kernel collects the \acp{tcb} for all threads in the entire system in a thread table according to the process table\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
+Instead of one \ac{tcb} within each process, the kernel collects the \acp{tcb} for all threads in the entire system in a thread table corresponding to the process table\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
 But this also allows the kernel to recognize a blocked thread and schedule another one of the same process instead of blocking the whole process\cite{tanenbaum-modern-operating-systems}.
 
 
@@ -621,11 +620,11 @@ As both processes share the same data and resources at this time, synchronizatio
 This issue is considered in the following section~\ref{sec:synchro}.
 The distinction of parent and child is done via their \ac{pid}.
 The fork call returns 0 to the child and a non-null \ac{pid} to its parent. 
-Based on this, the execution paths can be splitted up\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
+Based on this, the execution paths can be split up\cite{tanenbaum-modern-operating-systems},~\cite{mandl2014Grundkurs}.
 Even if parent and child differ only by the \ac{pid} directly after the fork, changes in the parent are not visible to the child and vice versa.
-To take advantage of this fact to actually use the new created process independently of the parent, in Unix-like systems the fork call is in most cases directly followed by the call \textit{exec()}, which replaces the complete process environment with the one from another, new program.
+To take advantage of this fact to actually use the newly created process independently of the parent, in Unix-like systems the fork call is in most cases directly followed by the call \textit{exec()}, which replaces the complete process environment with the one from another, new program.
 As copying the process data is quite costly and needless if an exec follows directly, modern Linux systems use a \textit{copy-on-write} strategy for process forking.
-Childs get own page tables pointing to the parent ones.
+Children get their own page tables pointing to the parent ones.
 The child still can read the parent's environment data without a copy operation needed. 
 Only when the child or the parent tries a write access on this data, a \textit{protection fault} is thrown and the page to modify is copied to the child process\cite{tanenbaum-modern-operating-systems}.
 Such a fork is known as \textit{vfork()} and used especially in situations an \textit{exec()} follows directly to avoid the expensive and needless copy of the parent process's environment\cite{mandl2014Grundkurs}.
@@ -635,11 +634,11 @@ Within the Linux kernel, the difference between processes and threads (or heavy-
 It is rather spoken of \textit{tasks}.
 The reason for this is that the Linux kernel offers a possibility for a fine-granular process respectively thread creation via the \textit{clone()} call on kernel level.
 In addition, Linux respects \ac{posix} threads\cite{lfd430}.
-But as the clone call is a unique feature of Linux and not generally available on other Unix-like systems are application using the clone call directly not portable\cite{tanenbaum-modern-operating-systems}.
+But as the clone call is a unique feature of Linux and not generally available on other Unix-like systems applications using the clone call directly are not portable\cite{tanenbaum-modern-operating-systems}.
 
 Nevertheless, \textit{clone()} is a very interesting concept in Linux.
-In each case, a process or thread created with clone gets an empty private stack and executes directly a new program which is given as an argument to the call.
-The decisions whether a process or a thread should be created, which resources should be shared or copied and which process is actual the parent are based on the following flags:
+In every case, a process or thread is created with clone it gets an empty private stack and executes directly a new program which is given as an argument to the call.
+The decision whether a process or a thread should be created, which resources should be shared or copied and which process is actual the parent are based on the following flags:
 \begin{itemize}
     \item if \texttt{CLONE\_VM} is set, a new thread is created, if not, the call results in a new process.
     \item if \texttt{CLONE\_FS} is set, the newly created thread or process shares \textit{umask}, \textit{root} and \textit{working directories} with its parent. They are not shared at all if the flag is not set.
@@ -648,7 +647,7 @@ The decisions whether a process or a thread should be created, which resources s
 \end{itemize}
 
 The flags listed show only a partial amount of the possibilities \textit{clone()} offers.
-A full list the glibc wrapper to the corresponding systemcall is available as a man-page using \texttt{man 2 clone}.
+A full list of the glibc wrapper to the corresponding systemcall is available as a man-page using \texttt{man 2 clone}.
 Both, processes (tasks) and threads based on the clone call are kernel constructs.
 The \ac{posix} thread implementation on Linux internally also uses the clone call with the special flag \texttt{CLONE\_THREAD}.
 
@@ -657,10 +656,10 @@ In contrast to the process lifecycle presented in the generic section, Linux tas
 
 
 \subsection{Processes and Threads in Zircon}\label{sec:processes-zircon}
-Similar to Linux, runnable entities of the Zircon kernel are called \textit{tasks} objects.
+Similar to Linux, runnable entities of the Zircon kernel are called \textit{tasks}.
 This term includes the kernel objects \textit{jobs}, \textit{processes} and \textit{threads}.
 As the whole Zircon kernel is object-based, the user interacts with kernel objects like the ones mentioned above via handles.
-The Zircon documentation describes \textit{handles} as ``kernel constructs that allows user-mode programs to reference a kernel object''\cite{zircon-process}, containing the reference to this object, the corresponding rights and the user-space process bounded to.
+The Zircon documentation describes \textit{handles} as ``kernel constructs that allows user-mode programs to reference a kernel object''\cite{zircon-process}, containing the reference to this object, the corresponding rights and the user-space process it is bounded to.
 Thus, a handle can reference each object type listed in the \textit{Zircon Kernel objects} reference\cite{zircon-objects}, including kernel objects for drivers like \textit{interrupts}, \textit{resource} objects and \textit{Log} objects.
 The Zircon systemcall \texttt{zx\_status\_t zx\_task\_kill(zx\_handle\_t handle)} is such an interaction between a user application and the kernel. 
 It refers to a \textit{task} object handle and thus to all objects for which \textit{task} is a generic term\cite{zircon-task}.
@@ -668,27 +667,27 @@ It refers to a \textit{task} object handle and thus to all objects for which \te
 
 \textit{Jobs} as an organizational unit are Zircon-specific and not known from the general or the Linux-specific section on processes and threads.
 A \textit{job} manages a group of processes but possibly other (child) jobs, too.
-According to Linux, jobs built a tree structure as every process must belong to a single job but jobs can be nested.
+Corresponding to Linux, jobs build a tree structure as every process must belong to a single job but jobs can be nested.
 Except the root job, which corresponds to the init process on Linux, each one has only one parent.
 A Job object consist of a reference to a single parent job, a number of child jobs and a set of member processes.
 In future\footnote{Unless otherwise noted, the status of the Zircon documentation cited in this thesis corresponds to the forked and frozen source code repository on which basis the driver development takes place. See \url{https://github.com/Allegra42/zircon/blob/i2c-grove-lcd/docs/}.}, they will also contain a set of policies\cite{zircon-job}.
 Jobs are used to track the privileges needed to perform kernel related operations like systemcalls but also to track and limit the consumption of basic computing resources such as memory, \ac{cpu} time or \ac{io} devices\cite{zircon-job}.
-The idea behind this concept is managing applications composed of more than one process as a single entity, both from a resource and permission view as well as from lifetime control\cite{zircon-process}.
+The idea behind this concept enables managing applications composed of more than one process as a single entity, both from a resource and permission view as well as from lifetime control\cite{zircon-process}.
 
 A Zircon \textit{process} itself is an instance of a program as defined in the general section about processes~\ref{sec:processes-threads}.
 It consists of the program code as a set of instructions to be executed by one or more \textit{threads} and a collection of resources.
 Threads are just as much a part of a process' resources as \textit{handles} and \textit{\acp{vmar}} are\cite{zircon-process}.
 Strictly speaking, it is not necessary to mention \acp{vmar} as an own point.
 They are kernel objects itself.
-But as the documentation mentions them explicitly, they should also receive special attention in this place.
+But as the documentation mentions them explicitly, they should also receive special attention at this point.
 A \ac{vmar} represents a contiguous part of virtual memory address space used by the kernel as well as by the user-space. 
-Each process starts an own \ac{vmar} to built up its address space.
+Each process starts its own \ac{vmar} to build up its address space.
 \acp{vmar} have a hierarchical permission model, so a process with a read only address space cannot create a readable and writable one, and are randomized per default\cite{zircon-vmar}.
 
 The lifetime of Zircon processes differs from the general but also from the Linux model.
 In Zircon, a new process is created via \texttt{zx\_process\_create()} but the execution starts not before \texttt{zx\_process\_start()} is called.
-Was a process already started and its last running thread thread exits, it is impossible to create a new thread within this process.
-Processes which are composed to a job are threatened as a single entity from a lifetime control's point of view.
+Was a process already started and its last running thread exits, it is impossible to create a new thread within this process.
+Processes which are composed of a job are threatened as a single entity from a lifetime control's point of view.
 The lifetime of Zircon processes (or jobs) ends if 
 \begin{itemize}
     \item the last thread within the process or job exits or is terminated,
@@ -697,11 +696,11 @@ The lifetime of Zircon processes (or jobs) ends if
     \item the parent job is destroyed\cite{zircon-process}.
 \end{itemize}
 
-Just like known from the general section are Zircon \textit{threads} the actual runnable computation entity living within a process.
+Just as described in the general section Zircon \textit{threads} are the actual runnable computation entity living within a process.
 They are created within the \textit{process} context via \texttt{zx\_thread\_create()} but as it is done with Zircon processes, the actual execution is not started until \texttt{zx\_thread\_start()} \textbf{or} \texttt{zx\_process\_start()} is called.
 The \texttt{main()} function or entry point of an application should be the first one started via \texttt{zx\_process\_start()}.
 But returning from such an entry point does not terminate a thread's execution.
-This must be done manually by voluntary calling 
+This must be done manually by voluntarily calling 
 \begin{itemize}
     \item \texttt{zx\_thread\_exit()},
     \item \texttt{zx\_vmar\_unmap\_handle\_close\_thread\_exit()},
@@ -710,11 +709,11 @@ This must be done manually by voluntary calling
 on the thread itself\cite{zircon-thread}.
 Even if the last handle to a thread is closed, the thread is not terminated automatically.
 Instead, the thread must be killed explicitly after the handle was restored via calling \texttt{zx\_object\_get\_child()} on the parent.
-On the other hand, a thread can be terminated involuntary 
+On the other hand, a thread can be terminated involuntarily 
 \begin{itemize}
     \item if the parent process is terminated,
-    \item if someone calls \texttt{zx\_task\_kill()} on the thread's handle and
-    \item if an exception was generated for which is no handler or the handler terminated the thread\cite{zircon-thread}. 
+    \item if someone calls \texttt{zx\_task\_kill()} on the thread's handle or
+    \item if an exception was generated for which there is no handler or the handler terminated the thread\cite{zircon-thread}. 
 \end{itemize}
 
 In contrast to Linux threads and some library thread implementations, Zircon threads are always \textit{detached} from each other.

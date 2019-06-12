@@ -19,14 +19,14 @@
         %   (includes tooling, workflow, ...)
 
 Modern application \acp{cpu}, as used for e.g.\ desktop computers or smartphones, are highly complex circuits consisting of at least two independent actual processing units.
-It is hardly possible to master these multicore processors, associated memory and \ac{io} devices in their full complexity nor take advantage of their actual computing power or security mechanisms without using an operating system as an abstraction layer between the actual hardware and their user.
-As such an operating system, to manage a computer's physical resources and share them between a multitude of user programs in a fair and safe way, is the central task.
+It is hardly possible to master these multicore processors, associated memory and \ac{io} devices in their full complexity nor take advantage of their actual computing power or security mechanisms without using an operating system as an abstraction layer between the actual hardware and their users.
+As such this goal of an operating system, to manage a computer's physical resources and share them between a multitude of user programs in a fair and safe way, is the central task.
 The part of operating systems providing this task is commonly referred to as the \textit{kernel}.  
 Even if this distinction is widely used, especially for Linux, there is no clear and global definition which specific tasks of an operating system are part of the \textit{kernel}.
 \textsc{Albrecht Achilles} named process management, memory management and basic \ac{io} operations as such ones in his book\cite{achilles2006betriebssysteme}.
 Actually, this distinction between a whole operating system and its kernel itself is so difficult to draw because it is not even consistent between different operating system architecture concepts.
-There are a lot of different goals and use-cases for operating systems which have a big impact on the architectural design, and thereforethe term \textit{kernel} too. 
-But for a majority of them, at least the central \textit{device drivers} are considered as part of the kernel. 
+There are a lot of different goals and use-cases for operating systems which have a big impact on the architectural design, and therefore the term \textit{kernel} too. 
+But for a majority of them, at least the central \textit{device drivers} are considered as a part of the kernel. 
 
 With \textit{Linux} and \textit{Fuchsia}, two fundamentally different representatives of the two best-known operating system concepts will be considered in this work, the microkernels and the monolithic ones. %, will be considered in this work.
 Both are representatives for very opposing kernel architecture approaches.
@@ -55,7 +55,7 @@ But some years later, in 2006, the Linux contributor \textsc{Richard Gooch} just
 
 Along with the guess that \textit{Zircon} will target the same sector as \textit{Linux}, especially the mobile and embedded sector, both of them make for an interesting comparison to examine the impacts of kernel concepts on an essential part of them, the \textit{device driver} development.
 In this process, the date of origin should be taken into account as an additional factor.
-It is to be assumed the \textit{Zircon} team is aware to historic, rather poor decisions in \textit{Linux} and other operating systems, and seizes the chance of a completely new product.
+It is to be assumed the \textit{Zircon} team is aware of historic, rather poor decisions in \textit{Linux} and other operating systems, and grasps the opportunity of a completely new product.
 
 
 
@@ -65,7 +65,7 @@ It is to be assumed the \textit{Zircon} team is aware to historic, rather poor d
 
 \section{Research Objectives}\label{sec:research-objectives}
 This work's goal is to evaluate the differences between monolithic and microkernel architectures for operating systems and how they influence the development of device drivers.
-For this purpose, this work shall focus only on the operating system's kernels, the \textit{Zircon} kernel and the \textit{Linux} kernel.
+For this purpose, this work shall focus solely on the operating system's kernels, the \textit{Zircon} kernel and the \textit{Linux} kernel.
 In most literature, filesystems are also listed as an essential part of an operating system, but shall be out of scope of this work.
 Of course, they are essential, but they form their entirely own field of research.
 For this particular work, the specific filesystem implementation is not crucial due to the focus on kernel and device drivers.
@@ -73,7 +73,7 @@ As a result, neither Google's \textit{Fuchsia} nor the \textit{Linux} userland o
 \\
 Contrarily, the following topics are to be examined within the scope of this work:
 \begin{itemize}
-    \item Introducing basic concepts of operating system kernels and examine how they are implemented in the specific realizations, \textit{Linux} and \textit{Zircon}.
+    \item Introducing basic concepts of operating system kernels and evaluating how they are implemented in the specific realizations, \textit{Linux} and \textit{Zircon}.
     \item Examining the effects of the architectural differences of the two well-known approaches \textit{monolithic} and \textit{microkernel} on device driver development using the example of the non-academic, specific implementations, \textit{Linux} and \textit{Zircon}. This includes:  
         \begin{itemize}
             \item The analysis of the driver models and how they are integrated into the kernel.

@@ -15,14 +15,14 @@ Die Arbeit richtet sich vor allem an System- und Gerätetreiber-Entwickler, die 
 
 \newpage
 \section*{Abstract}
-Monolithic operating system kernels were the state of art in almost all fields of application for a long time.
+Monolithic operating system kernels were the state of the art in almost all fields of application for a long time.
 For more specific areas, such as real-time operating systems, microkernel based systems have been gaining ground for some years now.
 With Google's Fuchsia, respectively its Zircon kernel, another microkernel based operating system has been released which has the potential to replace monolithic systems, even if the field of application is still not known right now.
 Therefore, the present work examines the differences between Linux as a monolithic representative and Zircon as a microkernel with respect to basic concepts of operating system theory and its implementation with a focus on device driver development.
 The second part of this thesis therefore includes a case study based on an exemplary device driver implementation, which analyzes the main issue of microkernel based operating systems as well, the performance.
-The analysis comes to the conclusion that the kernel architecture itself has hardly any influence on driver development, although it has a positive but hidden effect on the handling and stability of an operating system.
+The analysis concludes that the kernel architecture itself is hardly influencing the driver development, although it has a positive but hidden effect on the handling and stability of an operating system.
 However, the reduced performance compared to monolithic operating systems can be confirmed by a simple test examining the duration of a system action from a driver as well.
-An additional, notable advantage of the Zircon kernel over Linux is caused by numerous implementation details that make some, for historcal reasons, cumbersome programming constructs in Linux driver development obsolete.
+An additional, notable advantage of the Zircon kernel over Linux is caused by numerous implementation details that make some, for historical reasons, cumbersome programming constructs in Linux driver development obsolete.
 The work is primarily aimed at system and device driver developers who are interested in the differences between monolithic and microkernel based operating systems and may even seek inspiration to improve existing kernels.
 
 \paragraph{Keywords} operating systems, monolith, microkernel, device driver, Zircon, Linux
