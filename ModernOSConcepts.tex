@@ -1771,7 +1771,7 @@ In the first step, the \ac{cpu} is still needed.
 It must setup the \ac{dma} controller's internal registers which specify the start address of the data to transfer, a byte count and the transfer direction amongst other things.
 The controller takes over the control and initializes and executes the data transfer by issuing requests to the \ac{io} device instead of the \ac{cpu}.
 After a single partial request, e.g.\ the write of a memory address, is done, the \ac{dma} controller increments the address, decrements the byte count and re-executes the transfer until the byte count is 0.
-If the whole transfer is done the controller sends an interrupt to the \ac{cpu} and returns the control over the bus.
+Once the whole transfer is done the controller sends an interrupt to the \ac{cpu} and returns the control over the bus.
 The \ac{dma} controller may work on physical or virtual addresses.
 For the latter ones, the \ac{mmu} must be involved.
 As the \ac{cpu} is bypassed during \ac{dma} transfers, caches may become inconsistent and require additional handling to prevent inconsistent data between them and the main memory\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
@@ -1811,11 +1811,12 @@ If anyone is in need of a certain concept it can be integrated into the Linux ke
 Beside the very basic kernel itself, Linux is highly configurable to specific needs.
 As a result, there is not \textit{one} single Linux kernel but a number of variants depending on the chosen configuration.
 Zircon is more radical in many aspects.
-It is developed in public by a team from a large company for a certain, but at the moment not further specified purpose, but not open to receive contributions from outside.
-Even if the concepts used do not differ that much, the implementation does.
+It is developed in public by a team from a large company for a certain, but at the moment not further specified purpose.
+Yet, it is not open to receive contributions from outside.
+Even if the used concepts do not differ that much, the implementation does.
 This is justified by the microkernel architecture and its effects but also by the used programming languages and above all by learnings from other operating systems, especially the ones used in Google's environment like Android or Chromium OS which are based on Linux.
 Zircon is considerable less broadly positioned than Linux but the fewer concepts used and their implementation are very well selected and executed to suit the needs and design goals of the overlying Fuchsia system. 
-It is basically one resulting kernel with only a few configurations but the focus is on modularity, security, safety and stability anyway\cite{chat-zircon-arch}.
+It is basically one resulting kernel with only a few configurations and the focus lies on modularity, security, safety and stability anyway\cite{chat-zircon-arch}.
 Thus, the Zircon kernel is designed from scratch for the use in an interactive or realtime operating system, probably for a new mobile OS, where exactly these design goals predominate the advantages of a Linux kernel. 
 However, the focus on the few carefully selected concepts offers the opportunity to optimize them to a high degree.
 

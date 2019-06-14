@@ -12,7 +12,7 @@ Especially as even devices from the same type differ in the exact way the are ma
 Thus, it is the task of a driver as a part of an operating system to 
 \begin{itemize}
     \item define an abstraction of a device to the system,
-    \item do the connection between applications and certain peripherals, 
+    \item establish the connection between applications and certain peripherals, 
     \item initialize the peripheral controller and the device if it is needed,
     \item query the device state from the controller,
     \item log events,
@@ -22,30 +22,30 @@ Thus, it is the task of a driver as a part of an operating system to
 \end{itemize}
 %
 Driver development is very operating system dependent and has wide-ranging consequences.
-While the decision if drivers are located in user or kernel space goes alongside with the choice for an architecture, remain some further questions.
+While the decision if drivers are located in user or kernel space some further questions remain with the choice for an architecture, remain some further questions.
 Some of them are about the way and point in time a driver is attached to the operating system.
 For example if the driver must be known at compile time or if it is possible to attach it later, e.g.\ during runtime\cite{tanenbaum-modern-operating-systems}.
 In any case, each system should provide a unified but extensible device driver interface which supports various device types, even for those that were non-existing at the time the operating system was designed\cite{glatz2015betriebssysteme}.
 The design of the interface could be specific to each device type or standardized for all drivers\cite{tanenbaum-modern-operating-systems}.
 Furthermore, in almost every operating system specific driver model, it has to be ensured a driver is \textit{re-entrant}, which means a running driver must be safe if it is called from several processes at the same time, and also still safe if peripheral devices become added or removed while the computer is still running\cite{tanenbaum-modern-operating-systems}.
-In order to avoid re-developing or duplicating driver parts that remain the same for devices of the same type are device drivers often modeled and implemented as a hierarchical or layered model.
-A possibility is to split into a logical and a physical layer.
+In order to avoid re-developing or duplicating driver parts that remain the same for devices of the same type, device drivers are often modeled and implemented as a hierarchical or layered model.
+A widespread pattern is to split the implementation into a logical and a physical layer.
 The logical one contains driver functionality which remains consistent between same typed devices while the physical layer only takes care of device specific functionality\cite{tanenbaum-modern-operating-systems} 
 
 % \section{Driver Models}
   
 \section{Linux Driver Model}
 \subsubsection*{Driver Types}
-As already mentioned, drivers do most of all an abstraction of the communication with \ac{io} peripherals.
-To do so, Linux provides more ways than widely known.
+As already mentioned, drivers most importantly implement an abstraction of the communication with \ac{io} peripherals.
+To do so, Linux provides more ways than commonly known.
 The first one is via \textit{direct hardware access} as \textit{user-space driver}.
-As known from the previous sections are the most \ac{io} respectively driver related operations privileged.
-But Linux offers a way for common user applications (userspace) to access hardware without a classical driver using this possibility.
-It is, above all, used for video drivers which are incorporated into the \textit{X.Org display server}.
-In order to obtain the necessary rights are two systemcalls needed: \texttt{iopl()} to change the privileged level and \texttt{ioperm()} to set the \ac{io} port permissions.
-These calls can only be done by a privileged Linux user, the \textit{root} user.
+As known from the previous sections the most \ac{io} related drivers and its operations are privileged.
+But Linux offers a way for common user applications (userspace) to access hardware without a classical driver.
+This way of accessing the hardware is, above all, used for video drivers which are incorporated into the \textit{X.Org display server}.
+In order to obtain the necessary rights two systemcalls needed: \texttt{iopl()} to change the privileged level and \texttt{ioperm()} to set the \ac{io} port permissions.
+These calls can only be performed by a privileged Linux user or the \textit{root} user.
 Compared to other options to access peripheral hardware, this one has the disadvantage that interrupts are not available at all and the user software may run into issues with demand paging.
-So this way is maybe slower than a device driver in kernelspace, but for some tasks, like the already named \textit{X.Org server} is it more meaningful than a kernel driver\cite{lfd430},~\cite{glatz2015betriebssysteme}.
+So this way is maybe slower than a device driver in kernelspace, but for some tasks, like the already named \textit{X.Org server} is this kind of a accessing hardware more meaningful than a kernel driver\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 
 Another widely unknown and \ac{cpu} specific way to perform \ac{io} operations is using \textit{minimal operating system support} to access serial interfaces on x86-based \acp{cpu}.
 In doing so, the kernel does not know anything about the exact device but about its \ac{io} interface\cite{glatz2015betriebssysteme}.
@@ -53,8 +53,8 @@ Thus, this variant is not handled further.
 Instead, this work will focus on \ac{io} drivers in \textit{kernel-space}, the most common way device drivers in Linux are written.
 This kind of driver is a part of the kernel's address space, running in the \ac{cpu}'s kernel mode and thus privileged.
 User applications can access kernel drivers and thus the devices via common file operations like \texttt{open()}, \texttt{close()}, \texttt{read()} or \texttt{write()} as they are shown virtually as \textit{special files} in the device filesystem \texttt{/dev/}.
-Together with the optional entries in the \texttt{/sys/} filesystem and the older ones in \texttt{/proc/} are devices in those filesystems categorized in a structured way, according their types\cite{glatz2015betriebssysteme}.
-Linux differentiates drivers in the already known block devices, character devices and network devices, but internally are drivers structured in \textit{subsystems} of similar device functionality like usb, network, bluetooth, gpio and many others\cite{quade2016Linux}. 
+Together with the optional entries in the \texttt{/sys/} filesystem and the older ones in \texttt{/proc/} are devices in those filesystems categorized in a structured way, according to their types\cite{glatz2015betriebssysteme}.
+Linux differentiates drivers in the already known block devices, character devices and network devices, but internally drivers are structured in \textit{subsystems} of similar device functionality like usb, network, bluetooth, gpio and many others\cite{quade2016Linux}. 
 
 As indicated above do \textit{character} and \textit{block device drivers} in Linux have filesystem entries which are associated with them.
 Such a file node is the basic way to communicate with the driver from userspace.
@@ -65,7 +65,7 @@ Device numbers are in the most cases assigned by the \textit{udev} mechanism tod
 A closer look to it and its relation to the \texttt{/sys/} filesystem follows.
 
 \textit{Character devices}, no matter in which subsystem they are arranged, have in common that they are well represented as data streams.
-They provide only sequential access to their data and can be considered as file including the standard file operations\cite{lfd430}.
+They provide only sequential access to their data and can be accessed just like a regular file including the standard file operations\cite{lfd430}.
 The same applies to \textit{block devices}.
 In contrast to character devices are block devices read and written only in multiples of their block-size.
 Linux enables devices of these type to behave similar to character devices and transfer any number of bytes per time, too\cite{lfd430}.
@@ -81,38 +81,38 @@ Instead, they are most often identified by name (\texttt{eth0}, \texttt{wlan0}) 
 \subsubsection*{Driver Build Types}
 Device drivers in Linux can be a static part of the kernel or a dynamically loadable \textit{module}.
 In older version, only a static integration was possible. That means all may needed drivers must be present at compile time.
-Thus, the kernel size increases but some drivers will not be used at all and to add a new driver is it needed to recompile and reboot the kernel.
-Current Linux kernels allow additionally the dynamically loadable modules with optional parameters.
+Thus, the kernel size increases but some drivers will not be used at all and to add a new driver it is needed to recompile and reboot the kernel.
+Current Linux kernels additionally allow dynamically loadable modules with optional parameters.
 Reload a driver during runtime without a reboot does not only save space, it is also useful for development.
 It is only needed to recompile and reload a single module instead of the entire kernel including a system reboot\cite{quade2016Linux}.
-However, the module has to be built to exactly the same kernel as running in order to be loaded.
+However, the module has to be built to exactly the same kernel version as running in order to be loaded.
 A module which is dynamically loaded via \texttt{insmod} respectively \texttt{modprobe} is, like built-in drivers, a part of the kernel's address space and running in kernel mode.
 But as a module does a dynamic binding to the kernel's symbol table, it is only allowed to use a, in comparison to built-in drivers, restricted \ac{api}\cite{glatz2015betriebssysteme}.
 However, being a part of the kernel's address space brings drivers into a special responsibility.
 There is no isolation between parts of the kernel, an errornous implemented driver may crash the entire system as a result.
-For the implementation of a driver, the fact of it should be used as built-in driver or as module has just little impact.
+Whether a driver should be build as a built-in driver or as a module has just little impact on its implementation.
 It does require little or no changes on the source at all to switch between them as it is most of all a build configuration\cite{lfd430}.
 
-Module driver are indeed useful, but not realizable for each device type.
+Module drivers are indeed useful, but not realizable for each device type.
 Some drivers, e.g.\ specific \ac{cpu} controller, must be present at a very early system stage to enable Linux to read from hard drives.
-Writing such a driver as a module which needs to be read from a hard drive to be loaded into the system is not realizable accordingly\cite{quade2016Linux}.
+Writing such a driver as a module which needs to be read from a hard drive to be loaded into the system is therefore not realizable\cite{quade2016Linux}.
 
 \subsubsection*{Driver Interfaces}
-As for device drivers in general need the ones in Linux functions to include themself into the system, i.e.\ methods to initialize respectively deinitialize the driver and the associated device, operating system triggered functions, e.g.\ interrupt handler functions, as well as user application triggered routines to enable the communication between user and device\cite{quade2016Linux}.
+Device drivers in general need to call Linux system functions to include themself into the kernel, i.e.\ methods to initialize respectively deinitialize the driver and the associated device, operating system triggered functions, e.g.\ interrupt handler functions, as well as user application triggered routines to enable the communication between user and device\cite{quade2016Linux}.
 The latter ones also include the driver-side implementations for the standard \ac{io} \ac{api}, the file operations.
 It should be implemented in a device-specific way for the operations that are meaningful for the device.
-If there is no such behavior a device, it is preferred to implement only the meaningful operations, leave the default behavior for the others one and switch to a better suited interface for the device.
-Besides the standard \ac{io} \ac{api}, there are e.g.\ communication or multimedia specific \acp{api} which suits better to devices of these kinds.
+If there is no such behavior on a device, it is preferred to implement only the meaningful operations, leave the default behavior for the others one and switch to a better suited interface for the device.
+Besides the standard \ac{io} \ac{api}, there are e.g.\ communication or multimedia specific \acp{api} which are better suited to devices of these kinds.
 Often, these interfaces are defined in Linux but built on basis of the \texttt{ioctl()} call which is technically a part of the file operations\cite{quade2016Linux}.
 \ac{io} control is a universal interface to define own, device specific commands.
 An \texttt{ioctl()} command is usually made from a number and the type of optional arguments.
-However, the preferred way is to utilize the macros Linux provides to define beside the number and the argument types also the size of the transferred data and their transfer direction\cite{quade2016Linux}.
+However, the preferred way is to utilize the macros Linux provides and use them to define a command consisting of the number, the argument types, the size of the transferred data and their transfer direction\cite{quade2016Linux}.
 This is the best way to verify \texttt{ioctl()} calls to a certain extent.
 The calls defined for the use in \texttt{ioctl()}'s must be known in both, kernel and userspace.
 Thus, this interface descriptions and corresponding datastructure definitions must be accessible from both sides.
 Typically, they are found in \texttt{linux/include/uapi/linux/}\cite{quade2016Linux}.
 
-To make the drivers implementations of these standard \ac{io} functions callable for the system and users, it is needed to declared them to the operating system kernel via specific calls.
+To make the drivers implementations of these standard \ac{io} functions callable for the system and users, it is required to declared them to the operating system kernel via specific calls.
 They take structures with function pointers to the driver implementations as an argument.
 Functions that do not have a meaning for a specific driver are denoted with a null pointer\cite{glatz2015betriebssysteme},\cite{quade2016Linux}.
 
@@ -136,7 +136,7 @@ File operations are not the only option for a user interface to drivers.
 Another one, the \textit{system filesystem (sysfs, /sys/)} is closely tied to the \textit{unified device model}.
 It is a framework to handle all devices attached to a computer system in a unified scheme with similar data structures and functions.
 The representation of this model, of the current state of devices and corresponding drivers in a running Linux system, is the virtual sysfs.
-It generated during runtime as a virtual filesystem and spans a tree of device objects with the system bus on its root as a system representation.
+It is generated during runtime as a virtual filesystem and spans a tree of device objects with the system bus on its root as a system representation.
 A driver's interaction with the model itself is most often limited.
 It is only needed to register the driver on bus type the corresponding device is physically attached, like \ac{pci} or \ac{usb}.
 Thus, the \textit{udev} mechanism is invoked.
@@ -161,7 +161,7 @@ The sequence of a Linux device driver differs marginally depending on its build 
 The driver entry points \texttt{init()} and its corresponding \texttt{exit()} function are only necessary for drivers built as a module, but also allowed when compiling as a built-in driver.
 Thus, the most driver implementations does not require any code changes and the decision which variant is built depends only on a value in a configuration file.
 This additional functions do specific initialization which are only needed on modules.
-In common, the \texttt{init()} function itself and corresponding init data are specially marked to be discarded after initialization, while especially the \texttt{exit()} to clean up initialization is not needed for built-in drivers because they are not unloaded at all\cite{lfd430}.
+In common, the \texttt{init()} function itself and corresponding init data are specially marked to be discarded after initialization, while especially the \texttt{exit()} call is not needed for built-in drivers because they are not unloaded at all\cite{lfd430}.
 The \texttt{init()} function of a module is called as soon as a privileged user loads it to the kernel using \texttt{insmod} or \texttt{modprobe}.
 It will add and initialize the module but neither the driver is initialized and ready nor is a device connected at this point.
 Figure~\ref{pic:linux-lifecycle} pictures these in a drivers sequence context.
@@ -295,7 +295,7 @@ Thus, it concerns only the fewest drivers and is not further considered in this 
 
 
 The driver's \texttt{release()} method is invoked right before the driver is unloaded and after all devices it may have created in \texttt{bind()} using \texttt{device\_add()} have been destroyed.
-The method is never invoked currently because once a driver is loaded, it remains loaded for the lifetime of a device host process.
+The method is currently never invoked because once a driver is loaded, it remains loaded for the lifetime of a device host process.
 Nevertheless, it should be implemented.
 
 In theory, \texttt{release()} and the related \texttt{unbind()} method should be called e.g.\ if a parent device detects the corresponding device is removed and thus, calls \texttt{device\_remove()} as pictured in figure~\ref{pic:zircon-lifecycle}.
@@ -445,7 +445,7 @@ However, both operating system kernels add some requirements, too.
 
 Nevertheless, the first decision for the driver concept is reasoned in the Grove-LCD RGB backlight's nature of combining two distinct device controllers into a single peripheral device.
 Especially in Linux, two distinct \ac{i2c} devices, i.e.\ two controllers and thus two slave addresses, required distinct device drivers until kernel 4.9.
-Only Linux kernel versions starting there allow a combined driver from two or more related \ac{i2c} slave addresses by providing an appropriate \ac{api}.
+Only later Linux kernel versions allow a combined driver from two or more related \ac{i2c} slave addresses by providing an appropriate \ac{api}.
 Zircon also allows combined \ac{i2c} drivers in the used version level, but only on so-called \textit{platform devices}.
 The according term \textit{platform bus} describes the Zircon driver for a framework that manages several low level drivers on ARM64 system architectures.
 An \ac{i2c} is in this context a \textit{protocol implementation driver} and thus a part of the \textit{platform bus}.
@@ -462,8 +462,10 @@ However, the possibility to write a combined driver for both parts of the Grove 
 Indeed, the development setup using the HiKey960 and the Grove-LCD RGB backlight device fulfills this requirement but in contrast to Linux is the needed \ac{api} not fully available.
 
 For this work, the decision was made for using the new \ac{api} for a combined driver on Linux.
-It is still new and rarely used right now but interesting, global available and more meaningful for the selected device than writing two drivers.
-As a consequence, less boilerplate code, as it e.g.\ needed for initialization must be written.
+It is still new and rarely used right now but interesting, global available but above all, it is more meaningful for devices which are consisting from more than one \ac{i2c} controllers, such as the Grove RGB LCD backlight device.
+Perspectively, it is to be expected that more similar device driver implementations will switch to this \ac{api}.
+One positive consequence of switching is the need of less boilerplate code.
+For example it is not longer needed to write two or more pretty similar initialization routines for each partial driver.
 In the device filesystem \texttt{/dev/}, the Grove peripheral also shows up as a single device which is corresponds more to reality than distinct part devices.
 A further consequence of this decision results for user's access to the driver.
 The standard file operations \texttt{read()} and \texttt{write()} are not longer meaningful for the device.
@@ -479,12 +481,13 @@ In Zircon, the situation is very similar to Linux.
 But the \ac{api} for a combined driver is not available on x86\_64 platforms.
 Using the combined \textit{platform device \ac{api}}, implementation standard file operations is, exactly as with Linux, not meaningful.
 Besides, the way file operations are implemented in Zircon is not taken as known as it is for Linux.
-Thus, both variants, the two driver version which is also usable on x86\_64, but also the platform device way, are interesting for this work and should be considered.
+Thus, both variants, the two driver versions which are also usable on x86\_64, but also the platform device way, are interesting for this work and should be considered.
 Using the HiKey960 as a hardware platform enables both.
 While the standard file operations are available on both, Linux and Zircon, the further interfaces differ between them.
 Zircon offers with \ac{fidl} defined \acs{api} a very sophisticated option for driver specific interfaces which is comparable to the also available \ac{io}-controls but there are not equivalents to sysfs or procfs.
 To keep the drivers on both systems comparable and limit the development effort, they are not further considered in this work.
-Of course, even more comparable would be the use of \texttt{ioctl()} on both operating systems, but this would break the idea of writing idiomatic code for both platforms as interface defined with \ac{fidl} are clearly preferred in Zircon.
+Of course, even more comparable would be the use of \texttt{ioctl()} on both operating systems, but this would break the idea of writing idiomatic code for both platforms.
+According to the documentation are interface definitions using \ac{fidl} clearly preferred in Zircon\cite{zircon-ddk-gettingstarted}.
 Although the trend in Linux goes away from \texttt{ioctl()} to implement meaningful virtual file entries for sysfs are the former ones still accepted and wide-spread while Zircon clearly prefers the use of \ac{fidl} in such a situation.
 Furthermore, the virtual entries below a sysfs record is hardly comparable to \ac{io}-controls or \ac{fidl} in terms of defining type-safe call signatures with several arguments and types.
 
@@ -498,14 +501,14 @@ Accordingly, both ways are very attractive for this work, C++ in particular as d
 The chosen compiler does not influence the actual driver development in an essential degree, but it does for the system.
 Most of all, the error messages, diagnostics and some internal details are the obvious parts that may differ between GCC and Clang.
 They may also influence the output, but syntax errors are found on both of them.
-Hence, the possibility to compare two builds from different compilers is useful at all, e.g.\ in cases of compiler errors, but also to compare code sizes, binary or build performances or code portability.
+Hence, the possibility to compare two builds from different compilers is at all very useful, e.g.\ in cases of compiler errors, but also to compare code sizes, binary or build performances or code portability.
 On Zircon, Clang is slightly preferred as a respective build is needed for surrounding tools while GCC is often default for build scripts.
 GCC, on the other hand, was very closely interlocked with Linux for a long time.
 But also in this case, the chance to compare the outputs of two compilers is helpful and the work that was done to decouple Linux and GCC to enable Clang is positive at all.
 Another reasons for the use of Clang in Linux are, like for Zircon, the surrounding tools e.g.\ for style checking, linting, static and dynamic code analysis or address sanitizing\cite{linux-llvm}.
 However, without a closer look into the generated binaries is a well reasoned choice of the compiler for the pure driver development rather difficult.
 Due to the change to the Raspberry Pi as a hardware platform for Linux driver development, Clang can not longer be used out of the box compiling but before this change, both compilers and resulting kernels were employed.
-The same is and should still be done for Zircon, e.g.\ to see changes in the tooling of both compilers.
+The same is and may should still be done for Zircon, e.g.\ to see changes in the tooling of both compilers.
 
 %TODO functional scope
 The last but important issue for a general driver concept is the question of the implemented functional scope.
@@ -546,16 +549,16 @@ These methods more interesting for this work, especially in the Zircon C++ imple
   \subsection{Prearrangements}\label{sec:linux:prearrangements}
 To build a Linux driver, various options are available.
 It can be built as a permanent part of the kernel as a \textit{built-in} driver or as a \textit{module}.
-Further, it is not needed a module's source code is located within the actual kernel source tree.
+% Further, it is not needed a module's source code is located within the actual kernel source tree.
 For this work, the first choice should not play a deeper role, but the source location.
 Carefully developed as a module within the kernel sources, the change to \textit{built-in} is nothing more than a build configuration.
 Accordingly, the driver must be placed into the internal kernel structure in a meaningful manner.
 Linux is organized into \textit{subsystems} to structure its monolithic architecture into functional related modules.
 Within the \textit{drivers} directory, are several subsystems which are more or less meaningful for the Grove display.
-The probably most appropriate subsystem for this device is \textit{auxdisplay}, i.e.\ auxiliary display which groups a small amount of drivers for small additional e.g.\ \ac{lcd}'s.
+The probably most appropriate subsystem for this device is \textit{auxdisplay}, i.e.\ auxiliary display which groups a small amount of drivers for small additional displays e.g.\ \ac{lcd}'s.
 Currently, the auxdisplay subsystem consists of only nine drivers.
 Each one is made from a single C code file and thus, not further divided into sub-directories for the drivers.
-The Grove driver is to be inserted in this structure.
+The Grove driver must be to be inserted in this structure.
 Therefore, the driver source file is placed in \texttt{drivers/auxdisplay} and its build rules are added in the general \texttt{Makefile} for this subsystem.
 To configure the build, i.e.\ if the driver should be built as part of the kernel or as a module or none at all, it must also be registered in the subsystems \texttt{Kconfig} file.
 Listing~\ref{lst:make} shows both entries in a combined view.
@@ -668,13 +671,14 @@ Using the \mintinline{c}{module_i2c_driver()} macro also means \mintinline{c}{ex
 \subsection{Device Probing and Releasing}
 As already discussed uses the \mintinline{c}{probe()} implementation in listing~\ref{lst:probe} already the new method signature.
 The previously used second argument, the\\\mintinline{c}{struct i2c_device_id *id}, is not needed for this driver.
-As pictured in figure~\ref{pic:linux-lifecycle} is a driver's implementation of probe roughly divisible into two parts: the driver's own setup including its registration within the system and the device specific initialization.
+As pictured in figure~\ref{pic:linux-lifecycle} the driver's implementation of probe is roughly divisible into two parts: the driver's own setup including its registration within the system and the device specific initialization.
 The first part is very similar for many drivers.
 It includes i.a.\ allocating private memory regions and device numbers but also creating entries in sysfs and devfs.
 Often, a driver supports a few similar devices or device revisions which differ in their needs e.g.\ for setting them up or their instruction set.
 In such a case, the driver must check within \mintinline{c}{probe()} if the probed device is actually a supported one and how it must be handled.
 The grove driver only allows a single compatible string.
-A decision between two similar devices is not needed.
+A decision between two similar devices is not needed within this work.
+The whole setup is under control, a similar device which would require a distinction will not be added.
 Also, an additional testing if the device matches is redundant as long as the driver fails if the addresses defined within the device tree are not detected on the bus or the specific initialization failed.
 
 The \mintinline{c}{probe()} function is the first function of this driver which must be \textit{re-entrant} and aware of more than one device to handle.
@@ -755,7 +759,7 @@ In the following step, the character device structure \mintinline{c}{cdev} is in
 Its first argument is a reference to the empty struct which is a part of \mintinline{c}{grove_t}.
 The second argument references the \mintinline{c}{struct file_operations} which contains function pointers to the implementations of this drivers file operations, the driver entry points.
 The structure is not directly pictured as part of a listing as there is nothing special about.
-As defined in the general driver concept in section~\ref{sec:cs-driver-concept}} should the driver be accessible via \ac{io}-controls and thus, the struct contains a function pointer to its implementation.
+As defined in the general driver concept in section~\ref{sec:cs-driver-concept}} the driver should be accessible via \ac{io}-controls and thus, the struct contains a function pointer to its implementation.
 Additionally, it holds pointers for the owner but also for open and release.
 The \mintinline{c}{.owner} is pointing commonly to \mintinline{c}{THIS_MODULE}.
 The reason for implementing \mintinline{c}{open()} and \mintinline{c}{release()} even if there is no need for an access control for this device is related to restoring the right device instance if the driver is entered via a file operation like \mintinline{c}{ioctl()}, \mintinline{c}{write()} or \mintinline{c}{read()}.
