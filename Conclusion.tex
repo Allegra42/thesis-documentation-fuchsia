@@ -47,7 +47,7 @@ While a faulty buffer in an \mintinline{c}{ioctl()} call can potentially cause a
 If these do not match the defined call, the whole connection between user and the \ac{fidl} interface of a driver will be reset.
 Indeed, it is necessary to reconnect to the driver again, but wrong parameters can only cause little to limited damage by this check and the concept of distinct device hosts at all.
 In the attempts regarding the use of \ac{fidl} calls within the case study was it largely only possible to identify crashes and errors on the basis of informative log messages from the console.
-No further effects were observed and the driver could be used as usual as well.
+No further effects were observed and the driver could be used as usual.
 
 The observed situations belong both to the desired effects of the microkernel or rather \ac{fidl}, even if they are unfortunately not documented at all.
 However, these positive effects also result in the significant speed losses discussed as part of the previous chapter.

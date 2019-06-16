@@ -43,6 +43,9 @@ Actual operating system implementations may not use all of them.
 Linux for example utilizes ring 3 for user-space applications and shared libraries and ring 0 for system calls and the kernel.
 System calls provide the transition to ring 0, the one with the topmost security level, which is used for the operating system kernel.
 As a crucial part of an operating system, system calls will be discussed in more detail later in this work.
+Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
+It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
+Only the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operations or memory mappings\cite{lfd430}.
 %
 \begin{figure} [t]
 	\centering
@@ -56,9 +59,6 @@ As a crucial part of an operating system, system calls will be discussed in more
     \caption{A system calls sequence including the mode switches according to~\cite{glatz2015betriebssysteme}}\label{pic:mode-switches}
 \end{figure} %\ \\
 %
-Directly related to this model is the \textit{dual-mode} execution mode of modern \acp{cpu}.
-It is a hardware enabled security concept to provide a distinction between the user applications in ring 3 and the actual operating system kernel in ring 0.
-Only the kernel in ring 0, running in the \textit{kernel mode} (or \textit{privileged mode, supervisor mode or system mode}), has direct and privileged access to memory, hardware, timers or interrupts, e.g.\ for performing \ac{io} operations or memory mappings\cite{lfd430}.
 User applications in ring 3, running in the \textit{user mode}, are not allowed to use them directly, they have limited privileges and a limited instruction set.
 As mentioned above, they need to use a mechanism called \textit{system calls} to transfer the execution to the \textit{kernel mode} where the privileged actions are performed.
 Lastly, the execution is transferred back to the calling user process and with this, the mode changes back to \textit{user mode}.
@@ -97,12 +97,6 @@ Of course, this leads to some serious disadvantages in this architecture, for ex
 The missing memory protection within the kernel could also be a source for crashes or attacks.
 But in contrast, this design also enables a very efficient kernel design without any unneeded communication overhead or hardware inefficiencies\cite{lfd430}.
 
-\begin{figure} [ht]
-	\centering
-	\includegraphics[scale=0.3]{MonolithicKernel}
-	\caption{A Monolithic Kernel Architecture according to~\cite{lfd430}}\label{pic:monolith}
-\end{figure} \ \\
-%
 An extension of the monolithic architecture are the so-called \textbf{modular operating systems}.
 They provide additional, defined interfaces for (usually) dynamically loadable and unloadable extensions, e.g.\ for device drivers or filesystems. 
 Sometimes, such extensions or modules are just allowed to use a limited function set of the operating system, but they are still running as a part of the kernel in kernel mode\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}. 
@@ -112,7 +106,14 @@ It allows slimming down the actual kernel by providing the ability to load only 
 As the extensions become a part of the operating system running in kernel mode, no additional communication effort between the actual kernel and the modules is required.
 Figure~\ref{pic:monolith} pictures an exemplary architecture for a monolithic kernel using optional modules.
 Such a concept of modules is quite popular for monolithic operating systems like \textit{Linux} or \textit{Solaris}\cite{brause2017betriebssysteme},~\cite{silberschatz2009operating}.
-
+%
+\begin{figure} [t]
+	\centering
+	\includegraphics[scale=0.3]{MonolithicKernel}
+	\caption{A Monolithic Kernel Architecture according to~\cite{lfd430}}\label{pic:monolith}
+\end{figure}
+%
+%
 \subsection{Microkernel Architectures}\label{sec:microkernel-archs}
 The microkernel architecture focuses on very different design goals compared to the monolithic one. 
 Some of them are to cope with the complexity, rather poor maintainability and susceptibility to errors by a massively modular approach. 
@@ -120,13 +121,13 @@ To achieve this, the core idea behind microkernels is to provide only a very sma
 Thereby, the microkernel architecture is excellently suited to implement a proper division of mechanism and policy.
 The kernel provides just the most basic mechanisms needed for an operating system, while the userspace modules implement the policy.
 This decoupling makes it easier to change the policy in userspace for altering requirements without touching the actual kernel\cite{tanenbaum-modern-operating-systems}.
-
+%
 \begin{figure} [t]
 	\centering
 	\includegraphics[scale=0.3]{Microkernel}
 	\caption{A Microkernel Architecture according to~\cite{lfd430}}\label{pic:microkernel}
 \end{figure}
-
+%
 What is part of this core functionality differs between the various sources, but all considered ones are in agreement that a simple mechanism for process scheduling is as well a core functionality as providing an \ac{ipc} mechanism\cite{lfd430},~\cite{silberschatz2009operating},~\cite{glatz2015betriebssysteme}.  
 In contrast, the sources disagree whether memory management and virtualization, device drivers or synchronization facilities are a part of the actual kernel.
 The \textit{Mach} microkernel, which formed the first generation of microkernels in 1985, named process and thread administration, an extensible and secure \ac{ipc} mechanism, virtual memory management and scheduling as its core tasks, while everything else needed has to run in usermode\cite{rashidMach}.
@@ -201,6 +202,7 @@ Initially, it was because \textsc{Torvalds} could not get a version of the stand
 Also, the decision for the monolithic architecture is today consciously supported by the kernel community and justified with its performance and efficiency over microkernels due to the \textit{privilege barrier} between user and kernel mode which has to be passed quite often in microkernel architecture\cite{why-linux-monolith},~\cite{lfd430}.
 The Linux kernel itself is divided in five essential tasks which are also reflected in its source code.
 They are: 
+\newpage
 \begin{itemize}
     \item Process Management,
     \item Memory Management,
@@ -285,14 +287,14 @@ The user application has to clean up the stack like for each procedure call at t
 % Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86\_64 for Linux\cite{decade-linux-syscalls}.
 More modern versions use the special instructions \texttt{SYSENTER} and \texttt{SYSEXIT} (Intel) or \texttt{SYSCALL} and \texttt{SYSRET} (AMD) instead of the slower trap interrupts\cite{decade-linux-syscalls}.
 Figure~\ref{pic:syscalls} uses a x86\_64 like assembly and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number 0x80.
-
+%
 \begin{figure} [t]
 	\centering
 	\includegraphics[width=\linewidth]{Systemcalls}
     \caption{System Call Implementation inspired by~\cite{lfd430}}\label{pic:syscalls}
 \end{figure}
-
-
+%
+%
 \subsubsection{POSIX}
 The basic idea behind the \acf{posix} standard is to define a stable interface between the user-space and the operating system kernel to achieve portability for applications on systems meeting this standard.
 But even if an operating system complies, it may differ in the type and number of available system calls.
@@ -312,7 +314,7 @@ The exact mechanism, the calling convention but also the number of system calls 
 While a 32-bit Linux kernel in version 4.8 for the x86 architecture offeres 379 calls, the 64-bit version for x86\_64 offeres only 328\cite{lfd430}.
 The \textit{man-pages} project documents give an overview (\texttt{man 2 syscall}) about architectural differences and the calling conventions.
 How far Linux is actually compatible to the \ac{posix} standard is not only related to the kernel and the number of system calls itself, but for the most part to its abstraction layer, the used \ac{posix}/C standard library.
-One of the most widespread ones, the \textit{glibc} (GNU C Library) aims to follow POSIX.1\-2008 amongst other standards\footnote{\url{https://www.gnu.org/software/libc/}} while the \textit{musl} library does not implement it in complete\footnote{\url{https://repo.or.cz/w/musl-tools.git/blob_plain/HEAD:/tab_posix.html}}.
+One of the most widespread ones, the \textit{glibc} (GNU C Library) aims to follow POSIX.1\-2008 amongst other standards\footnote{gnu.org, visited on 15.06.2019 \url{https://www.gnu.org/software/libc/}} while the \textit{musl} library does not implement it in complete\footnote{repo.or.cz, visited on 15.06.2019 \url{https://repo.or.cz/w/musl-tools.git/blob_plain/HEAD:/tab_posix.html}}.
 
 
 
@@ -489,13 +491,13 @@ Only when the blocking resource needed by the process is available again, the op
 The process is prepared to get reassigned to a \ac{cpu}.
 A running process finishing its task during its computing time has reached the end of its life, its state changes to \textit{terminated}.
 The operating system destroys the process and frees related resources\cite{silberschatz2009operating},~\cite{mandl2014Grundkurs}.
-
+%
 \begin{figure} [t]
 	\centering
 	\includegraphics[width=\linewidth]{ProcessLifecycle}
     \caption{Lifecycle of a process according to~\label{pic:process-lifecycle}\cite{silberschatz2009operating}}
 \end{figure}
-
+%
 The model described applies to each individual process.
 For the coordination of the entirety of processes, the scheduler, an operating system kernel's component is responsible.
 It is a good example for the separation of mechanism and policy.
@@ -528,13 +530,13 @@ As a result, both processes have access to exactly the same resources like opene
 The Unix implementation of \texttt{fork()} is an example for this way of process creation.
 Process \textit{forking} and \textit{chaining} are usually used combined in Unix-like systems to create a new, independent process which is running in parallel to the first one\cite{tanenbaum-modern-operating-systems}.
 In contrast, Windows offers a third way of \textit{process creation} (figure~\ref{pic:processcreation}, c) which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
-
+%
 \begin{figure} [t]
 	\centering
 	\includegraphics[width=\linewidth]{ProcessCreation}
 	\caption{Ways of Process Creation according to~\cite{glatz2015betriebssysteme}}\label{pic:processcreation}
 \end{figure}
-
+%
 As the newly created process and its parent share the same program code, the new one can simply inherit all needed data from its parent like it is done by \textit{process forking}\cite{achilles2006betriebssysteme}.
 Each process has its own virtual address space if it is not shared through inheritance.
 
@@ -760,7 +762,7 @@ In the context of this section, it should be assumed that \textit{threads} are i
 According to the definition, the term \textit{thread} refers in this section to both, execution threads within a single process and the ones within independent processes.
 A competitive situation can occur for both variants. 
 The threads of one process rather rival regarding a shared variable while the threads of different processes rather compete for resources such as a printer.
-
+%
 Race conditions are a topic each time several processes or threads work on the same data in any way.
 This also applies to an operating system's kernel, except for non-preemptive kernels which can guarantee that only one thread is active at a time on a single-core system\cite{silberschatz2009operating}.
 In contrast to preemptive kernels, non-preemptive ones do not allow a thread running in kernel mode to be interrupted. 
@@ -768,7 +770,7 @@ The thread runs until it exits kernel mode, blocks or yields the control of the 
 In such a case it can be guaranteed that a kernel and its data structures are free of race conditions.
 However, preemptive kernels are more common because they are more responsive and better suited for real-time tasks due to their interruptibility\cite{silberschatz2009operating}.
 Furthermore, with today's multicore systems it is rather unlikely to fulfill the requirement of only one active thread in kernel space.
-
+%
 For this reason, a mechanism to prevent race conditions on both, user and kernelspace, is needed.
 The basic idea behind is to prevent the possibility that two threads try to change a shared resource at the same time\cite{tanenbaum-modern-operating-systems}.
 But only certain areas in the program code are critical, the ones where a shared resource is processed.
@@ -832,7 +834,7 @@ If the lock is already held by another thread, the library has to put the thread
 But if there is no contention there is also no need to involve the kernel\cite{tanenbaum-modern-operating-systems}.
 The less actual competitive situations occur, the more efficient are futexes compared to common mutexes.
 Mutexes are for example used as part of the Linux kernel. 
-In this context, \textsc{Ingo Molnar} published an article\footnote{\url{https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/robust-futexes.txt}} as part of the Linux kernel documentation covering the implementation of robust futexes and its impact on the system performance.
+In this context, \textsc{Ingo Molnar} published an article\footnote{git.kernel.org, visited on 15.06.2019 \url{https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/robust-futexes.txt}} as part of the Linux kernel documentation covering the implementation of robust futexes and its impact on the system performance.
 
 \subsubsection*{Barriers}
 So far, the synchronization of resource accesses has been discussed.
@@ -1375,7 +1377,7 @@ While code running in user space may be preempted at any time, common modern Lin
 \begin{itemize}
     \item As a no-forced preemption version, suitable for the use in servers.
     \item With voluntary kernel preemption for the use in desktop systems and
-    \item as a fully preemptive kernel for desktop systems with low latency requirements\cite{lfd430},~\footnote{See also ``\texttt{man 7 sched}'' on Linux systems as an additional source for this section.}.
+    \item as a fully preemptive kernel for desktop systems with low latency\\requirements\cite{lfd430},~\footnote{See also ``\texttt{man 7 sched}'' on Linux systems as an additional source for this section.}.
 \end{itemize}
 Older kernels before version 2.6.23 were not preemptive at all.
 They were only disturbed by explicit or implicit sleep requests, e.g.\ if a required resource was not available, or, if enabled, on interrupts.
@@ -1475,7 +1477,7 @@ The purpose of the idle thread is to keep track of idle times, but some platform
 At the time of writing, an additional \ac{cfs} is in the works.
 Its \ac{api} is compatible to the one Linux uses.
 It is not merged into the standalone Zircon repository yet, but to the development master branch of the Zircon kernel within Fuchsia.
-Further information is available in the according documentation within this repository\footnote{Zircon Fair Scheduler, visited on 11.04.2019\\ \url{https://fuchsia.googlesource.com/fuchsia/+/refs/heads/master/zircon/docs/fair_scheduler.md}}.
+Further information is available in the according documentation within this repository\footnote{Zircon Fair Scheduler, visited on 11.04.2019 \url{https://fuchsia.googlesource.com/fuchsia/+/refs/heads/master/zircon/docs/fair_scheduler.md}}.
 
 
 \section{Memory Management}\label{sec:memory-management}
@@ -1622,13 +1624,13 @@ Kernel virtual addresses differ from common virtual addresses and will be consid
 \textit{High memory} describes the higher physical memory addresses which maps to the virtual addresses used within user applications.
 As described in the general section, Linux provides an own protected address space with virtual addresses for each process, too, which are generally mapped into high memory\cite{lfd430}.
 Figure~\ref{pic:high-low-mem} illustrates the context.
-
+%
 \begin{figure} [t]
 	\centering
 	\includegraphics[scale=0.25]{HighLowMem}
 	\caption{The Relation between Virtual and Physical Memory in 32-bit x86 Architectures according to~\cite{lfd430}}\label{pic:high-low-mem}
 \end{figure}
-%
+
 Actually, the division in high and low memory is just one from several ones. 
 Linux uses additionally a \textit{zone allocator} memory algorithm to partition its address space in a finer granular way.
 Each zone differs in its usage and comes with its own methods to perform basic memory operations like allocating and freeing memory pages\cite{lfd430}.
@@ -1651,13 +1653,13 @@ The types are:
     \item \textbf{kernel logical addresses}, which are actual physical addresses shifted by an offset. They are always stored in low memory and only used within the Linux kernel itself.
     \item \textbf{kernel virtual addresses}, which are kernel addresses with no need for a direct mapping to physical memory addresses. It is a 32-bit x86 architectural anomaly and not available on 64-bit systems. Kernel virtual addresses which are not logical addresses, too, reside in high memory\cite{lfd430}.
 \end{itemize}
-
+%
 \begin{figure} [t]
 	\centering
 	\includegraphics[width=\linewidth]{LinuxMemoryManagement}
 	\caption{Linux memory management overview according to~\cite{lfd430}}\label{pic:linux-mem}
 \end{figure}
-
+%
 As also described in the general section, Linux uses fixed sized pages within memory management.
 The actual size of a page depends on the \ac{cpu} architecture.
 Pages in x86 are in common 4 KB sized while ARM based architectures may use 4, 16 or 32 KB sized ones. 
@@ -1801,7 +1803,7 @@ It represents the ability of a device to take the control over the bus and with 
 A \ac{bti} object can also be used to granting a device access to memory.
 It can pin memory used in \acp{vmo} and the given physical device addresses can be used to initiate memory transactions, i.e.\ \ac{dma} transactions which proceed as described in the general part\cite{zircon-bti}.
 
-
+\newpage
 \section{Summary~-~Concepts in Linux and Zircon}
 The main difference between Linux and Zircon remains the basic architecture and about 25 years passed time.
 A lot of general concepts stay largely the same on both systems but the implementation differs due to architectural concepts, used programming languages, but also due to different design goals.

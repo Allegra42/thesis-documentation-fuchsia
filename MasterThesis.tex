@@ -2,7 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{csquotes}
-\usepackage[english]{babel}
+\usepackage[main=english, ngerman]{babel}
 \usepackage{graphicx, changepage}
 \graphicspath{{pictures/}}
 \usepackage{subfig}
@@ -23,9 +23,7 @@
 \usepackage[backend=biber, style=numeric, citestyle=numeric]{biblatex}
 
 % \apptocmd{\UrlBreaks}{\do\f\do\m}{}{}
-\appto\UrlBreaks{\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j
-\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w
-\do\x\do\y\do\z}
+\appto\UrlBreaks{\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z}
 \setcounter{biburllcpenalty}{9000}% Kleinbuchstaben
 \setcounter{biburlucpenalty}{9000}% Großbuchstaben
 
@@ -89,12 +87,11 @@
 %mainpart
 \mainmatter
 
-
 \input{Introduction}
 \input{ModernOSConcepts}
 \input{CSLinux}
 \input{CSZircon}
-\input{CSEvaluation}
+% \input{CSEvaluation}
 \input{Conclusion}
 \input{Outlook}
 
