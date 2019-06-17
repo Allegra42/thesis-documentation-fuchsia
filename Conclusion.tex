@@ -7,7 +7,7 @@ The architectures and objectives of microkernel and monolith systems are fundame
 Overall, however, these are optimized for the use in their respective architecture.
 Especially Zircon presents an implementation idea that demonstrates a great deal of knowledge and experience in the field of operating system development and clearly shows that the developers have learned from aspects that are not necessarily optimally solved in Linux, e.g.\ for historical and/or compatibility reasons.
 Examples for these are, amongst other things, the handling of system calls or the memory management.
-Due to the lack of \ac{posix} compatibility, Zircon enables a unencumbered design of systemcalls and adapts them to modern needs, but the enforcement of \acp{vdso} and the use of \texttt{libzircon.so} for all systemcall implementations is interesting from a security aspect, as well.
+Due to the lack of \ac{posix} compatibility, Zircon enables an unencumbered design of systemcalls and adapts them to modern needs, but the enforcement of \acp{vdso} and the use of \texttt{libzircon.so} for all systemcall implementations is interesting from a security aspect, as well.
 Linux is very architecture dependent regarding memory management.
 The multitude of architectures and their associated terms and concepts makes them difficult to understand and use correctly, even for experienced developers.
 In this context Zircon is, as far as it can be read from the documentation, much more stringent and as well, simpler.
@@ -51,7 +51,7 @@ No further effects were observed and the driver could be used as usual.
 
 The observed situations both belong to the desired effects of the microkernel or rather \ac{fidl}, even if they are unfortunately not documented at all.
 However, these positive effects also result in the significant performance losses discussed as part of the previous chapter.
-Whether one would accept these depends very much on the application of a kernel respectively a system.
+Whether one would accept depends very much on the application of a kernel respectively a system.
 For Zircon, however, these losses are clearly accepted in favor of the advantages.
 Even though Zircon's impression in this thesis is very positive, this does not automatically imply that Linux is worse.
 The fundamentally different architectural concept is clearly visible but very much influenced by Linux's origins.

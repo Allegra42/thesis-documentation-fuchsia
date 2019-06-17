@@ -1,7 +1,7 @@
 % !TEX root = MasterThesis.tex
 
 \chapter{Case Study: Driver Development in Linux and Zircon}\label{ch:case-study}
-Device drivers are an integral part of operating systems and require an in-depth understanding of the peripheral device and its controller, the hardware interface between device and computer abstraced by the target operating system from the developer.
+Device drivers are an integral part of operating systems and require an in-depth understanding of the peripheral device and its controller, the hardware interface between device and computer abstracted by the target operating system from the developer.
 The fundamental operating system principles and their realization were already established in the previous chapter.
 But the question of what a device driver actually is and its responsibility was not discussed so far.
 Therefore, answering these questions is a valid entry point to the actual case study about the driver models in Linux and Zircon and the exemplary device driver development.
@@ -45,7 +45,7 @@ This way of accessing the hardware is mostly used for video drivers which are in
 In order to obtain the necessary rights two systemcalls are needed: \texttt{iopl()} to change the privileged level and \texttt{ioperm()} to set the \ac{io} port permissions.
 These calls can only be performed by a privileged Linux user or the \textit{root} user.
 Compared to other options to access peripheral hardware, this one has the disadvantage that interrupts are not available at all and the user software may run into issues with demand paging.
-So this option is possibly slower than a device driver in kernelspace, but for some tasks, like the already named \textit{X.Org server} is this kind of a accessing hardware more appropriate than a kernel driver\cite{lfd430},~\cite{glatz2015betriebssysteme}.
+So this option is possibly slower than a device driver in kernelspace, but for some tasks, like the already named \textit{X.Org server} is this kind of accessing hardware more appropriate than a kernel driver\cite{lfd430},~\cite{glatz2015betriebssysteme}.
 
 Another widely unknown and \ac{cpu} specific way to perform \ac{io} operations is using \textit{minimal operating system support} to access serial interfaces on x86-based \acp{cpu}.
 In doing so, the kernel does not know anything about the exact device but about its \ac{io} interface\cite{glatz2015betriebssysteme}.
@@ -89,7 +89,7 @@ However, the module has to be built for exactly the same kernel version as runni
 A module which is dynamically loaded via \texttt{insmod} respectively \texttt{modprobe} is, like built-in drivers, a part of the kernel's address space and running in kernel mode.
 But as this module does a dynamic binding to the kernel's symbol table, it is only allowed to use a, in comparison to built-in drivers, restricted \ac{api}\cite{glatz2015betriebssysteme}.
 However, being a part of the kernel's address space assigns drivers a special responsibility.
-As there is no isolation between parts of the kernel, an errornously implemented driver may crash the entire system as a result.
+As there is no isolation between parts of the kernel, an erroneously implemented driver may crash the entire system as a result.
 Whether a driver should be build as a built-in driver or as a module has little impact on its implementation.
 It does require little or no changes to the source at all to switch between them as it is mostly a build configuration\cite{lfd430}.
 
@@ -174,9 +174,9 @@ The \texttt{probe()} function is used by the driver to test if the device given 
 The signature of \texttt{probe()} is not unified for all drivers.
 It depends on the device type, e.g.\ if the device is \ac{pci}, \ac{usb} or an \ac{i2c} typed\cite{lfd430},~\cite{quade2016Linux},~\cite{corbet2005linux}.
 Also, \texttt{probe()} is the first driver function that must be \textit{re-entrant}.
-It is called each time a matching device is detected and there should not be an artifical limit how many devices a driver can handle. 
+It is called each time a matching device is detected and there should not be an artificial limit how many devices a driver can handle. 
 Thus, the information needed for each distinct device should be stored in a private per-device data structure.
-Allocating the memory for this structure and fillng it with relevant information is also a part of \texttt{probe()}\cite{lfd430},~\cite{quade2016Linux}.
+Allocating the memory for this structure and filling it with relevant information is also a part of \texttt{probe()}\cite{lfd430},~\cite{quade2016Linux}.
 
 The \texttt{probe()} function's counterpart is \texttt{remove()}.
 It is called if a device is to be removed from the system or already was removed without announcement, e.g.\ due to an electrical error.
@@ -194,7 +194,7 @@ Only afterwards, the \texttt{exit()} function can be called.
 Within \texttt{exit()}, the device should be put in a suitable condition prior to the initialization done in \texttt{probe()} is revoked\cite{lfd430},~\cite{quade2016Linux}.
 The \texttt{remove()} function is \textit{re-entrant}, too.
 It is called per device.
-The right information needed to deregister a device and the driver's entries for this specific instance should be stored as part of the private per-device datastructure.
+The right information needed to deregister a device and the driver's entries for this specific instance should be stored as part of the private per-device data structure.
 Figure~\ref{pic:linux-lifecycle} illustrates this situation.
 
 After probing the device, the driver for this instance is ready for use.
@@ -317,7 +317,7 @@ It is not only a development board for Linux but also officially listed as refer
 The HiKey is, amongst other things, equipped with\footnote{96boards.org, visited on 02.05.2019~\url{https://www.96boards.org/product/hikey960/}}
 \begin{itemize}
     \item 4 ARM Cortex A73 and 4 ARM Cortex A53 \ac{cpu} cores arranged in the big.LITTLE architecture,
-    \item a ARM Mali G71 MP8 \ac{gpu},
+    \item an ARM Mali G71 MP8 \ac{gpu},
     \item 3 GB \ac{ram},
     \item 32 GB Flash Storage,
     \item an expansion interface, in particular consisting of
@@ -465,7 +465,7 @@ For this work, the decision was made to use the new \ac{api} for a combined driv
 It is still new and rarely used right now but interesting, globally available but above all, it is more meaningful for devices which are consisting from more than one \ac{i2c} controllers, such as the Grove RGB LCD backlight device.
 Perspectively, it is to be expected that more similar device driver implementations will switch to this \ac{api}.
 One positive consequence of switching is the need of less boilerplate code.
-For example it is not longer needed to write two or more pretty similar initialization routines for each partial driver.
+For example, it is not longer needed to write two or more pretty similar initialization routines for each partial driver.
 In the device filesystem \texttt{/dev/}, the Grove peripheral also shows up as a single device which corresponds more closely to reality than distinct part devices.
 A further consequence of this decision results for an user's access to the driver.
 The standard file operations \texttt{read()} and \texttt{write()} are no longer meaningful for the device.
@@ -554,7 +554,7 @@ For this work, the first choice should not play a major role, but the source loc
 Carefully developed as a module within the kernel sources, the change to \textit{built-in} is nothing more than a build configuration.
 Accordingly, the driver must be placed into the internal kernel structure in a meaningful manner.
 Linux is organized into \textit{subsystems} to structure its monolithic architecture into functionally related modules.
-Within the \textit{drivers} directory, there are several subsystems which are more or less meaningful for the Grove display.
+Within the \textit{driver's} directory, there are several subsystems which are more or less meaningful for the Grove display.
 The probably most appropriate subsystem for this device is \textit{auxdisplay}, i.e.\ auxiliary display which groups a small amount of drivers for small additional displays e.g.\ \ac{lcd}'s.
 Currently, the auxdisplay subsystem consists of only nine drivers.
 Each one is made from a single C code file and thus, not further divided into sub-directories for the drivers.
@@ -895,7 +895,7 @@ The initialization should be only entered once per device, indeed, but is still 
 Within the loop, the actual transfer between driver and device is done using the kernel internal \ac{api} \mintinline{c}{i2c_smbus_write_byte_data()}.
 It writes exactly one byte of usable data, the value within the struct, to a specified controller register.
 For all of these setup commands, the register is 0x80 what the name \mintinline{c}{LCD_CMD} stands for.
-As a result, the loop iterates over all tuples made from a register and a value and sends them to the \mintinline{c}{struct i2c_device}pointer given as a first argument of the call (see listing~\ref{lst:probe-lcdinit}, line 14 to 22).
+As a result, the loop iterates over all tuples made from a register and a value and sends them to the \mintinline{c}{struct i2c_device} pointer given as a first argument of the call (see listing~\ref{lst:probe-lcdinit}, line 14 to 22).
 For the \ac{lcd}, this way is only used to setup the device or prepare other writes, but not for the actual text writes themselves.
 Using structures for text has \textit{padding effects} as a result.
 Thus, a more sophisticated way is to encode the target register on the controller as a part of the string to be sent and use so-called \textit{block writes} instead of sending single bytes at a time.
@@ -987,7 +987,7 @@ However, each time before one of these basic file operations is called, \mintinl
 If it is not explicitly implemented by a driver, a default one is used.
 But the fact \mintinline{c}{open()} is called can be exploited to solve the underlying issue.
 Its call signature, \mintinline{c}{open(struct inode *inode, struct file *file)}, enables restoring \texttt{grove\_t} via its entry \texttt{struct cdev *i\_cdev}.
-To do so, the \texttt{grove\_t} structure needs to contains a \texttt{cdev} entry as well.
+To do so, the \texttt{grove\_t} structure needs to contain a \texttt{cdev} entry as well.
 %
 \begin{listing} [H]
     \caption{Implementation of \texttt{open()} and \texttt{release()}}
@@ -1133,7 +1133,7 @@ As mentioned previously, the kernel helper \mintinline{c}{copy_to_user()} is inv
 It differs from its counterpart only in the transferred direction.
 The \mintinline{c}{ioctl()} call argument \texttt{arg} is interpreted as an address in userspace again, but this time as a target address, while the \mintinline{c}{struct color_t} which is stored as a part of the instance data acts as source.
 
-Even if the individual \ac{io} control commands are implemented in a row within this function usually only a single on is executed each time \mintinline{c}{ioctl()} is called by a user.
+Even if the individual \ac{io} control commands are implemented in a row within this function usually only a single one is executed each time \mintinline{c}{ioctl()} is called by a user.
 Thus, the developer must ensure the \mintinline{c}{break;} command is set correctly each time it is needed.
 The listing shown as a part of this work only consists of a snippet of the full implementation listed in the related Github repository\footnote{github.com, \url{https://github.com/Allegra42/linux-rpi/blob/rpi-5.0.y/drivers/auxdisplay/grove.c}}, but is a recognizable complex task if the number of commands or the complexity of their implementation increases. 
 To outsource them into their own functions might be helpful in these cases. 

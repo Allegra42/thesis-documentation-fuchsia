@@ -101,7 +101,7 @@ An extension of the monolithic architecture are the so-called \textbf{modular op
 They provide additional, defined interfaces for (usually) dynamically loadable and unloadable extensions, e.g.\ for device drivers or filesystems. 
 Sometimes, such extensions or modules are just allowed to use a limited function set of the operating system, but they are still running as a part of the kernel in kernel mode\cite{lfd430},~\cite{tanenbaum-modern-operating-systems}. 
 Just like ordinary kernel functions or procedures, (malicious) programming errors in extensions may lead to a kernel crash, manipulation or damage to other components.
-On the other hand, the modular concept provides some advantages over regular monolitic kernels.
+On the other hand, the modular concept provides some advantages over regular monolithic kernels.
 It allows slimming down the actual kernel by providing the ability to load only the actually needed functionality dynamically and e.g.\ security patches within such an extension are possible without restarting the entire system\cite{brause2017betriebssysteme}.
 As the extensions become a part of the operating system running in kernel mode, no additional communication effort between the actual kernel and the modules is required.
 Figure~\ref{pic:monolith} pictures an exemplary architecture for a monolithic kernel using optional modules.
@@ -181,7 +181,7 @@ Examples for this architecture are \textit{OS/2} or newer \textit{Unix} variants
 
 
 \subsection{Hybrid Architectures}
-Hybrid operating system architectures based on monolithic concepts, microkernels and maybe layeres are a common approach to combine the advantages of these concepts.
+Hybrid operating system architectures based on monolithic concepts, microkernels and maybe layers are a common approach to combine the advantages of these concepts.
 They try to pair the performance of the monolithic design with the modularity and reliability of microkernels\cite{microkernels},~\cite{silberschatz2009operating}.
 How both worlds interact is very different depending on the exact implementation.
 \textsc{Silberschatz} explains one of them in his book \textit{Operating System Concepts}\cite{silberschatz2009operating} using Apple's \textit{OS X} (today named \textit{macOS}) as an example.
@@ -275,7 +275,7 @@ Linux, for example, has in general another convention for system calls than Wind
 The following instruction triggers a special software interrupt containing the order to switch the context.
 It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch.
-They are \texttt{0x80} on Linux as pictured in~\ref{pic:syscalls} and \texttt{0x2e} on Windows systems\cite{glatz2015betriebssysteme}.
+They are \texttt{$0x80$} on Linux as pictured in~\ref{pic:syscalls} and \texttt{$0x2e$} on Windows systems\cite{glatz2015betriebssysteme}.
 But right before switching it is needed to save the \acf{psw}, which contains the actual processors state including the mode bit, to the stack.
 The same number is used in kernel mode as an index within the interrupt vector table (or \acf{idt}) which contains the start address of the system service dispatcher routine (compare to~\ref{pic:syscalls}).
 This table's content, the system service dispatcher routine, is loaded as next instruction to the new \ac{psw}\cite{brause2017betriebssysteme}.
@@ -286,7 +286,7 @@ The user application has to clean up the stack like for each procedure call at t
 
 % Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86\_64 for Linux\cite{decade-linux-syscalls}.
 More modern versions use the special instructions \texttt{SYSENTER} and \texttt{SYSEXIT} (Intel) or \texttt{SYSCALL} and \texttt{SYSRET} (AMD) instead of the slower trap interrupts\cite{decade-linux-syscalls}.
-Figure~\ref{pic:syscalls} uses a x86\_64 like assembly and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number 0x80.
+Figure~\ref{pic:syscalls} uses a x86\_64 like assembly and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number $0x80$.
 %
 \begin{figure} [t]
 	\centering
@@ -311,7 +311,7 @@ Another example for an \ac{api} is Win32 used by Windows to abstract their syste
 \subsection{System Calls in Linux}
 The way system calls are working in Linux was already described as part of the general section. 
 The exact mechanism, the calling convention but also the number of system calls is highly dependent on the \ac{cpu}'s architecture.
-While a 32-bit Linux kernel in version 4.8 for the x86 architecture offeres 379 calls, the 64-bit version for x86\_64 offeres only 328\cite{lfd430}.
+While a 32-bit Linux kernel in version 4.8 for the x86 architecture offers 379 calls, the 64-bit version for x86\_64 offers only 328\cite{lfd430}.
 The \textit{man-pages} project documents give an overview (\texttt{man 2 syscall}) about architectural differences and the calling conventions.
 How far Linux is actually compatible to the \ac{posix} standard is not only related to the kernel and the number of system calls itself, but for the most part to its abstraction layer, the used \ac{posix}/C standard library.
 One of the most widespread ones, the \textit{glibc} (GNU C Library) aims to follow POSIX.1\-2008 amongst other standards\footnote{gnu.org, visited on 15.06.2019 \url{https://www.gnu.org/software/libc/}} while the \textit{musl} library does not implement it in complete\footnote{repo.or.cz, visited on 15.06.2019 \url{https://repo.or.cz/w/musl-tools.git/blob_plain/HEAD:/tab_posix.html}}.
@@ -328,7 +328,7 @@ Handles are checked by the kernel each time a system call is triggered.
 For additional security, the kernel checks whether
 \begin{itemize}
     \item a handle has the correct type for the system call, 
-    \item a kernel handle's parameters refer to an existing within the calling process's handle table and
+    \item a kernel handle's parameters refers to an existing within the calling process's handle table and
     \item a handle has the necessary rights for the triggered action\cite{zircon-concepts}.
 \end{itemize}
 % 
@@ -520,13 +520,13 @@ Foreground processes, the ones a user interacts with, are more often started on 
 Besides, a process can also be started by a system service call from an existing process.
 The last option that a process is started to execute a batch job is rare today apart from scientific high performance computers\cite{tanenbaum-modern-operating-systems},~\cite{glatz2015betriebssysteme}.
 
-Also for the way how a new process can be started there are several options.
+Also, for the way how a new process can be started there are several options.
 Using \textit{process chaining}, a running process starts an independent new one, a new \ac{pcb}, and destroys itself\cite{achilles2006betriebssysteme}.
 This option is pictured in figure~\ref{pic:processcreation}, a.
 An example in Unix-like systems is calling \texttt{exec()} on an already running process to replace the current program with another one\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 By \textit{forking a process} (figure~\ref{pic:processcreation}, b), a second one is created that is, at least in the beginning, a copy of the original one.
 Both keep exiting and share the same environment such as program code, address space and resources\cite{tanenbaum-modern-operating-systems}.
-As a result, both processes have access to exactly the same resources like opened files or \ac{io} devices\cite{achilles2006betriebssysteme}.
+As a result, both processes have access to exactly the same resources as opened files or \ac{io} devices\cite{achilles2006betriebssysteme}.
 The Unix implementation of \texttt{fork()} is an example for this way of process creation.
 Process \textit{forking} and \textit{chaining} are usually used combined in Unix-like systems to create a new, independent process which is running in parallel to the first one\cite{tanenbaum-modern-operating-systems}.
 In contrast, Windows offers a third way of \textit{process creation} (figure~\ref{pic:processcreation}, c) which combines them in a single instruction to start a second, independent process (\texttt{CreateProcess()})\cite{glatz2015betriebssysteme}.
@@ -853,7 +853,7 @@ In most instances, barriers are implemented on the basis of blocking semaphores\
 \subsection{Inter Process Communication}\label{sec:ipc}
 While the previous section~\ref{sec:synchro} focuses on threads, this section explicitly deals with the communication between different processes and their synchronization.
 As \ac{ipc} is a central element in operating systems, especially in microkernel architectures, which significantly influences the system's behavior and its performance.
-Both of them are crucial aspects in each operating system and thus, their efficiency is a decisive factor for a systems acceptance.
+Both of them are crucial aspects in each operating system and thus, their efficiency is a decisive factor for a system's acceptance.
 
 
 \subsubsection{Memory Based Communication}
@@ -1271,7 +1271,7 @@ If a job does not finish within such a slot, it needs to be rescheduled accordin
 This results in a much more responsive system.
 
 Whether a scheduling policy should be aware of prioritized jobs follows directly after.
-There are a lot of reasons to give priority to certain jobs, e.g.\ to create the impression of a notably more reactive system by prioritising \ac{ui} related jobs or to ensure the fastest possible processing of a security-critical task in a realtime system\cite{mandl2014Grundkurs}.
+There are a lot of reasons to give priority to certain jobs, e.g.\ to create the impression of a notably more reactive system by prioritizing \ac{ui} related jobs or to ensure the fastest possible processing of a security-critical task in a realtime system\cite{mandl2014Grundkurs}.
 In general, prioritized jobs are available on both, preemptive and non-preemptive policies\cite{brause2017betriebssysteme}.
 
 The intention of this work is not to provide a complete enumeration of scheduling policies but a selection of relevant ones with respect to Linux and Zircon.
@@ -1499,7 +1499,8 @@ But there is not unlimited space and thus, it is very small sized\cite{tanenbaum
 After two to four cache levels follows the main memory or \ac{ram}.
 If memory is mentioned within this work, the main memory is meant in the majority of cases.
 In common, it is implemented as \textit{Dynamic} \ac{ram}.
-Accessing the main memory is 10 to 50 times slower than accessing caches, but the capacity is significantly larger (e.g.\ Intel Core i7-7820HQ; L1 caches are divided into data and instruction caches with 32 kilobytes each, while the total main memory installed is 16 gigabyte\footnote{Benchmarks from an Intel Core i7, 7th Generation.}\cite{mandl2014Grundkurs}.
+Accessing the main memory is 10 to 50 times slower than accessing caches, but the capacity is significantly larger (see e.g.\ Intel Core i7-7820HQ).
+Usually, the L1 caches are divided into data and instruction caches with 32 kilobytes each, while the total main memory installed is 16 gigabyte\footnote{Benchmarks from an Intel Core i7, 7th Generation.}\cite{mandl2014Grundkurs}.
 The data of running processes and the system itself is generally held in the main memory.
 The last kind of memory which is important as a part of this thesis are common hard drives and newer \acp{ssd}, used for files, not running applications and miscellaneous other data.
 
@@ -1683,7 +1684,7 @@ Additionally, the graphic symbolizes how pages in different contexts are mapped 
 Both user processes have numbered pages which can also be found in the right-hand side \ac{ram} representation.
 Furthermore, some kernel pages are marked in gray with the characters \textit{z, y and x} which are 1:1 mapped into the normal memory (kernel logical addresses) and a page in purple (kernel virtual address), mapped into the high memory zone. 
 
-Linux memory management is, as already mentioned, a very complex topic.
+Linux's memory management is, as already mentioned, a very complex topic.
 This section is only an introduction to the most important terms and concepts.
 It is not possible to give a complete and detailed summary on this topic as part of this work.
 Thus, a very good and detailed resource to memory management in Linux on different architectures and the effects on kernel programming is the \textit{LFD430 Developing Linux Device Drivers} course script\cite{lfd430} respectively the corresponding Linux foundation training class, which was also used as main source for this section. 
@@ -1768,7 +1769,7 @@ In earlier days, it was commonly used on \acp{cpu} where \textit{memory mapped \
 Today, the purpose of \ac{dma} is rather speeding up large data transfers between a peripheral device and the systems main memory.
 % Thus, \ac{dma} is more often used for \textit{block-oriented} \ac{io} devices.
 The idea behind is moving the rather costly \ac{io} transfers from the \ac{cpu} to a distinct but specialized controller, which allows direct interaction between an external device and the memory.
-As a prerequisit this controller needs direct access to the processor bus, i.e.\ it must be able to take the control over this bus from the \ac{cpu}.
+As a prerequisite this controller needs direct access to the processor bus, i.e.\ it must be able to take the control over this bus from the \ac{cpu}.
 In the first step, the \ac{cpu} is still needed.
 It must setup the \ac{dma} controller's internal registers which specify the start address of the data to transfer, a byte count and the transfer direction amongst other things.
 The controller takes over the control and initializes and executes the data transfer by issuing requests to the \ac{io} device instead of the \ac{cpu}.

@@ -38,7 +38,7 @@ However, the device tree can be enhanced during runtime using so-called \textit{
 Today, a comparable mechanism for Zircon board files is not known.
 
 For the actual definition of the Grove-LCD RGB device for the Hikey960 running Zircon, the targeted driver language is not decisive but the kind of the driver.
-If both controllers are to be used in standalone driver implementations, e.g.\ necessary on non platform devices, they must be defined independently from each other as well.
+If both controllers are to be used in standalone driver implementations, e.g.\ necessary on non platform devices, they must be defined independently of each other as well.
 After all, a driver must be able to pick exactly the desired device controller.
 In cases a combined \textit{platform device} specific driver is requested, both controllers must be accessible from the same binding sequence.
 %
@@ -99,7 +99,7 @@ The definition for the combined device is shown in the same listing from line 15
 It does not differ from above but combined both of those definitions in a single one, i.e.\ the array contains both structure elements instead of only a single one.
 More interesting is the way the device is actually defined in order to be bindable.
 The definitions listed so far do not contain any information that allows a matching between device definition and driver.
-Those are added in a second structure which contains a device name, but also entries for a \textit{vendor ID (vid)}, a \textit{product ID (pid)} and a \textit{device ID (did)}.
+Those are added in a second structure which contain a device name, but also entries for a \textit{vendor ID (vid)}, a \textit{product ID (pid)} and a \textit{device ID (did)}.
 These IDs are decisive for the binding between device and driver.
 In order to include the device to be addressed in this structure as well, a pointer of the respective structure type is added alongside the number of actual device entries in the previous list (see listing~\ref{lst:boardfile}, line 27 to 34 and 36 to 43).
 %
@@ -607,12 +607,12 @@ Another call argument is the read offset \mintinline{c}{off}.
 It specifies the start address to read from.
 For a character device like the considered \ac{rgb} backlight device is such an offset not meaningful at all and thus, ignored.
 If an offset is specified, no data at all is copied as a result, the value of \mintinline{c}{actual} is set to \textit{EOF (End Of File)}.
-Is the offset zero, then as much data as possible, specified in the already mentioned \mintinline{c}{count} value, is transferred.
+Is the offset zero, then as many data as possible, specified in the already mentioned \mintinline{c}{count} value, is transferred.
 %
 
 The call argument \mintinline{c}{actual} is in fact an output argument which must be set with the number of actually transferred bytes.
 For this reason, the return value of \mintinline{c}{snprintf()} in line 4 is stored within.
-Independent from this value, the \mintinline{c}{read()} function must always return \mintinline{c}{ZX_OK} (see listing~\ref{lst:read}, line 9).
+Independent of this value, the \mintinline{c}{read()} function must always return \mintinline{c}{ZX_OK} (see listing~\ref{lst:read}, line 9).
 
 Even for the \mintinline{c}{write()} function shown in listing~\ref{lst:write}, the buffer given as a call argument could be used directly, without any validation checking.
 However, a buffer with \ac{rgb} values can not been written like a text.
@@ -710,7 +710,7 @@ Even if the Grove \ac{rgb} backlight is modified using \mintinline{c}{write()}, 
 The C++ driver variants are considered at once with a focus on the platform device driver.
 Nevertheless, important differences in the two-driver variant are mentioned.
 As a first and fundamental difference are Zircon C++ drivers truly object-oriented.
-A Driver is represented by a common class with contructor, destructor as well as public and private member variables and functions.
+A Driver is represented by a common class with constructor, destructor as well as public and private member variables and functions.
 Thus, the driver is organized differently from a pseudo object-oriented C driver.
 A per device context data structure is not needed anymore because a driver object itself is instantiated per device and the member variables, especially the private ones, adopt the task of it.  
 Further, the widely used function pointers are not idiomatic in C++ and thus avoided when possible.
@@ -992,7 +992,7 @@ But since this fact is well-known and accepted for the resulting advantages like
 For this work, it is fascinating how the microkernel architecture affects driver development.
 Therefore, the assumption is made that especially the additional context switches into the actual microkernel running in kernel mode which are e.g.\ needed to perform hardware actions, influence the overall driver and system performance.
 The resulting idea is to measure the elapsing time during a corresponding call, for example toggling \acp{gpio}.
-A more complete performance analysis of both kernels is hardly practicable as part of this work and thus, the corresponding results can of course not give a complete picture of the kernel performanc in every situation.
+A more complete performance analysis of both kernels is hardly practicable as part of this work and thus, the corresponding results can of course not give a complete picture of the kernel performance in every situation.
 But at least, they can convey an idea of the performance loss in Zircon in contrast to Linux.
 
 To make the comparison as meaningful as possible, as many influencing parameters as possible are excluded.
@@ -1041,7 +1041,7 @@ As a result of these considerations the performance measurement is carried out u
 The resulting values for Linux and Zircon are pictured as a \textit{box-plot} in figure~\ref{pic:perftest}.
 This diagram type allows a comparable statistical representation of the elapsed time in nanoseconds.
 Each colored box has the size of the interquartile range (IQR) for the given values.
-It contains the average 50\% of the datapoints limited by the upper and lower quartile.
+It contains the average 50\% of the data points limited by the upper and lower quartile.
 The bigger line within a box represents the median for the given range.
 The lines starting at the box are named \textit{whiskers} and picture the range from the last values within the $1.5 * IQR$ below and above the box.
 Values within this range are also named as mild outlier values in contrast to the ones outside, pictured as dots. 
