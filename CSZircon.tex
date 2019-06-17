@@ -1,53 +1,46 @@
 % !TEX root = MasterThesis.tex
 
 \section{Zircon Driver Development}\label{sec:cs-zircon}
-By allowing different programming languages for device drivers but also the variety of available and legit ways result in the fact that Zircon drivers can not be considered in each detail.
-In Linux, the situation was similar, but the ways and resulting drivers in Zircon are noticeable more.
-This section will focus on the \textit{platform device} driver variants, especially the C one to hold this consideration comparable to the Linux one, but the C++ driver implementation and its anomalies are considered as well because it is special compared to Linux.
+By allowing different programming languages for device drivers but also the variety of available and legit ways result in the fact that Zircon drivers can not be considered in every detail.
+In Linux, the situation was similar, but the options and resulting drivers in Zircon are noticeable more varied.
+This section will focus on the \textit{platform device} driver variants, especially the C one to hold this discussion comparable to the Linux one, but the C++ driver implementation and its anomalies are considered as well because it is special compared to Linux.
 Nevertheless, the \textit{two driver} variant should be mentioned, too.
-The differences between both ones are rather reasoned in the way the device is defined and initialized and thus, not crucial.
-Similar to Linux, will this section focus on selected driver aspects as well.
-The full implementations for all written driver variants are available in the according GitHub repository\footnote{github.com, \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/system/dev/display}}.
+The differences between both ones are rather caused by the way the device is defined and initialized and thus, not crucial.
+Similar to Linux, this section will focus on selected driver aspects as well.
+The full implementations for all written driver variants are available in the corresponding GitHub repository\footnote{github.com, \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/system/dev/display}}.
 
 \subsection{Prearrangements}
-Zircon drivers are always built as a part of the kernel and according user system components at the moment.
+Zircon drivers are always built as a part of the kernel and accordingly user system components at the moment.
 Within the corresponding driver directory \texttt{zircon/system/dev} are several subdirectories to group them based on their tasks.
-As there is no comparable one to \textit{auxdisplay} on Linux, the probably best matching one is \texttt{display}.
+As there is no comparable one to \textit{auxdisplay} on Linux, the best matching one is probably \texttt{display}.
 Each driver variant is located in \texttt{display} as an own subdirectory consisting of its source file and a \texttt{rules.mk}, the makefile.
-A dedicated and sophisticated build configuration as known from Linux \texttt{Kconfig} system is not available.
+A dedicated and sophisticated build configuration as known from the Linux \texttt{Kconfig} system is not available.
 If a driver directory contains a valid \texttt{rules.mk}, it is built.
 Working with four different driver variant for the same device, this situation leads to expectable issues.
 Thus, the \texttt{rules.mk} of each currently not needed driver must be taken off the build, e.g.\ by commenting its content out.
 
-As already discussed uses Zircon the \acf{fidl} rather than \ac{io} controls.
+As already discussed Zircon uses the \acf{fidl} rather than \ac{io} controls.
 All of these definitions which refer to a module located within \texttt{zircon/system}, i.e.\ a system component that is not part of the actual microkernel, are collected within the directory \texttt{zircon/system/fidl}.
 According to the way a driver is modularized, one or more \ac{fidl} definitions are grouped in a subdirectory together with a \texttt{rules.mk} file.
 A special compiler generates interface definitions and bindings in the needed languages from the generic \ac{fidl} files.
 At the moment, these are most of all C bindings for both sides, a set for the use in drivers and a corresponding one for the use in user applications.
-Even if a driver is written in C++ are currently only the C bindings available.
+Even if a driver is written in C++ there are currently only the C bindings available.
 The resulting effects are considered as a part of the following section.
 
 \subsection{Device Definition}
 In Linux, the way an \ac{i2c} device is defined for the system was discussed as part of driver initialization.
 A corresponding driver function exists but is hardly ever used and the whole binding mechanism in Zircon works slightly different.
 Zircon relies on so-called \textit{board files} to define a computing platform such as the Hikey960 is.
-Linux previously did the same but changed to the already known \textit{device tree} representation for ARM-based computing devices because the former concept did not scale with the number of supported boards.
+Linux previously did the same but changed to the already known \textit{device tree} representation for ARM-based computing devices because the former concept did not scale well with the number of supported boards.
 The device tree files are a textual representation in an own syntax while board files are written in C on both kernels.
-For the actual use are device tree files but board files as well compiled to a binary representation.
+For the actual use device tree files but board files as well are compiled to a binary representation.
 However, the device tree can be enhanced during runtime using so-called \textit{device tree overlays}.
 Today, a comparable mechanism for Zircon board files is not known.
 
 For the actual definition of the Grove-LCD RGB device for the Hikey960 running Zircon, the targeted driver language is not decisive but the kind of the driver.
-If both controllers are to be used in standalone driver implementations, e.g.\ necessary on non platform devices, they must be defined independed from each other as well.
+If both controllers are to be used in standalone driver implementations, e.g.\ necessary on non platform devices, they must be defined independently from each other as well.
 After all, a driver must be able to pick exactly the desired device controller.
 In cases a combined \textit{platform device} specific driver is requested, both controllers must be accessible from the same binding sequence.
-
-Listing~\ref{lst:boardfile} pictures the way the devices are defined for both driver kinds.
-Line 1 to 13 shows the pure definition of single handled devices on the \ac{i2c} bus.
-They are described as an array of a structure consisting of the bus ID and the respectively slave address.
-The definition for the combined device is pictured in the same listing from line 15 to 24. 
-It is nothing else than above but combined both of those definitions in a single one, i.e.\ the array contains both structure elements instead only a single one.
-More interesting is the way the device is actually defined in order to be bindable.
 %
 \begin{listing} [H]
 \caption{Device Definition in Zircon Boardfiles}
@@ -99,41 +92,41 @@ static const pbus_dev_t i2c_grove_pdev_dev = {
 \end{minted}
 \end{listing}
 %
-The definitions listed so far does not contain any information that allows a matching between device definition and driver.
+Listing~\ref{lst:boardfile} shows the way the devices are defined for both kinds of drivers.
+Line 1 to 13 shows the pure definition of single handled devices on the \ac{i2c} bus.
+They are described as an array of a structure consisting of the bus ID and the respective slave address.
+The definition for the combined device is shown in the same listing from line 15 to 24. 
+It does not differ from above but combined both of those definitions in a single one, i.e.\ the array contains both structure elements instead of only a single one.
+More interesting is the way the device is actually defined in order to be bindable.
+The definitions listed so far do not contain any information that allows a matching between device definition and driver.
 Those are added in a second structure which contains a device name, but also entries for a \textit{vendor ID (vid)}, a \textit{product ID (pid)} and a \textit{device ID (did)}.
 These IDs are decisive for the binding between device and driver.
-In order to include the device to be addressed in this structure as well, a pointer of the respectively structure type is added alongside the number of actual device entries in the previous list (see listing~\ref{lst:boardfile}, line 27 to 34 and 36 to 43).
+In order to include the device to be addressed in this structure as well, a pointer of the respective structure type is added alongside the number of actual device entries in the previous list (see listing~\ref{lst:boardfile}, line 27 to 34 and 36 to 43).
 %
 As a result, the device definitions for a single driver only contain one element in this \mintinline{c}{i2c_channel_list} while the device definition for the pdev driver holds two of them.
-The listing~\ref{lst:boardfile} pictures only the \ac{lcd} definition for the first type.
+Listing~\ref{lst:boardfile} shows only the \ac{lcd} definition for the first type.
 The one for \ac{rgb} is defined accordingly.
 But the idea behind this second device definition goes further.
 It does not only allow one or more \ac{i2c} devices but additional ones as well.
-This allows creating complex device descriptions, e.g.\ a device consisting of \ac{i2c} parts, \ac{gpio}'s, interrupts and others, and make exactly this combination of devices accessible to a single driver.
+This allows creating complex device descriptions, e.g.\ a device consisting of \ac{i2c} parts, \ac{gpio}'s, interrupts and others, and makes exactly this combination of devices accessible to a single driver.
 Within the Hikey960 board files, such an approach is for example used to describe the on-board \ac{gpu} which is made from \ac{mmio}, interrupts and \ac{bti} for \ac{dma} transfers.
 
 Thus, the device description in Zircon is much more detailed but very descriptive.
 Unfortunately, there is hardly any documentation available on this topic and the binding mechanism in general.
 However, the pure definition of the devices is not enough.
 If these descriptions are not attached to the object representing the \textit{platform bus} for the Hikey960 using the \mintinline{c}{pbus_device_add()} \ac{api}, no binding is possible at all.
-The device is not known without.
+The device is not known without it.
 
 \subsection{Driver Binding}
-The pure binding or matching mechanism between device definition and driver is the same for C and C++ in both variants as well because for this situation are only C language bindings available at the moment.
+The pure binding or matching mechanism between device definition and driver is the same for C and C++ in both variants as well because in this situation only C language bindings are available at the moment.
 Thus, the way a driver defines a matching device is considered for both language versions while the actual \mintinline{c}{bind()} implementation is discussed in the specific sections.
 Within C driver implementations, the necessary code lines are a part of the common driver source code, in C++ they are usually outsourced in a single \texttt{bind.c} file containing these lines and an extern definition of the C++ function signature for \mintinline{c}{bind()}.
-While the way for C drivers is well-defined and documented, the implementations of C++ \texttt{bind.c} files differs a lot within the available sources.
-These work only discusses the way used within this case study.
-The listing~\ref{lst:binding} pictures such a binding definition, to be accurate, the one for the C++ \ac{lcd} driver.
+While the way for C drivers is well-defined and documented, the implementations of C++ \texttt{bind.c} files differ a lot within the available sources.
+This work only discusses the way used within this case study.
+The listing~\ref{lst:binding} shows such a binding definition, to be accurate, the one for the C++ \ac{lcd} driver.
 It only differs by the one used for the C one by line 2 which is only needed for C++ and the C++ specific naming within the code.
 While Linux uses compatible strings for the matching between driver and device Zircon offers a more sophisticated mechanism based on macros.
-Listing~\ref{lst:binding} pictures a rather basic example in the lines 10 to 14.
-The binding definitions are surrounded by two macros, the \mintinline{c}{ZIRCON_DRIVER_BEGIN()} and \mintinline{c}{ZIRCON_DRIVER_END()}.
-With, the actual binding rules are defined.
-Zircon allows much more complex sequences to describe the device to be binded than Linux does.
-The according listing~\ref{lst:binding} only pictures two types of them.
-A full definition is available in \texttt{system/public/zircon/driver/binding.h}.
-The first used type is \mintinline{c}{BI_ABORT_IF()}.
+Listing~\ref{lst:binding} shows a rather basic example in the lines 10 to 14.
 %
 \begin{listing} [H]
 \caption{Driver Binding for the LCD Driver C/C++}
@@ -156,59 +149,62 @@ ZIRCON_DRIVER_END(grove-lcd-cpp)
 \end{minted}
 \end{listing}
 %
-In combination with its first argument \mintinline{c}{NE}, the lines 11 and 12 indicate the device coordinator to abort the binding process if the third argument which must be from the type specified as a second argument, not matches the one defined for a device (see~\ref{lst:boardfile}, lines 29 to 30 and 38 to 39).
-These type of rule is used within all drivers written as a part of this thesis to ensure the vendor and product ID matches the ones defined for the Grove device definitions.
-All of them share exactly these symbolic names pictured in this listing as vendor and product IDs.
-Only the product ID, and thus, the last binding rule pictured in line 13 is different for the particular device types, the \ac{lcd}, the \ac{rgb} and the combined PDev device.
-The according binding rule to differ between them is \mintinline{c}{BI_MATCH_IF()} with \mintinline{c}{EQ} as a first argument.
-As a result, the whole binding sequence means a device matching to the pictured rule must define \texttt{PDEV\_VID\_SEEED} as a vendor ID, \texttt{PDEV\_PID\_SEEED} as a product ID and \texttt{PDEV\_DID\_SEEED\_GROVE\_LCD} as a product ID.
-Accordingly, the pictured rule is for a Grove \ac{lcd} driver, no matter if written in C or C++.
+The binding definitions are surrounded by two macros, the \mintinline{c}{ZIRCON_DRIVER_BEGIN()} and \mintinline{c}{ZIRCON_DRIVER_END()}.
+Within this macros, the actual binding rules are defined.
+Zircon allows much more complex sequences to describe the device to be bound than Linux does.
+The corresponding listing~\ref{lst:binding} only shows two types of them.
+A full definition is available in \texttt{system/public/zircon/driver/binding.h}.
+The first used type is \mintinline{c}{BI_ABORT_IF()}.
+In combination with its first argument \mintinline{c}{NE}, the lines 11 and 12 instruct the device coordinator to abort the binding process if the third argument which must be from the same type specified as a second argument, does not match the one defined for a device (see~\ref{lst:boardfile}, lines 29 to 30 and 38 to 39).
+This type of rule is used within all drivers written as a part of this thesis to ensure the vendor and product ID matches the ones defined for the Grove device definitions.
+All of them share exactly these symbolic names shown in this listing as vendor and product IDs.
+Only the product ID, and thus, the last binding rule shown in line 13 is different for the particular device types, the \ac{lcd}, the \ac{rgb} and the combined PDev device.
+The corresponding binding rule to differentiate between them is \mintinline{c}{BI_MATCH_IF()} with \mintinline{c}{EQ} as a first argument.
+As a result, the whole binding sequence means a device matching to the shown rule must define \texttt{PDEV\_VID\_SEEED} as a vendor ID, \texttt{PDEV\_PID\_SEEED} as a product ID and \texttt{PDEV\_DID\_SEEED\_GROVE\_LCD} as a product ID.
+Accordingly, the shown rule is for a Grove \ac{lcd} driver, no matter if it is written in C or C++.
 To change it for the \ac{rgb} or PDev one, only the symbolic name in listing~\ref{lst:binding}, line 13 and related naming definitions must be changed.
 In common, these are the names used as arguments for \mintinline{c}{ZIRCON_DRIVER_BEGIN/END()}.
-But these macros does not only contain the driver's name as an argument, the \mintinline{c}{ZIRCON_DRIVER_BEGIN/END()} takes a reference to a driver operations structure as well.
-The structure (see listing~\ref{lst:binding}, line 5 to 8) is not visible as such one at the first sight because Zircon allows type definitions in contrast to Linux.
+But these macros do not only contain the driver's name as an argument, the \mintinline{c}{ZIRCON_DRIVER_BEGIN/END()} takes a reference to a driver operations structure as well.
+The structure (see listing~\ref{lst:binding}, line 5 to 8) is not visible as such one at first sight because Zircon allows type definitions in contrast to Linux.
 Within this \mintinline{c}{zx_driver_ops_t}, only two entries must be defined.
 The version code must be set to \mintinline{c}{DRIVER_OPS_VERSION}.
 It is a pre-defined symbolic name and a requirement for the driver.
 The second entry in line 7 is a function pointer to the driver's \textit{bind} implementation, i.a.\ the corresponding function to Linux' \texttt{probe()}.
 If the binding sequence matches a device, this function is the one to be called.
-Similar to Linux, its task is to setting up driver and device for use.
+Similar to Linux, its task is setting up the driver and the device for use.
 
-As already mentioned is the second line, the extern definition of the \texttt{bind()} function signature only needed for C++ drivers as the binding routine and the actual implementation of  \texttt{bind()} are done in different source files and programming languages.
+As already mentioned, the second line, the extern definition of the \texttt{bind()} function signature, is only needed for C++ drivers as the binding routine and the actual implementation of  \texttt{bind()} are done in different source files and programming languages.
 In a pure C driver, it is not needed at all.
 
 One further special situation about these binding rules is the fact they are defined as a part of the driver but located in a defined binary segment which allows the device coordinator to access them without loading a whole driver into its address space.
-The full driver is not loaded before a matching device is found and its \mintinline{c}{bind()} function referenced in \mintinline{c}{zx_driver_ops_t} is actually called.
+The full driver is not loaded until a matching device is found and its \mintinline{c}{bind()} function referenced in \mintinline{c}{zx_driver_ops_t} is actually called.
 
 \subsection{C-Driver}
 
 \subsubsection{Driver Binding and Release}\label{sec:zircon:drv:bind}
 After a match between driver and device is found by the device coordinator, the complete driver is loaded into the device host process of a superior device.
-At this point, the driver's execution starts by calling its \mintinline{c}{bind()} function with these parent device as an argument.
+At this point, the driver's execution starts by calling its \mintinline{c}{bind()} function with this parent device as an argument.
 
-Zircon driver code seems unfamiliar at the first sight if switching from Linux, e.g.\ because of naming, function signatures and coding style.
+Zircon driver code seems unfamiliar at first sight if switching from Linux, e.g.\ because of naming, function signatures and coding style.
 But the structure within is similar.
 As a first step, memory for instance specific driver data is allocated.
 The previous section mentioned already that the coding style used in Zircon prefers type definitions over structures for C drivers. 
-Thus, the type \mintinline{grove_t} is introduced for this situation.
+Thus, the type \mintinline{c}{grove_t} is introduced for this situation.
 The data stored within is comparable to the one stored in the Linux equivalent.
-It contains, besides other entries that are considered as soon as they are needed, ones for the \ac{i2c} objects but also entries to store the device' current state.
+It contains, besides other entries that are considered as soon as they are needed, ones for the \ac{i2c} objects but also entries to store the device's current state.
 Unlike Linux, the actual memory allocation for this type is done via \mintinline{c}{calloc()}, a standard C library function (see listing~\ref{lst:bindfunc}, line 4 to 7).
 Obviously, error handling in form of checking if the pointer to the resulting memory regions is valid, is needed in Zircon as well.
 
-The next call is a kind of platform device specific.
+The next call is kind of platform device specific.
 It fetches the protocol device for this driver, in this case for the \texttt{PDev} protocol (see listing~\ref{lst:bindfunc}, line 9 to 13).
 This will turn this driver implementation into a platform device specific one.
-A driver which is not addicted to platform devices would fetch the \mintinline{c}{ZX_PROTOCOL_I2C} instead, in this situation.
+A driver which is not associated to platform devices would fetch the \mintinline{c}{ZX_PROTOCOL_I2C} instead, in this situation.
 The result of this call is a \mintinline{c}{pdev_protocol_t} typed object which represents the platform device instance.
 It is needed to fetch associated devices on the platform bus.
 For this driver, these are both \ac{i2c} devices of the Grove-LCD RGB backlight.
-They are allocated using the call \mintinline{c}{pdev_get_protocol()} pictured in listing~\ref{lst:bindfunc}, line 16 to 25.
+They are allocated using the call \mintinline{c}{pdev_get_protocol()} shown in listing~\ref{lst:bindfunc}, line 16 to 25.
 The call is very similar to the previously used one to fetch the platform device.
-It uses this one as a parent instead of the one given as a call argument to the bind function.
-The fetched protocol is, of course, \mintinline{c}{ZX_PROTOCOL_I2C} and the resulting object is stored as an \mintinline{c}{i2c_protocol_t} within the \mintinline{c}{grove_t} structure.
-But to fetch the desired device from the both possible ones defined in listing~\ref{lst:boardfile}, an additional call argument is needed.
-It is a number to describe the position within the \mintinline{c}{pbus_i2c_channel_t} array (see listing~\ref{lst:boardfile}, line 15 to 24).
+It uses the fetched platform device instance as a parent instead of the one given as a call argument to the bind function.
 %
 \begin{listing} [H]
     \caption{Implementation of the \texttt{bind()} Function within the Zircon Platform Device Driver in C}
@@ -264,39 +260,38 @@ static zx_status_t grove_bind(void* ctx, zx_device_t* parent) {
 \end{minted}
 \end{listing}
 %
-Unlike Linux \mintinline{c}{probe()}, Zircon's \mintinline{bind()} does not need that much kernel internal driver setup and registration in various infrastructure elements.
+The fetched protocol is, of course, \mintinline{c}{ZX_PROTOCOL_I2C} and the resulting object is stored as an \mintinline{c}{i2c_protocol_t} within the \mintinline{c}{grove_t} structure.
+But to fetch the desired device from both possible ones defined in listing~\ref{lst:boardfile}, an additional call argument is needed.
+It is a number to describe the position within the \mintinline{c}{pbus_i2c_channel_t} array (see listing~\ref{lst:boardfile}, line 15 to 24).
+Unlike Linux's \mintinline{c}{probe()}, Zircon's \mintinline{c}{bind()} does not need so much kernel internal driver setup and registration in various infrastructure elements.
 The only similar action a Zircon driver must perform is adding a device below the parent via the \mintinline{c}{device_add()} call in listing~\ref{lst:bindfunc}, line 35.
 This call adds this device instance to the system using the arguments defined in line 27 to 33.
 For this reason, the structure contains a pointer to the driver operations (line 31), i.a.\ the \ac{fidl} operations on this platform device driver.
-The issue known from Linux, make the private driver instance data available through the whole driver including the file operations and other interfacing options is solved more sophisticated in Zircon.
+The issue known from Linux, making the private driver instance data available through the whole driver including the file operations and other interfacing options, is solved more sophisticated in Zircon.
 Already this arguments structure contains it as a so-called \textit{context pointer} \texttt{ctx}.
-It is a void pointer and thus, capable of own type definitions.
+It is a void pointer and thus, capable of its own type definitions.
 
 Beside these entries, the structure contains a version code, the driver name to be shown and maybe additional flags.
 These flags influence, among other things, the way a device is added to the system.
-The implementation pictured uses \\ \mintinline{c}{DEVICE_ADD_INVISIBLE} as a flag.
+The implementation shown uses \mintinline{c}{DEVICE_ADD_INVISIBLE} as a flag.
 It should be used for device drivers with long running initialization.
 The idea behind is to add a device representation already to the system and leave the \mintinline{c}{bind()} function but hide it from users until the initialization is done.
-One or more of such long running operations are in common done as possibly in parallel running threads.
-If the initialization finishes successfully, the driver implementation must switch the device state to visible while a failed one was not spotted by users at all.
+One or more of such long running operations are usually done as in parallel running threads, if possible.
+If the initialization finishes successfully, the driver implementation must switch the device state to visible while a failed one will not be spotted by users at all.
 
-The device initialization for both Grove parts are not that long and it would probably be fine to initialize them using as sequential function.
+The device initialization for both Grove parts are not that long and it would probably be fine to initialize them using a sequential function.
 However, Zircon does not define precise rules for this situation.
 For this reason, the actual device initialization is implemented in the thread version in C and the sequential one in C++.
-The code pictured in listing~\ref{lst:bindfunc}, line 40 to 46 uses a single thread for both initialization which is considered in detail within the following section.
+The code shown in listing~\ref{lst:bindfunc}, line 40 to 46 uses a single thread for both initializations which is considered in detail within the following section.
 As the thread creation takes the driver context as an argument as well, it enables the access to the needed \ac{i2c} instances without further ado.
 The used Zircon driver implementation returns a status code which is needed for a proper error handling.
-However, if the device initialization fails, the only situation occurs in which a call must be revoked within the whole binding function.
+However, if the device initialization fails, only the situation occurs in which a call must be revoked within the whole binding function.
 The already added device must be removed and, as always, the \mintinline{c}{grove_t} instance must be freed (see listing~\ref{lst:bindfunc}, line 42 to 46).
 
-As pictured, Zircon does not need a sophisticated driver setup as known from Linux and as a result, not that much memory allocations in \mintinline{c}{bind()}.
-At the same time, it is not needed to undo the most calls done during this function.
-As a result, the error handling is, in this case, less complex than known from Linux.
+As shown, Zircon does not need a sophisticated driver setup as known from Linux and as a result, not that much memory allocations in \mintinline{c}{bind()}.
+At the same time, it is not needed to undo most calls done during this function.
+As a result, the error handling is, in this case, less complex than in Linux.
 Using jump marks for clean up is not needed, thus, but valid in Zircon as well.
-
-Accordingly, the \mintinline{c}{release()} implementation is very simple and short as well and thus, not pictured here.
-The device should be removed and the context data must be freed.
-However, it is rare this function is called according to the driver lifecycle discussed in section~\ref{sec:zirconlifecycle}.
 %
 \begin{listing} [H]
     \caption{Device Initialization in a Zircon Platform Device Driver (C)}
@@ -341,49 +336,48 @@ init_failed:
 \end{minted}
 \end{listing}
 %
+Accordingly, the \mintinline{c}{release()} implementation is very simple and short as well and thus, not shown here.
+The device should be removed and the context data must be freed.
+However, it is rare this function is called according to the driver lifecycle discussed in section~\ref{sec:zirconlifecycle}.
 The mentioned actual device initialization is very similar to the way it is done in Linux.
 Thus, this section focuses on the Zircon specific parts and considers only the \ac{lcd} initialization.
 The \ac{rgb} one is part of this thread function as well, but skipped in this context.
 Data transfers on the \ac{i2c} bus are also critical sections in Zircon, so it is needed to lock them just like in Linux (see listing~\ref{lst:zirconinit}, line 4).
 It is managed as a part of the \mintinline{c}{grove_t} instance.
 
-Overall, in Zircon is it avoided to use global variables at all, while static defines, e.g.\ for fixed values are allowed.
+Overall, in Zircon the use of global variables is avoided, while static defines, e.g.\ for fixed values are allowed.
 Everything else should be a part of a device instance context.
 After the section is locked, the way \ac{i2c} transactions are done does not differ from Linux except the available kernel \ac{api} calls.
 It is because the Linux implementation was inspired by Zircon.
-Defining a structure respectively a data type for the register and according value tuples, build an array containing the needed sequence (see listing~\ref{lst:zirconinit}, lines 7 to 12) and send it using a loop over this array (lines 14 to 20) was discovered as a commonly used pattern in Zircon.
+Defining a structure respectively a data type for the register and corresponding value tuples, building an array containing the needed sequence (see listing~\ref{lst:zirconinit}, lines 7 to 12) and sending it using a loop over this array (lines 14 to 20) was discovered as a commonly used pattern in Zircon.
 
 
 It is better readable but as well more flexible than writing the commands hard coded into the \ac{i2c} \acp{api} and reduces redundant code at the same time.
-Using this pattern, an additional step in the initialization sequence requires only an extra entry in the \mintinline{c}{i2c_cmd_t} array but not change in the write logic.
+Using this pattern, an additional step in the initialization sequence requires only an extra entry in the \mintinline{c}{i2c_cmd_t} array but no change in the write logic.
 The used loop determines the array's size and does the action, the \mintinline{c}{i2c_write_sync()} for all tuples within.
-Thereby is the \ac{i2c} write call similar to the one invoked on Linux.
-Indeed, there is no \ac{api} to write a single byte value into a controller register, but the call pictured in listing~\ref{lst:zirconinit}, line 15 takes the desired \ac{i2c} representation as a first argument as well.
+Thereby the \ac{i2c} write call is similar to the one invoked on Linux.
+Indeed, there is no \ac{api} to write a single byte value into a controller register, but the call shown in listing~\ref{lst:zirconinit}, line 15 takes the desired \ac{i2c} representation as a first argument as well.
 The following argument differs.
 It is the address to an element in the array, which represents the target register on the controller.
 From this point, the call works like the one used to send strings in Linux.
 The last argument is not a single value to be written in the named register but a number of bytes to be transferred.
-As already known from Linux is the first one interpreted as a target register while all following one are written in it.
-To leave the loop correctly in case of an error does this function implementation take advantage of jumps.
+As already known from Linux is the first one interpreted as a target register while all following ones are written in it.
+To leave the loop correctly in case of an error this function implementation takes advantage of jumps.
 The error routine must unlock the mutex and exit the thread with a certain error code which allows a proper tear down of the failed driver in the calling function (see listing~\ref{lst:zirconinit}, lines 18 and 32 to 35).
 
 If the initialization of both partial devices was successful so far, an example text is set to the \ac{lcd}.
 It shows to a user that the display is initialized and ready for use.
 With the available Zircon \ac{api} for writing \ac{i2c} transfers, the idea for texts stays the same as already pictured for Linux.
 The target register is encoded as an \ac{ascii} character and prefixes the actual text to be shown.
-As discussed previously must the terminating, non-printable character of a string be cutted off at sending to prevent display errors.
+As discussed previously the terminating, non-printable character of a string must be cutted off at sending to prevent display errors.
 
 However, the probably most important task of this function is, after the initialization was finished successfully, to change the device visibility in Zircon's device filesystem.
-This is done using the call \mintinline{c}{device_make_visible()}, pictured in listing~\ref{lst:zirconinit}, line 29.
+This is done using the call \mintinline{c}{device_make_visible()}, shown in listing~\ref{lst:zirconinit}, line 29.
 From this moment on, its representation and thus the actual Grove device, is accessible by users via the interfacing options defined via the \mintinline{c}{.ops} field in the \mintinline{c}{device_add_args_t} (see listing~\ref{lst:bindfunc}, line 31).
 
 \subsubsection{Driver Interfaces}
 In accordance with the concept drawn up previously, the Zircon platform device driver receives only a \ac{fidl} interface.
 The common file operations \mintinline{c}{read()} and \mintinline{c}{write()} are considered in the following section for the two-driver version.
-
-All \ac{fidl} definitions for the Grove-LCD RGB backlight driver variants are defined within the directory \texttt{system/fidl/zircon-display-grove/} in the Zircon sources.
-It contains tree single definitions, one for the platform device variant and two of them for the single controllers.
-Thereby is the first variant split into the controller specific parts for the \ac{lcd} and \ac{rgb} definitions.
 %
 \begin{listing} [H]
     \caption{FIDL Definitions for a Zircon Platform Device Driver (C)}
@@ -405,29 +399,29 @@ interface Pdev {
 \end{minted}
 \end{listing}
 %
-The defined function signatures does not change between both variants.
+All \ac{fidl} definitions for the Grove-LCD RGB backlight driver variants are defined within the directory \texttt{system/fidl/zircon-display-grove/} in the Zircon sources.
+It contains three single definitions, one for the platform device variant and two of them for the single controllers.
+Thereby is the first variant split into the controller specific parts for the \ac{lcd} and \ac{rgb} definitions.
+The defined function signatures do not change between both variants.
 Besides the \ac{fidl} files, the directory contains a \texttt{rules.mk} file as well.
 It bundles the make rules for all of them in a single file.
-Do reach distinct outputs, the built modules get a name extension.
-In common, they are named according the current directory but to build all \ac{fidl} files in a single directory with only one \texttt{rules.mk}, the module names are extended with e.g.\ \texttt{.pdev} for the platform device definition or \texttt{.rgb} for the \ac{rgb} specific one. 
+To reach distinct outputs, the built modules get a name extension.
+Usually, they are named according to the current directory but to build all \ac{fidl} files in a single directory with only one \texttt{rules.mk}, the module names are extended with e.g.\ \texttt{.pdev} for the platform device definition or \texttt{.rgb} for the \ac{rgb} specific one. 
 The compiled results are available in the build directory under the path \texttt{build-arm64/system/fidl/zircon-display-grove.pdev} for the platform device.
-The other ones are named according their extensions.
+The other ones are named according to their extensions.
 Important for the further driver development is the generated header file with the function signatures for driver and user.
 It must be included in the source file and the whole directory must be referenced in the driver's \texttt{rules.mk} by adding the additional line \mintinline{c}{MODULE_FIDL_LIBS := system/fidl/zircon-display-grove.pdev} in order to be linked correctly.
 Within the source file, it is sufficient using \\ \mintinline{c}{zircon/display/grove/pdev/c/fidl.h} as an include path.
 It is the path to the header definition starting in the mentioned directory's \texttt{gen/include/zircon} record.
 
-The actual interface definitions are pictured in listing~\ref{lst:fidldef}.
+The actual interface definitions are shown in listing~\ref{lst:fidldef}.
 It's C-like syntax is simple to use, but with some pitfalls.
 The definition for interface number 3 in line 8 is very simple.
 It is a void call and thus without call arguments.
-More complex ones as number 1 in line 6 take one or more primitive datatype as arguments.
+More complex ones as number 1 in line 6 take one or more primitive data types as arguments.
 Return values, e.g.\ as defined for interface number 2 in line 7 are defined using a \texttt{-> (<type>)} after the actual call interface.
 The return value might consist of more than one value.
 An anomaly is the way strings are defined as in or out parameters in the \ac{fidl} syntax.
-Using the \textit{simple} layout needed for device drivers, a string as datatype definition must be followed by its maximum transfer size (see listing~\ref{lst:fidldef}, lines 9 to 11).
-However, the well-defined input and output arguments lead to some advantage over Linux' \ac{io} controls.
-The generated code allows for example strict type safety and according checks.
 %
 \begin{listing} [H]
     \caption{Driver Interfaces via FIDL in a Zircon Platform Device Driver (C)}
@@ -456,20 +450,20 @@ static zircon_display_grove_pdev_Pdev_ops_t fidl_ops = {
 \end{minted}
 \end{listing}
 %
-At the same time enables the use of an abstract interface definition language the generation of bindings in different target languages.
+Using the \textit{simple} layout needed for device drivers, a string as datatype definition must be followed by its maximum transfer size (see listing~\ref{lst:fidldef}, lines 9 to 11).
+However, the well-defined input and output arguments lead to some advantage over Linux's \ac{io} controls.
+The generated code allows for example strict type safety and according checks.
+At the same time the use of an abstract interface definition language enables the generation of bindings in different target languages.
 For the Zircon version used during this work, only idiomatic C bindings are available for drivers.
 
 Within the driver, the \ac{fidl} calls are declared via a \mintinline{c}{.message} function pointer in the already mentioned \mintinline{c}{zx_protocol_device_t} structure.
 Beside this message entry, it contains as well a version string and the function pointer to the previously discussed driver release implementation (see listing~\ref{lst:fidlinit}, lines 1 to 5).
-The \mintinline{c}{message()} implementation follows always the same scheme.
+The \mintinline{c}{message()} implementation always follows the same scheme.
 It calls a dispatcher function which is generated as a part of the \ac{fidl} definitions and forwards the message call arguments to this function besides a reference to \mintinline{c}{zircon_display_grove_pdev_Pdev_ops_t} (see listing~\ref{lst:fidlinit}, lines 7 to 10).
 This datatype consists of a structure of function pointers to the \ac{fidl} definitions for the included one and is generated in this context as well. 
 All generated helpers and function signatures are available in the previously mentioned and included header file.
 The \mintinline{c}{zircon_display_grove_pdev_Pdev_ops_t} structure holds the function pointers to the actual implementations of the defined interfaces within this driver.
 A \ac{fidl} call reaches the driver as a marshaled message which is dispatched into the actual call via the provided \mintinline{c}{dispatch()} call and the list of actual implementations in the driver in \mintinline{c}{zircon_display_grove_pdev_Pdev_ops_t}.
-
-The actual implementations of the \ac{fidl} calls are similar to the Linux ones.
-As there, the set and get function for the \ac{rgb} controller are considered in the Zircon specific listing~\ref{lst:fidlimpl}.
 %
 \begin{listing} [H]
     \caption{Illustrative Implementation of two FIDL Calls in a Zircon Platform Device Driver (C)}
@@ -509,22 +503,25 @@ static zx_status_t grove_fidl_get_color(void* ctx, fidl_txn_t* txn) {
 \end{minted}
 \end{listing}
 %
-Besides the changing \ac{api}, is the way data is transferred between user and driver the main difference and characterized by \ac{fidl} and the fact Zircon drivers are located in userspace.
+\newpage
+The actual implementations of the \ac{fidl} calls are similar to the Linux ones.
+As there, the set and get function for the \ac{rgb} controller are considered in the Zircon specific listing~\ref{lst:fidlimpl}.
+Besides the changing \ac{api}, the way data is transferred between user and driver is the main difference and characterized by \ac{fidl} and the fact Zircon drivers are located in userspace.
 Call arguments are applicable without further ado and each function signature is enhanced with a context pointer by the \ac{fidl} compiler.
 As a result, it is not necessary to use \mintinline{c}{open()} and \mintinline{c}{close()} to access the device instance data as it is done in Linux.
 Both functions are not needed at all, if no specific needs must be matched.
 Thus, the actual \mintinline{c}{grove_fidl_set_color()} implementation follows the same sequence as the Linux one discussed before.
-Of course, the code pictured in listing~\ref{lst:fidlimpl}, lines 1 to 27, is idiomatic for Zircon and uses these \acp{api} which were already considered during the \mintinline{c}{bind()} implementation.
+Of course, the code shown in listing~\ref{lst:fidlimpl}, lines 1 to 27, is idiomatic for Zircon and uses these \acp{api} which were already considered during the \mintinline{c}{bind()} implementation.
 
 The \mintinline{c}{grove_fidl_get_color()} implementation is more interesting.
-It's initial \ac{fidl} definition had no input but three output arguments which must be transported back to the calling user process which invokes \ac{ipc} communication.
+It's initial \ac{fidl} definition had no input but three output arguments which must be transported back to the calling user process which invokes the \ac{ipc} communication.
 The generated function signature contains the familiar context pointer but as well an argument of the type \mintinline{c}{fidl_txn_t}.
 Furthermore, the \ac{fidl} compiler generated a \mintinline{c}{reply()} call specific to this interface definition (see listing~\ref{lst:fidlimpl}, line 31).
 It must be called with matching arguments but the underlying \ac{ipc} mechanism is abstracted.
 Thus, especially this implementation is very simple.
 The \mintinline{c}{fidl_txn_t} pointer \mintinline{c}{txn} is forwarded to the reply call while the \ac{rgb} component values are taken from the currently saved instance state, the context.
 
-Further \ac{fidl} call implementation are neither discussed nor pictured as part of this work.
+Further \ac{fidl} call implementations are neither discussed nor shown as part of this work.
 The full source code for this driver variant is available in the corresponding GitHub repository at \url{https://github.com/Allegra42/zircon/tree/i2c-grove-lcd/system/dev/display/grove-c-pdev-driver}.
 
 
@@ -532,11 +529,11 @@ The full source code for this driver variant is available in the corresponding G
 
 \subsubsection*{Two Driver Variant} 
 The first difference between the C driver variants is in the bind implementation of the drivers.
-Section~\ref{sec:zircon:drv:bind} mentioned already the difference between the \ac{i2c} device allocation in both C driver variants, the platform device and the common one.
-The platform device variant etches the \mintinline{c}{ZX_PROTOCOL_PDEV} using the parent device given as a call argument of \mintinline{c}{bind()} (see listing~\ref{lst:i2callocpdev}). 
+Section~\ref{sec:zircon:drv:bind} already mentioned the difference between the \ac{i2c} device allocation in both C driver variants, the platform device and the common one.
+The platform device variant fetches the \mintinline{c}{ZX_PROTOCOL_PDEV} using the parent device given as a call argument of \mintinline{c}{bind()} (see listing~\ref{lst:i2callocpdev}). 
 Following, it uses the resulting \mintinline{c}{pdev_protocol_t} instance with a platform device specific \ac{api} to allocate the \ac{i2c} devices (see listing~\ref{lst:i2callocpdev}).
 Instead, the common version, here shown for the \ac{rgb} C driver, allocates the \ac{i2c} device directly by fetching a \mintinline{c}{ZX_PROTOCOL_I2C} (see listing~\ref{lst:i2calloccomm}).
-For the actual use of the fetched \ac{i2c} instances does the underlying mechanism not matter at all.
+For the actual use of the fetched \ac{i2c} instances the underlying mechanism does not matter at all.
 However, a single driver implementation for a composed device is currently only available on platform devices using the related \ac{api}.
 %
 \begin{listing}[H]
@@ -574,25 +571,14 @@ As a single difference, there is a division of the total calls to the correspond
 But in contrast to a platform device driver, it is more or less meaningful to implement the \mintinline{c}{read()} and \mintinline{c}{write()} systemcalls for those drivers.
 In general, they are done similar to the unattended Linux implementation, except already known Zircon specifics and details.
 The discussion about these calls is about the \ac{rgb} specific driver within this work.
-It does not only illustrate the calls itself but also the issue with \mintinline{c}{write()} for such a device and why \ac{fidl} or respectively \mintinline{c}{ioctl()} on Linux, is more suitable is some situations.
+It does not only illustrate the calls itself but also the issue with \mintinline{c}{write()} for such a device and why \ac{fidl} or respectively \mintinline{c}{ioctl()} on Linux, is more suitable in some situations.
 
-The \mintinline{c}{read()} implementation pictured in listing~\ref{lst:read} is absolutely fine and valid for the \ac{rgb} device except the representation of its results.
-It is a composite value made from a red, green and blue share.
-Of course, the driver is free to define the output format but it is not that intuitive and comparable than reading e.g.\ files.
+The \mintinline{c}{read()} implementation shown in listing~\ref{lst:read} is absolutely fine and valid for the \ac{rgb} device except the representation of its results.
+It is a composite value made from a red, green and blue ratio.
+Of course, the driver is free to define the output format but it is not that intuitive and comparable compared to reading e.g.\ files.
 Apart from this problem, the implementation is rather simple and follows the standard.
-A \mintinline{c}{read()} call in Zircon has, as each one discussed until now, a context pointer as an argument.
+A \mintinline{c}{read()} call in Zircon has, as discussed before, a context pointer as an argument.
 Thus, an additional procedure to make the instance data available as in Linux is not necessary (see listing~\ref{lst:read}, lines 1 and 3).
-Without different execution modes between driver and user, there is no need for check the buffer and its permissions with sophisticated helpers.
-The data to be read is stored using the \mintinline{c}{snprintf()} function in line 4 with a defined format.
-In point of fact, the resulting string should be prepared with this call.
-However, the maximum size to copy is specified in the argument \mintinline{c}{count} and the user buffer is accessible without further ado, thus the call \mintinline{c}{snprintf()} can execute the transfer to the user without any additional steps (see listing~\ref{lst:read}, line 4).
-The original logic behind is again similar to Linux except the names, but both specify an offset on which should be read.
-An example for such an implementation is given in \cite{zircon-simpledrv}.
-Another call argument is the read offset \mintinline{c}{off}.
-It specifies the start address to read from.
-For a character device like the considered \ac{rgb} backlight device is such an offset not meaningful at all and thus, ignored.
-If an offset is specified, no data at all is copied as a result, the value of \mintinline{actual} is set to \textit{EOF (End Of File)}.
-Is the offset zero, the as many data as possible, specific in the already mentioned \mintinline{c}{count} value, is transferred.
 %
 \begin{listing} [H]
     \caption{Implementation of the \texttt{read()} call in a Zircon Device Driver (C)}
@@ -611,28 +597,31 @@ static zx_status_t grove_rgb_read(void* ctx, void* buf, size_t count, zx_off_t o
 \end{minted}
 \end{listing}
 %
+Without different execution modes between driver and user, there is no need for checking the buffer and its permissions with sophisticated helpers.
+The data to be read is stored using the \mintinline{c}{snprintf()} function in line 4 with a defined format.
+As a matter of fact, the resulting string should be prepared with this call.
+However, the maximum size to copy is specified in the argument \mintinline{c}{count} and the user buffer is accessible without further ado, thus the call \mintinline{c}{snprintf()} can execute the transfer to the user without any additional steps (see listing~\ref{lst:read}, line 4).
+The original logic behind is again similar to Linux except the names, but both specify an offset at which should be read.
+An example for such an implementation is given in \cite{zircon-simpledrv}.
+Another call argument is the read offset \mintinline{c}{off}.
+It specifies the start address to read from.
+For a character device like the considered \ac{rgb} backlight device is such an offset not meaningful at all and thus, ignored.
+If an offset is specified, no data at all is copied as a result, the value of \mintinline{c}{actual} is set to \textit{EOF (End Of File)}.
+Is the offset zero, then as much data as possible, specified in the already mentioned \mintinline{c}{count} value, is transferred.
+%
+
 The call argument \mintinline{c}{actual} is in fact an output argument which must be set with the number of actually transferred bytes.
 For this reason, the return value of \mintinline{c}{snprintf()} in line 4 is stored within.
-Independent from this value, the \mintinline{c}{read()} function must always return \mintinline{ZX_OK} (see listing~\ref{lst:read}, line 9).
+Independent from this value, the \mintinline{c}{read()} function must always return \mintinline{c}{ZX_OK} (see listing~\ref{lst:read}, line 9).
 
-Even for the \mintinline{c}{write()} function pictured in listing~\ref{lst:write}, the buffer given as a call argument could be used directly, without any validation checking.
+Even for the \mintinline{c}{write()} function shown in listing~\ref{lst:write}, the buffer given as a call argument could be used directly, without any validation checking.
 However, a buffer with \ac{rgb} values can not been written like a text.
-The color shares must be parsed from the given buffer and sent to specific and distinct registers.
-Thus, the input text needs a certainly defined format to be parsed in this situation.
+The color ratios must be parsed from the given buffer and sent to specific and distinct registers.
+Thus, the input text needs a robustly defined format to be parsed in this situation.
 Implementing the \mintinline{c}{write()} call for \ac{rgb} is rather a demonstration of the way it is realized and the issues with writing such data than a valid use case.
-\ac{fidl} calls are considerably better suitable for this situation.
+\ac{fidl} calls are considerably better suited for this situation.
 Because the input buffer must be parsed, it makes sense to copy it to a temporary one where the parsing is done.
-As the temporary buffer can take the size of the input buffer specific by the \mintinline{c}{count} value, the whole content can be copied at once (see listing~\ref{lst:write}, lines 4 and 6).
-Similar to the \mintinline{c}{read()} function, the number of copied bytes is stored in \mintinline{c}{*actual} as an output argument.
-Why string parsing is not desired in a driver is pictured in the lines 11 to 24.
-It is complex, error-proune and hard to maintain, even in Zircon which enables the use of the standard C library.
-Furthermore, the user must know about the specific syntax.
-In the pictured and shortened function, the information about this syntax is skipped.
-It is only printed to the user in the case a wrong format was sent.
-
-The actual \ac{i2c} transfer is done according to the previously considered ones.
-A structure is used to store the tuples of register address and its matching color share parsed from the input buffer and a loop steps over these tuples to send them via \mintinline{c}{i2c_write_sync()} (see listing~\ref{lst:write}, lines 26 to 38).
-Even if the Grove \ac{rgb} backlight is modified using \mintinline{c}{write()}, the internal color state must be updated after a successful update since it is not possible to read it directly from the device.
+As the temporary buffer can take the size of the input buffer specified by the \mintinline{c}{count} value, the whole content can be copied at once (see listing~\ref{lst:write}, lines 4 and 6).
 %
 \begin{listing} [H]
     \caption{Implementation of the \texttt{write()} call in a Zircon Device Driver (C)}
@@ -689,7 +678,7 @@ fail:
 %
 % Even for the \mintinline{c}{write()} function pictured in listing~\ref{lst:write}, the buffer given as a call argument could be used directly, without any validation checking.
 % However, a buffer with \ac{rgb} values can not been written like a text.
-% The color shares must be parsed from the given buffer and sent to specific and distinct registers.
+% The color ratios must be parsed from the given buffer and sent to specific and distinct registers.
 % Thus, the input text needs a certainly defined format to be parsed in this situation.
 % Implementing the \mintinline{c}{write()} call for \ac{rgb} is rather a demonstration of the way it is realized and the issues with writing such data than a valid use case.
 % \ac{fidl} calls are considerably better suitable for this situation.
@@ -703,9 +692,19 @@ fail:
 % It is only printed to the user in the case a wrong format was sent.
 %
 % The actual \ac{i2c} transfer is done according to the previously considered ones.
-% A structure is used to store the tuples of register address and its matching color share parsed from the input buffer and a loop steps over these tuples to send them via \mintinline{c}{i2c_write_sync()} (see listing~\ref{lst:write}, lines 26 to 38).
+% A structure is used to store the tuples of register address and its matching color ratio parsed from the input buffer and a loop steps over these tuples to send them via \mintinline{c}{i2c_write_sync()} (see listing~\ref{lst:write}, lines 26 to 38).
 % Even if the Grove \ac{rgb} backlight is modified using \mintinline{c}{write()}, the internal color state must be updated after a successful update since it is not possible to read it directly from the device.
 %
+Similar to the \mintinline{c}{read()} function, the number of copied bytes is stored in \mintinline{c}{*actual} as an output argument.
+Why string parsing is not desired in a driver is pictured in the lines 11 to 24.
+It is complex, error-prone and hard to maintain, even in Zircon which enables the use of the standard C library.
+Furthermore, the user must know about the specific syntax.
+In the shown and shortened function, the information about this syntax is skipped.
+It is only printed to the user in the case a wrong format was sent.
+
+The actual \ac{i2c} transfer is done similar to the previously considered ones.
+A structure is used to store the tuples of register addresses and its matching color ratio parsed from the input buffer and a loop steps over these tuples to send them via \mintinline{c}{i2c_write_sync()} (see listing~\ref{lst:write}, lines 26 to 38).
+Even if the Grove \ac{rgb} backlight is modified using \mintinline{c}{write()}, the internal color state must be updated after a successful update since it is not possible to read it directly from the device.
 
 \subsubsection*{C++ Driver Variants}
 The C++ driver variants are considered at once with a focus on the platform device driver.
@@ -720,26 +719,16 @@ Unfortunately, neither C++ drivers nor the way mixins are instrumented is well d
 Probably the best information about it is written as a comment in the header file \texttt{system/ulib/ddktl/include/ddktl/device.h}.
 It contains a list about the available mixins as well.
 Because the platform device driver must support \ac{fidl} defined function calls, the corresponding mixin \mintinline{cpp}{ddk::Messageable} must be invoked.
-For the two-driver variant is it additionally \mintinline{cpp}{ddk::Readable} and \mintinline{cpp}{ddk::Writeable}.
-Listing~\ref{lst:cppheader} pictures the way the \mintinline{cpp}{ddk::Messageable} mixin is included into the Grove platform device C++ driver in line 2.
-Line 3 pictures the situation for the two-driver variant.
-The mixin functions must be declared in the public section with a defined name and signature as pictured in the lines 14 and 15 for the \mintinline{cpp}{DdkRelease()} function which is obligatory for each driver and for \mintinline{cpp}{DdkMessage()}.
+For the two-driver variant it is additionally \mintinline{cpp}{ddk::Readable} and \mintinline{cpp}{ddk::Writeable}.
+Listing~\ref{lst:cppheader} shows the way the \mintinline{cpp}{ddk::Messageable} mixin is included into the Grove platform device C++ driver in line 2.
+Line 3 shows the situation for the two-driver variant.
+The mixin functions must be declared in the public section with a defined name and signature as shown in the lines 14 and 15 for the \mintinline{cpp}{DdkRelease()} function which is obligatory for each driver and for \mintinline{cpp}{DdkMessage()}.
 
 Very different in contrast to a C driver is the way the \mintinline{cpp}{pdev} instance is allocated in a C++ driver.
 It is represented as a private member variable within the \mintinline{cpp}{GroveDevice} class.
-The platform device itself is represented as a \mintinline{cpp}{PDev} name class from the namespace \mintinline{cpp}{ddk} (see listing~\ref{lst:cppheader}, line 22) while its corresponding \mintinline{pdev} object is initialized using the \textit{initializer list} of the \mintinline{cpp}{GroveDevice}.
-It calls the constructor of \mintinline{cpp}{PDev} with \mintinline{cpp}{parent} as an argument during the driver class itself is constructed (see listing~\ref{lst:cppheader}, lines 7 and 8).
+The platform device itself is represented as a \mintinline{cpp}{PDev} name class from the namespace \mintinline{cpp}{ddk} (see listing~\ref{lst:cppheader}, line 22) while its corresponding \mintinline{cpp}{pdev} object is initialized using the \textit{initializer list} of the \mintinline{cpp}{GroveDevice}.
+It calls the constructor of \mintinline{cpp}{PDev} with \mintinline{cpp}{parent} as an argument while the driver class itself is constructed (see listing~\ref{lst:cppheader}, lines 7 and 8).
 The same mechanism is used to instantiate the \ac{i2c} representation \mintinline{cpp}{I2cChannel} in the ordinary variant with two drivers.
-For the pdev one, the \ac{i2c} devices are instantiated during the common device initialization written in the C++ source file.
-The last anomaly which is worth mentioning is the \mintinline{cpp}{fbl} namespace which contains e.g.\ the Zircon C++ mutex implementation pictured in listing~\ref{lst:cppheader}, line 25.
-For C++ drivers, Zircon provides specific libraries in contrast to its C drivers and bundles them in exactly this \mintinline{cpp}{fbl} namespace.
-Besides the mutex implementation, it contains for example a specific secured string class including helper functions for the use in C++ drivers as well as other re-implementations of the C++ standard library.
-
-The \mintinline{cpp}{Bind()} function pictured in listing~\ref{lst:cppbind} looks unfamiliar when moving from C driver development as well, but at a closer look, it does not differ except from the language and its effects.
-It is just the counterpart of a C driver in idiomatic C++.
-As such one is a manual memory allocation for data structures not longer needed.
-It is done implicitly as part of the driver object creation (see listing~\ref{lst:cppbind}, line 4).
-But calling the driver's constructor does not only build a driver respectively a device instance.
 %
 \begin{listing} [H]
     \caption{Header Definition for a C++ Platform Driver in Zircon}
@@ -782,11 +771,10 @@ private:
 \end{minted}
 \end{listing}
 %
-Looking back to the corresponding header file does it invoke the mixins, in this case \mintinline{cpp}{ddk::Messageable} for \ac{fidl}, as well as the constructor for the \mintinline{cpp}{PDev} instance.
-Thus, constructing the driver object does a bulk of a C driver in a single call plus the according header definitions.
-This results in less code but is significantly harder to read and to understand if not familiar with C++.
-To reach the same functional range as the C driver is it needed to allocate the \ac{i2c} channel objects, add the device with meaningful flags and initialize the actual Grove device.
-Similar to the C driver, the device is added \textit{invisible} even if the initialization is not done, yet (see listing~\ref{lst:cppbind}, line 9).
+For the pdev one, the \ac{i2c} devices are instantiated during the common device initialization written in the C++ source file.
+The last anomaly which is worth mentioning is the \mintinline{cpp}{fbl} namespace which contains e.g.\ the Zircon C++ mutex implementation shown in listing~\ref{lst:cppheader}, line 25.
+For C++ drivers, Zircon provides specific libraries in contrast to its C drivers and bundles them in exactly this \mintinline{cpp}{fbl} namespace.
+Besides the mutex implementation, it contains for example a specific secured string class including helper functions for the use in C++ drivers as well as other re-implementations of the C++ standard library.
 % The C++ version of this call, the \mintinline{cpp}{DdkAdd()} requires only a name and flags as arguments.
 %
 \begin{listing} [H]
@@ -823,26 +811,26 @@ zx_status_t GroveDevice::Bind(zx_device_t* parent) {
 % To reach the same functional range as the C driver is it needed to allocate the \ac{i2c} channel objects, add the device with meaningful flags and initialize the actual Grove device.
 % Similar to the C driver, the device is added \textit{invisible} even if the initialization is not done, yet (see listing~\ref{lst:cppbind, line 9}).
 %
+The \mintinline{cpp}{Bind()} function shown in listing~\ref{lst:cppbind} looks unfamiliar when moving from C driver development as well, but at a closer look, it does not differ except from the language and its effects.
+It is just the counterpart of a C driver in idiomatic C++.
+As such one a manual memory allocation for data structures is not longer needed.
+It is done implicitly as part of the driver object creation (see listing~\ref{lst:cppbind}, line 4).
+But calling the driver's constructor does not only build a driver respectively a device instance.
+Looking back to the corresponding header file it does invoke the mixins, in this case \mintinline{cpp}{ddk::Messageable} for \ac{fidl}, as well as the constructor for the \mintinline{cpp}{PDev} instance.
+Thus, constructing the driver object does a bulk of a C driver in a single call plus the according header definitions.
+This results in less code but is significantly harder to read and to understand if not familiar with C++.
+To reach the same functional range as the C driver one needs to allocate the \ac{i2c} channel objects, add the device with meaningful flags and initialize the actual Grove device.
+Similar to the C driver, the device is added \textit{invisible} as long as the initialization is not done, yet (see listing~\ref{lst:cppbind}, line 9).
+
 The C++ version of this call, the \mintinline{cpp}{DdkAdd()} requires only a name and flags as arguments.
 It is neither needed to provide a version code nor a context or driver operations.
 The context is not needed because the instance specific data is stored as a part of the driver object in C++ while the operations are invoked via the \textit{mixins} specified in the header file.
-However, the actual device initialization which are invoked in line 10 of this listing, are not done using a thread as known from the C driver.
-But as the initialization of this device does not require a long running threaded setup, is it only a variation without further meaning for driver development.
+However, the actual device initialization which is invoked in line 10 of this listing, is not done using a thread as known from the C driver.
+But as the initialization of this device does not require a long running threaded setup, it is only a variation without further meaning for driver development.
 
-For a better modularization is the initialization of the actual devices splitted into three functions: the \mintinline{cpp}{PdevInit()} pictured in listing~\ref{lst:cppinit}, the \mintinline{cpp}{LcdInit()} in listing~\ref{lst:cpplcdinit} and the not shown \mintinline{cpp}{RgbInit()}.
+For a better modularization the initialization of the actual devices is split into three functions: the \mintinline{cpp}{PdevInit()} pictured in listing~\ref{lst:cppinit}, the \mintinline{cpp}{LcdInit()} in listing~\ref{lst:cpplcdinit} and the not shown \mintinline{cpp}{RgbInit()}.
 The first one, \mintinline{cpp}{PdevInit()} instantiates the \ac{i2c} devices and invokes their actual initialization routines sequentially.
 The platform device object was already created during the driver class constructor.
-Thus, this method must only check if it was created correctly (see listing~\ref{lst:cppinit}, lines 2 to 4).
-As for the C driver, the \mintinline{cpp}{pdev} object is needed to create the \ac{i2c} ones.
-The C++ \ac{api} to do this is easier than in C.
-It is needed to call \mintinline{cpp}{GetI2c()} with the item location within the \ac{i2c} definition array on the \mintinline{cpp}{pdev} (see listing~\ref{lst:cppinit}, lines 6 and 10).
-If both object are created without errors, the initialization routines are called sequentially.
-The device state is not switched to \textit{visible} until both of them runned successfully.
-If that is the case, the visibility can be switched using the call \mintinline{cpp}{DdkMakeVisible()} pictured in line 22 and make the device accessible, e.g.\ via the \ac{fidl} calls.
-
-The \ac{lcd} initialization pictured in listing\ref{lst:cpplcdinit} is already known from previous Zircon driver variants, but implemented using some C++ specific concepts.
-One is using the \mintinline{cpp}{fbl} implementation of C++ strings.
-In comparison to C strings provides this class a wide range of very comfortable helpers.
 %
 \begin{listing} [H]
     \caption{Implementation of the Device Initializations in a Zircon Device Driver (C++, shortened)}
@@ -881,17 +869,22 @@ error:
 % The \ac{lcd} initialization pictured in listing\ref{lst:cpplcdinit} is already known from previous Zircon driver variants, but implemented using some C++ specific concepts.
 % One is using the \mintinline{cpp}{fbl} implementation of C++ strings.
 % In comparison to C strings provides this class a wide range of very comfortable helpers.
+%
+Thus, this method must only check if it was created correctly (see listing~\ref{lst:cppinit}, lines 2 to 4).
+As for the C driver, the \mintinline{cpp}{pdev} object is needed to create the \ac{i2c} ones.
+The C++ \ac{api} to do this is easier than in C.
+It is needed to call \mintinline{cpp}{GetI2c()} with the item location within the \ac{i2c} definition array on the \mintinline{cpp}{pdev} (see listing~\ref{lst:cppinit}, lines 6 and 10).
+If both objects are created without errors, the initialization routines are called sequentially.
+The device state is not switched to \textit{visible} until both of them run successfully.
+If that is the case, the visibility can be switched using the call \mintinline{cpp}{DdkMakeVisible()} shown in line 22 and make the device accessible, e.g.\ via the \ac{fidl} calls.
+
+The \ac{lcd} initialization shown in listing~\ref{lst:cpplcdinit} is already known from previous Zircon driver variants, but implemented using some C++ specific concepts.
+One is using the \mintinline{cpp}{fbl} implementation of C++ strings.
+In comparison to C strings this class provides a wide range of very comfortable helpers.
 As a result, the required string operations, e.g.\ to add the \texttt{@} in front of a non-static string, become easier.
 Another concept that is currently available for C++ only are \textit{for-each loops} (see listing~\ref{lst:cpplcdinit}, line 12).
-Iterating over the \ac{lcd} setup sequence becomes better read and maintainable.
+Iterating over the \ac{lcd} setup sequence becomes better readable and maintainable.
 However, an \ac{i2c} write changes, too.
-In C++, it is a member function of \mintinline{cpp}{I2cChannel} objects and thus, it must be called on such one (see listing~\ref{lst:cpplcdinit}, line 13).
-Accordingly, it is not longer needed to name the \ac{i2c} instance as a call argument.
-Furthermore is the \ac{i2c} write for a \mintinline{cpp}{fbl::String} not longer that simple as before.
-C++ strings are represented as a class with internal character pointer holding the actual data.
-To match the \mintinline{cpp}{uint8_t*}, which is required in \mintinline{cpp}{WriteSync()}, must this internal data be casted.
-In C are strings or character arrays implicitly interpreted as the unsigned \mintinline{cpp}{uint8_t*}, while C++ requires sophisticated cast operations to cope the situation (see listing~\ref{lst:cpplcdinit}, line 20).
-This results in a more complex and harder readable \ac{lcd} write operations, but the idea behind stays the same.
 %
 \begin{listing} [H]
     \caption{Implementation of the LCD Initializations in a Zircon Device Driver (C++, shortened)}
@@ -929,22 +922,13 @@ error:
 \end{minted}
 \end{listing}
 %
-The \mintinline{cpp}{DdkMessage()} method is included as a mixin but the implementation is very much the same as in C, except the context pointer is replaced with \mintinline{cpp}{this}.
-Unfortunately, this means as well the generated \mintinline{cpp}{dispatch()} call is not specific to C++ (see listing~\ref{lst:cppmessage}, lines 1 to 3) because generating C++ bindings for drivers from \ac{fidl} definitions is not possible with the chosen Zircon version.
-Thus, the \ac{fidl} calls are not invoked like \mintinline{cpp}{DdkMessage()} itself, as \textit{mixins}, but as a structure of function pointers (see listing~\ref{lst:cppmessage}, lines 5 to 13).
-Thereby, the actual implications of using C calls in a C++ driver become visible in the \ac{fidl} implementations, for example in the pictured \mintinline{ReadLcd()} (see listing~\ref{lst:cppmessage}, lines 15 to 21).
-The generated function signature delivers a context pointer as an argument but in C++, an object of the driver class \mintinline{cpp}{GroveDevice} is needed.
-There is no documented solution for this issue, but research in other drivers yielded to the pattern pictured in line 16.
-It was commonly used in other Zircon drivers to cope similar situations.
-% Based on the assumption the driver is written in C++, the previous initialization but also the \mintinline{cpp}{message()} method must be written in C++.
-%
-% The context passed to \mintinline{c}{dispatch()} is not a common C context pointer, but a \mintinline{this} pointer of the currently \mintinline{cpp}{GroveDevice} instance.
-% Thus, it can be casted back to a \mintinline{GroveDevice} object and used as such one during the \ac{fidl} call implementation (see listing~\ref{lst:cppmessage}, lines 2, 15 and 16).
-%
-% The actual implementation of \mintinline{cpp}{ReadLcd()} is nothing special at all, but it pictures the simple string handling using the Zircon C++ \mintinline{cpp}{fbl::String} class (see listing~\ref{lst:cppmessage}, line 18).
-% On the other side are the issues with those strings and C \acp{api} illustrated as well.
-% A conversion to the C string representation is needed for the generated C function \mintinline{c}{reply()} in line 20.
-% The remaining \ac{fidl} call implications are done accordingly.
+In C++, it is a member function of \mintinline{cpp}{I2cChannel} objects and thus, it must be called on such one (see listing~\ref{lst:cpplcdinit}, line 13).
+Accordingly, it is no longer needed to name the \ac{i2c} instance as a call argument.
+Furthermore, the \ac{i2c} write for a \mintinline{cpp}{fbl::String} is no longer that simple as before.
+C++ strings are represented as a class with internal character pointer holding the actual data.
+To match the \mintinline{cpp}{uint8_t*}, which is required in \mintinline{cpp}{WriteSync()}, this internal data must be casted.
+In C strings or character arrays are implicitly interpreted as the unsigned \mintinline{cpp}{uint8_t*}, while C++ requires sophisticated cast operations to cope with the situation (see listing~\ref{lst:cpplcdinit}, line 20).
+This results in a more complex and harder to read \ac{lcd} write operations, but the idea behind stays the same.
 %
 \begin{listing} [H]
 \caption{FIDL in a C++ Zircon Device Driver}
@@ -974,8 +958,25 @@ zx_status_t GroveDevice::ReadLcd(void* ctx, fidl_txn_t* txn) {
 \end{minted}
 \end{listing}
 %
-The context passed to \mintinline{c}{dispatch()} is not a common C context pointer, but a \mintinline{this} pointer of the currently \mintinline{cpp}{GroveDevice} instance.
-Thus, it can be casted back to a \mintinline{GroveDevice} object and used as such one during the \ac{fidl} call implementation (see listing~\ref{lst:cppmessage}, lines 2, 15 and 16).
+The \mintinline{cpp}{DdkMessage()} method is included as a mixin but the implementation is very much the same as in C, except the context pointer is replaced with \mintinline{cpp}{this}.
+Unfortunately, this means as well the generated \mintinline{cpp}{dispatch()} call is not specific to C++ (see listing~\ref{lst:cppmessage}, lines 1 to 3) because generating C++ bindings for drivers from \ac{fidl} definitions is not possible with the chosen Zircon version.
+Thus, the \ac{fidl} calls are not invoked like \mintinline{cpp}{DdkMessage()} itself, as \textit{mixins}, but as a structure of function pointers (see listing~\ref{lst:cppmessage}, lines 5 to 13).
+Thereby, the actual implications of using C calls in a C++ driver become visible in the \ac{fidl} implementations, for example in the shown \mintinline{c}{ReadLcd()} (see listing~\ref{lst:cppmessage}, lines 15 to 21).
+The generated function signature delivers a context pointer as an argument but in C++, an object of the driver class \mintinline{cpp}{GroveDevice} is needed.
+There is no documented solution for this issue, but research in other drivers yielded to the pattern shown in line 16.
+It was commonly used in other Zircon drivers to cope with similar situations.
+% Based on the assumption the driver is written in C++, the previous initialization but also the \mintinline{cpp}{message()} method must be written in C++.
+%
+% The context passed to \mintinline{c}{dispatch()} is not a common C context pointer, but a \mintinline{this} pointer of the currently \mintinline{cpp}{GroveDevice} instance.
+% Thus, it can be casted back to a \mintinline{GroveDevice} object and used as such one during the \ac{fidl} call implementation (see listing~\ref{lst:cppmessage}, lines 2, 15 and 16).
+%
+% The actual implementation of \mintinline{cpp}{ReadLcd()} is nothing special at all, but it pictures the simple string handling using the Zircon C++ \mintinline{cpp}{fbl::String} class (see listing~\ref{lst:cppmessage}, line 18).
+% On the other side are the issues with those strings and C \acp{api} illustrated as well.
+% A conversion to the C string representation is needed for the generated C function \mintinline{c}{reply()} in line 20.
+% The remaining \ac{fidl} call implications are done accordingly.
+%
+The context passed to \mintinline{c}{dispatch()} is not a common C context pointer, but a \mintinline{c}{this} pointer of the current \mintinline{cpp}{GroveDevice} instance.
+Thus, it can be cast back to a \mintinline{cpp}{GroveDevice} object and used as such one during the \ac{fidl} call implementation (see listing~\ref{lst:cppmessage}, lines 2, 15 and 16).
 
 The actual implementation of \mintinline{cpp}{ReadLcd()} is nothing special at all, but it pictures the simple string handling using the Zircon C++ \mintinline{cpp}{fbl::String} class (see listing~\ref{lst:cppmessage}, line 18).
 On the other side are the issues with those strings and C \acp{api} illustrated as well.
@@ -1010,7 +1011,7 @@ Both operating systems provide internal high resolution timers with a nanosecond
 Nevertheless, these timers are probably the best idea to measure the elapsed time during toggling \acp{gpio}.
 Except for scheduling influences are drivers executed sequentially and without interruptions.
 Taking the elapsed nanoseconds since system start right before and after the considered systemcall and subtract the start time from the end time should produce a comparable call duration.
-
+\newpage
 As a result of these considerations is the performance measurement carried out under the following framing conditions:
 \begin{itemize}
     \item The operating systems to be compared run on a HiKey960 development board, each on a separated one.

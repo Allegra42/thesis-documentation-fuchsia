@@ -822,16 +822,12 @@ All following devices are not directly passed.
 The driver handles them as so-called \textit{secondary devices} and references them using their address as well as their given name defined in the device tree.
 
 But first, the major \ac{i2c} device must be initialized before adding the secondary one.
-Before doing this, the \mintinline{c}{grove_t} structure which contains now the \ac{i2c} client for the \ac{lcd} controller as well, is set to the \mintinline{c}{void *driver_data} pointer of the \mintinline{struct device}~which is itself a part of \mintinline{c}{struct i2c_device}.
+Before doing this, the \mintinline{c}{grove_t} structure which contains now the \ac{i2c} client for the \ac{lcd} controller as well, is set to the \mintinline{c}{void *driver_data} pointer of the \mintinline{c}{struct device}~which is itself a part of \mintinline{c}{struct i2c_device}.
 Some calls to this driver contain exactly this structure as an argument which allows to restore the device for use.
 Using global variables to store the data of all possible devices is avoided in this way.
 Additionally, it is a much more flexible way.
 Global definitions would not allow dynamically changing quantities of devices controlled by a driver and in the worst case, unnecessarily allocated memory.
 The assignment to \mintinline{c}{void *driver_data} is done via the \mintinline{c}{i2c_set_clientdata()} call shown in listing~\ref{lst:probe-grove}, line 6.
-Its counterpart, \mintinline{c}{i2c_get_clientdata()} is used within this driver as well, as a part of the opposite of device probing: the \mintinline{c}{release()} function. 
-The device initialization itself is outsourced to an own function.
-Within this thesis, only the \ac{lcd} initialization is described.
-The \ac{rgb} one is straight forward using the commands of the respective controller and as well as the \ac{lcd} initialization rather device specific than relevant for driver development consideration.
 %
 \begin{listing} [H]
     \caption{Controller-specific LCD Initialization}
@@ -877,6 +873,11 @@ fail:
     \end{minted}
 \end{listing}
 %
+Its counterpart, \mintinline{c}{i2c_get_clientdata()} is used within this driver as well, as a part of the opposite of device probing: the \mintinline{c}{release()} function. 
+The device initialization itself is outsourced to an own function.
+Within this thesis, only the \ac{lcd} initialization is described.
+The \ac{rgb} one is straight forward using the commands of the respective controller and as well as the \ac{lcd} initialization rather device specific than relevant for driver development consideration.
+
 The \ac{lcd} init function takes the \mintinline{c}{grove_t} structure as an argument.
 This is needed to access the \ac{i2c} client stored within which is needed for the actual communication with the device.
 Of course, it would be possible to use \mintinline{c}{struct i2c_client} as an argument as well, but in this case, the function call would change between \ac{lcd} and \ac{rgb} initialization.
@@ -904,7 +905,7 @@ For this initialization, writing a string to the \ac{lcd} is not necessarily nee
 This part could also been skipped, thus, but it illustrates the way strings are written inside the whole driver.
 The call to the kernel \ac{api} \mintinline{c}{i2c_master_send()} is as well slightly different from the one used previously (see listing~\ref{lst:probe-lcdinit}, line 26).
 It also takes the \texttt{i2c\_device} structure as a first argument, but the second one is a pointer to the char buffer which is to be sent.
-In this context, it is \mintinline{char init[]} defined in listing~\ref{lst:probe-lcdinit}, line 24.
+In this context, it is \mintinline{c}{char init[]} defined in listing~\ref{lst:probe-lcdinit}, line 24.
 The last argument is the number of bytes which are to be sent. 
 Usually, this would be the string size including \texttt{\textbackslash n}.
 But because the \ac{lcd} would try to print this character as well, it is cut of by decreasing the size by one.
@@ -925,26 +926,23 @@ The resulting \mintinline{c}{struct i2c_client} is stored as a part of \mintinli
 Further steps for the \ac{rgb} device are the same as for the \ac{lcd} one (see listing~\ref{lst:probe-lcdinit}), but the exact implementation of the device specific initialization is of course different and meaningful for the \ac{rgb} device.
 
 \subsection{Driver Interfaces}
-The Linux driver is, as designed in section~\ref{sec:cs-driver-concept}, accessed via \ac{io} controls and already the section about this driver's prearrangements~\ref{sec:linux:prearrangements} mentions they are located besides the actual source code, within \texttt{include/uapi/linux/grove\_ioctl.h}, to be access from both sides, user and kernel.
-For real, \ac{io} control call definitions are nothing more than numbers and using pure numbers on both sides works as well.
+The Linux driver is, as designed in section~\ref{sec:cs-driver-concept}, accessed via \ac{io} controls and the section about this driver's prearrangements~\ref{sec:linux:prearrangements} already mentions they are located besides the actual source code, within \texttt{include/uapi/linux/grove\_ioctl.h}, to be accessed from both sides, user and kernel.
+Essentially, \ac{io} control call definitions are nothing more than numbers and using pure numbers on both sides works as well.
 But it is error-prone and does not even allow Linux to perform the basic checks, e.g.\ if the size of transferred data matches the definition for these calls.
 However, a well engineered \mintinline{c}{ioctl()} interface needs special care from the programmer.
 The Linux kernel provides macro definitions and a scheme to define meaningful and checkable \mintinline{c}{ioctl()} calls with non-conflicting numbers, but thus, they must be used.
-The way used within this work is pictured in listing~\ref{lst:ioctldefs}.
+The way used within this work is shown in listing~\ref{lst:ioctldefs}.
 It corresponds to the recommendation given in \textit{Developing Linux Device Drivers}\cite{lfd430}, the accompanying script to a Linux Foundation class.
-To encode the number including the data transfer direction and the call parameters are the macros \mintinline{c}{_IO, _IOR, IOW} and \mintinline{c}{_IORW} available.
+To encode the number including the data transfer direction and the call parameters the macros \mintinline{c}{_IO, _IOR, IOW} and \mintinline{c}{_IORW} are available.
 For example, \mintinline{c}{_IOR} means the user reads data from the kernel.
 Each \ac{io} control definition is made from a \textit{type}, a \textit{number} and, if data is transferred, from the \textit{size} of those data as well. 
 The \textit{type} is a kind of magic number which is used throughout the driver for creating the \ac{io} control numbers.
 In this case, it is defined in listing~\ref{lst:ioctldefs}, line 1 as \mintinline{c}{MAGIC 'M'}.
 The character is interpreted as its \ac{ascii} value, 0x4D, and represents a base value for the macro usage.
-According the concept specified in section~\ref{sec:cs-driver-concept} are the operations, which should be provided by the driver, listed and enumerated from line 3 to 9 in listing~\ref{lst:ioctldefs}.
+According to the concept specified in section~\ref{sec:cs-driver-concept} the operations, which should be provided by the driver, are listed and enumerated from line 3 to 9 in listing~\ref{lst:ioctldefs}.
 This number is the second argument needed for the usage of the macro.
 But the actual \mintinline{c}{ioctl()} numbers are not defined until line 12 in this listing.
 Only there, the actual macros are used.
-If the transferred data consists of more than one argument, as it is e.g.\ the case for setting and getting the Grove's backlight color consisting of a red, green and blue share, often a structure is used to describe the situation.
-Within this work, the template definition of the struct is passed as a size to the macro as well.
-In cases the transmitted value is a single one, it is enough to use only its type is.
 %
 \begin{listing} [H]
     \caption{I/O Control Call Definitions}
@@ -970,6 +968,10 @@ In cases the transmitted value is a single one, it is enough to use only its typ
     \end{minted}
 \end{listing}
 %
+If the transferred data consists of more than one argument, as it is e.g.\ the case for setting and getting the Grove's backlight color consisting of a red, green and blue ratio, often a structure is used to describe the situation.
+Within this work, the template definition of the struct is passed as a size to the macro as well.
+In cases the transmitted value is a single one, it is enough to use only its type.
+
 If no transfer at all is needed, e.g.\ if the command should only trigger a specific action without parameters or return values, the \mintinline{c}{_IO(type, number)} macro should be used.
 It does not define a \textit{size} to transfer in contrast to the other ones (see listing~\ref{lst:ioctldefs}, line 11 to 17).
 
@@ -978,16 +980,14 @@ Before diving right into the implementation of \mintinline{c}{ioctl()}, the ques
 %
 %
 % Before diving right into the implementation of \mintinline{c}{ioctl()}, the question is answered why this driver needs to implement the file operations \mintinline{c}{open()} and \mintinline{c}{close()} even if there is no need for a sophisticated access control.
-The reason is in the function signature of \ac{io} control,\\\mintinline{c}{ioctl(struct file *file, unsigned int cmd, unsigned long arg)}, more\\precisely in the \mintinline{c}{struct file}.
+The reason is in the function signature of \ac{io} control, \mintinline{c}{ioctl(struct file *file, unsigned int cmd, unsigned long arg)}, more precisely in the \mintinline{c}{struct file}.
 It does not contain an entry for a private device data structure such as \mintinline{c}{grove_t} is or any other entry which enables the restoration of the related instance of this structure for the called device.
-Even if the signature slightly differs for \mintinline{c}{read()} and \mintinline{c}{write()}, it is the same issue on them.
+Even if the signature slightly differs for \mintinline{c}{read()} and \mintinline{c}{write()}, it is the same issue with them.
 However, each time before one of these basic file operations is called, \mintinline{c}{open()} must be invoked as the user must open the file descriptor which represents the device.
 If it is not explicitly implemented by a driver, a default one is used.
 But the fact \mintinline{c}{open()} is called can be exploited to solve the underlying issue.
-Its call signature, \mintinline{c}{open(struct inode *inode, struct file *file)}, enables to restore \texttt{grove\_t} via its entry \texttt{struct cdev *i\_cdev}.
+Its call signature, \mintinline{c}{open(struct inode *inode, struct file *file)}, enables restoring \texttt{grove\_t} via its entry \texttt{struct cdev *i\_cdev}.
 To do so, the \texttt{grove\_t} structure needs to contains a \texttt{cdev} entry as well.
-Having such a situation, the \textit{magic macro} \texttt{container\_of(ptr, type, member)} can be applied to restore the instance of the \texttt{grove\_t} structure for the called device (see listing~\ref{lst:open}, line 5).
-The way this macro is implemented is not discussed as part of this work, but the blog article \textit{The Magical container\_of Macro}\footnote{radek.io, visited on 13.06.2019 \url{https://radek.io/2012/11/10/magical-container_of-macro/}} by Radek Pazdera gives a sound explanation about.
 %
 \begin{listing} [H]
     \caption{Implementation of \texttt{open()} and \texttt{release()}}
@@ -1010,24 +1010,23 @@ static int grove_release(struct inode *inode, struct file *file)
     \end{minted}
 \end{listing}
 %
-To make this \texttt{grove\_t} instance effective available within \mintinline{c}{ioctl()} (and/or \mintinline{c}{open()} and \mintinline{c}{close()}), it must be stored in a way that is accessible from these calls.
-As all of them share \mintinline{c}{struct file *file} as a call argument and it is the only possible location as well.
+Having such a situation, the \textit{magic macro} \texttt{container\_of(ptr, type, member)} can be applied to restore the instance of the \texttt{grove\_t} structure for the called device (see listing~\ref{lst:open}, line 5).
+The way this macro is implemented is not discussed as part of this work, but the blog article \textit{The Magical container\_of Macro}\footnote{radek.io, visited on 13.06.2019 \url{https://radek.io/2012/11/10/magical-container_of-macro/}} by Radek Pazdera gives a sound explanation.
+To make this \texttt{grove\_t} instance effectively available within \mintinline{c}{ioctl()} (and/or \mintinline{c}{open()} and \mintinline{c}{close()}), it must be stored in a way that is accessible from these calls.
+As all of them share \mintinline{c}{struct file *file} as a call argument.
+It is the only possible location as well.
 The file structure contains an entry \mintinline{c}{void *private_data} which is intended for exactly this use-case (see listing~\ref{lst:open}, line 6). 
 By using this trick, the pointer must be invalidated in \mintinline{c}{release()}, the counterpart of \mintinline{c}{open()} right before the file structure is destroyed by the kernel (see listing~\ref{lst:open}, line 12).
 
 Within the \mintinline{c}{ioctl()} implementation, the device's instance of \mintinline{c}{grove_t} is restored as a first step (see listing~\ref{lst:ioctl}, line 5).
 Its contents, especially the \mintinline{c}{i2c_client} instances for both controllers, are essential for this function respectively for the actual \ac{i2c} transactions.
 Before starting with the implementation of the individual commands, memory is allocated for the structures \mintinline{c}{struct color_t} and \mintinline{c}{struct string_t} as well as a preparation (see listing~\ref{lst:ioctl}, line 7 and 11).
-These structures represent the backlight color, consisting of a red, green and blue share, and the \ac{lcd}'s content.
-They may become filled either from kernel or from user space depending on the actual command and thus, the data transfer direction and of course, they must be freed before leaving this function, even if it is not pictured in the according listing~\ref{lst:ioctl}.
+These structures represent the backlight color, consisting of a red, green and blue ratio, and the \ac{lcd}'s content.
+They may become filled either from kernel or from user space depending on the actual command and thus, the data transfer direction and of course, they must be freed before leaving this function, even if it is not shown in the corresponding listing~\ref{lst:ioctl}.
 
 It is neither possible nor purposeful for the question of this work to consider all commands defined within the concept in detail.
-As the idea of writing the \ac{lcd} was already discussed during device probing, \mintinline{c}{ioctl()} is to be focusing on setting the \ac{rgb} backlight respectively returning its state to the user.
+As the idea of writing to the \ac{lcd} was already discussed during device probing, \mintinline{c}{ioctl()} is focusing on setting the \ac{rgb} backlight respectively returning its state to the user.
 However, it is obvious that the setting of the \ac{lcd}'s content is not exactly the same as it was during \mintinline{c}{probe()}.
-In this context, a static string was set which already contained the encoded target register on the controller.
-The related \mintinline{c}{ioctl()} calls instead receives user defined strings and thus, string operations to do a respective encoding.
-For the now considered \ac{rgb} backlight device, the implementation is much more straight forward.
-Its first command defined in the concept and thus in the according Linux header is \mintinline{c}{GROVE_SET_COLOR}.
 %
 \begin{listing} [H]
     \caption{I/O Control Implementation}
@@ -1089,51 +1088,53 @@ static long grove_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
     \end{minted}
 \end{listing}
 %
+In this context, a static string was set which already contained the encoded target register on the controller.
+The related \mintinline{c}{ioctl()} calls instead receives user defined strings and thus, string operations to do a respective encoding.
+For the now considered \ac{rgb} backlight device, the implementation is much more straight forward.
+Its first command defined in the concept and thus in the according Linux header is \mintinline{c}{GROVE_SET_COLOR}.
 In case the function's argument \mintinline{c}{unsigned int arg} matches the number behind this symbolic name, the associated implementation in the switch-case construct is called.
 As the commands are decoded as numbers, using switch-case to implement them is a common pattern.
 % Thus, the code for this function is more longish and sometimes, it is useful to do the actual command implementations in external functions.
 In each case, the error handling and ending of a command's realization must be done properly to avoid unattended effects from fall-through's if they are not explicitly desired in a situation.
 However, all of these drivers commands contain at least one critical command, either a data transfer from or to a user and/or an \ac{i2c} write transaction.
 
-As a reaction, the according instructions must be locked with a mutex.
+Therefore, the according instructions must be locked with a mutex.
 In cases an error occurred, it must be ensured the mutex is unlocked in any situation and the switch-case but also the function itself is left properly.
 The task of \mintinline{c}{GROVE_SET_COLOR} is to receive user input in a certain format defined by the structure \mintinline{c}{color_t} and set the device' backlight color accordingly.
 Both subtasks, but especially the operation on the \ac{i2c} bus, must be locked.
 
 Nevertheless, the data transfer between user and driver needs special attention as well.
-As discussed in section~\ref{sec:mm:linux} does Linux use different address types between them.
+As discussed in section~\ref{sec:mm:linux} Linux use different address types between them.
 Thus, the call's argument \mintinline{c}{unsigned long arg} which is interpreted as an address to the user's buffer, is meaningless within kernel.
 Using it without further ado is possibly even dangerous.
-Instead, the buffer must be transferred to the kernel buffer \mintinline{c}{color_t color} which was allocated at beginning (see listing~\ref{lst:ioctl}, line 7).
+Instead, the buffer must be transferred to the kernel buffer \mintinline{c}{color_t color} which was allocated at the beginning (see listing~\ref{lst:ioctl}, line 7).
 The \mintinline{c}{ioctl()} header definition specified the size of this structure as transfer size of this call and should be used as a reference for the maximum size to copy.
 For the actual transfer, the Linux kernel offers helpers.
-The call \mintinline{c}{copy_from_user()} which is used for this command, and its counterpart \mintinline{c}{copy_to_user()} that will be used as part of the next considered one.
+The call \mintinline{c}{copy_from_user()} which is used for this command, and its counterpart \mintinline{c}{copy_to_user()} that will be used as part of the next considered transfer.
 It takes the given function arg as an address in userspace and copies a given number of bytes, i.e.\ the defined structures size, to a specified memory region in kernel (see listing~\ref{lst:ioctl}, line 19).
 According to the command definition in the header file (see listing~\ref{lst:ioctldefs}), the transferred buffer should be of type \mintinline{c}{color_t}, and thus it can be interpreted accordingly.
 Within \ac{io} control, a careful error handling is very important.
-If the transfer failed, it is necessarily to unlock the mutex and leave the entire \mintinline{c}{ioctl()} implementation properly.
+If the transfer failed, it is necessary to unlock the mutex and leave the entire \mintinline{c}{ioctl()} implementation properly.
 
 On a successful transfer, the received data is taken to set the color on the actual device.
-Similar to the \ac{lcd}'s setup known from device probing, a structure consisting of the target registers address and the value to set is defined.
-Using these structure as a base type, an array is created.
-Each \ac{rgb} color share is set within an own register and thus, as an own entry within this array.
+Similar to the \ac{lcd}'s setup known from device probing, a structure consisting of the target register's address and the value to set is defined.
+Using this structure as a base type, an array is created.
+Each \ac{rgb} color ratio is set within an own register and thus, as an own entry within this array.
 Following the actual \ac{i2c} transfer is done as known from initializing the \ac{lcd} during \mintinline{c}{probe()}.
-A loop iterates over the array and transfers each partial command tuple to the respectively device controller (see listing~\ref{lst:ioctl}, line 30 to 37).
+A loop iterates over the array and transfers each partial command tuple to the respective device controller (see listing~\ref{lst:ioctl}, line 30 to 37).
 
 Unfortunately, the controller does not allow reading the current values directly from the device.
 Thus, they must be stored alongside the private device instance data.
-The \ac{lcd} shares the same issue and thus, a private buffer to store its state as well.
+The \ac{lcd} ratios the same issue and thus, a private buffer to store its state as well must be used.
 Respectively, updating the device implies updating this state information, but it must not be changed before the \ac{i2c} transferred was finished successfully to avoid wrong or inconsistent states (see listing~\ref{lst:ioctl}, line 38).
 The next considered command, \mintinline{c}{GROVE_GET_COLOR} takes advantage of this state information.
-Through this situation, there is no \ac{i2c} read transfer in this \ac{io} control command, but the buffer must be copied into user mode accessible addresses.
+In this situation, there is no \ac{i2c} read transfer in this \ac{io} control command, but the buffer must be copied into user mode accessible addresses.
 As mentioned previously, the kernel helper \mintinline{c}{copy_to_user()} is invoked for this task (see listing~\ref{lst:ioctl}, line 43).
 It differs from its counterpart only in the transferred direction.
-The \mintinline{c}{ioctl()} call argument \texttt{arg} is interpreted as an address in userspace again, but this time as a target address, while the \mintinline{struct color_t} which is stored as a part of the instance data acts as source.
+The \mintinline{c}{ioctl()} call argument \texttt{arg} is interpreted as an address in userspace again, but this time as a target address, while the \mintinline{c}{struct color_t} which is stored as a part of the instance data acts as source.
 
-Even if the individual \ac{io} control commands are implemented in a row within this function is in common only a single one executed each time \mintinline{c}{ioctl()} is called by a user.
+Even if the individual \ac{io} control commands are implemented in a row within this function usually only a single on is executed each time \mintinline{c}{ioctl()} is called by a user.
 Thus, the developer must ensure the \mintinline{c}{break;} command is set correctly each time it is needed.
-The listing pictured as a part of this work only shows a snipped of the full implementation listed in the related Github repository\footnote{github.com, \url{https://github.com/Allegra42/linux-rpi/blob/rpi-5.0.y/drivers/auxdisplay/grove.c}}, but is a recognizable complex task if the number of commands or the complexity of their implementation increases. 
-To outsource them into own functions might be helpful in these cases. 
+The listing shown as a part of this work only consists of a snippet of the full implementation listed in the related Github repository\footnote{github.com, \url{https://github.com/Allegra42/linux-rpi/blob/rpi-5.0.y/drivers/auxdisplay/grove.c}}, but is a recognizable complex task if the number of commands or the complexity of their implementation increases. 
+To outsource them into their own functions might be helpful in these cases. 
 Nevertheless, an \mintinline{c}{ioctl()} implementation requires a high degree of care and attention from a developer to avoid errors.
-
-
