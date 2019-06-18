@@ -19,6 +19,7 @@
 \usepackage{geometry}
 % \usepackage{pgfplots}
 \usepackage{pdfpages}
+\usepackage{fancyhdr}
 \geometry{a4paper, top=35mm, left=30mm, right=25mm, bottom=35mm, headsep=10mm, footskip=12mm}
 \usepackage[backend=biber, style=numeric, citestyle=numeric]{biblatex}
 
@@ -32,6 +33,11 @@
 \newenvironment{code}{\captionsetup{type=listing}}{}
 
 % \pgfplotsset{compat=1.16}
+
+% \pagestyle{headings}
+% \renewcommand{\chaptermark}[1]{\markboth{#1}{#1}}
+% \renewcommand{\sectionmark}[1]{\markright{#1}{}}
+%
 
 \begin{document}
 
@@ -71,7 +77,15 @@
 
 
 
-\pagestyle{headings}
+% \pagestyle{headings}
+% \renewcommand{\chaptermark}[1]{\markboth{#1}{#1}}
+% \renewcommand{\sectionmark}[1]{\markright{#1}{}}
+%
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE,LO]{\rightmark}
+
 \quad
 \newpage
 \input{Declaration}
@@ -101,6 +115,9 @@
 %\input{appendix}
 
 % \nocite{*}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+
 \addcontentsline{toc}{chapter}{Bibliography}
 \printbibliography
 

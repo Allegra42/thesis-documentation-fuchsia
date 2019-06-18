@@ -275,7 +275,7 @@ Linux, for example, has in general another convention for system calls than Wind
 The following instruction triggers a special software interrupt containing the order to switch the context.
 It is also named \textit{trap instruction}\cite{glatz2015betriebssysteme},~\cite{tanenbaum-modern-operating-systems}.
 To be exact, it is the interrupt vector number of the trap instruction which is responsible for the switch.
-They are \texttt{$0x80$} on Linux as pictured in~\ref{pic:syscalls} and \texttt{$0x2e$} on Windows systems\cite{glatz2015betriebssysteme}.
+They are \texttt{0x80} on Linux as pictured in~\ref{pic:syscalls} and \texttt{0x2e} on Windows systems\cite{glatz2015betriebssysteme}.
 But right before switching it is needed to save the \acf{psw}, which contains the actual processors state including the mode bit, to the stack.
 The same number is used in kernel mode as an index within the interrupt vector table (or \acf{idt}) which contains the start address of the system service dispatcher routine (compare to~\ref{pic:syscalls}).
 This table's content, the system service dispatcher routine, is loaded as next instruction to the new \ac{psw}\cite{brause2017betriebssysteme}.
@@ -286,7 +286,7 @@ The user application has to clean up the stack like for each procedure call at t
 
 % Figure~\ref{pic:syscalls} shows a simplified version of the system call implementation on x86\_64 for Linux\cite{decade-linux-syscalls}.
 More modern versions use the special instructions \texttt{SYSENTER} and \texttt{SYSEXIT} (Intel) or \texttt{SYSCALL} and \texttt{SYSRET} (AMD) instead of the slower trap interrupts\cite{decade-linux-syscalls}.
-Figure~\ref{pic:syscalls} uses a x86\_64 like assembly and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number $0x80$.
+Figure~\ref{pic:syscalls} uses a x86\_64 like assembly and thus, this modern syntax for invoking the systemcall while the \ac{idt} also pictures the older number 0x80.
 %
 \begin{figure} [t]
 	\centering
