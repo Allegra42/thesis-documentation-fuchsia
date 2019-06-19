@@ -1340,7 +1340,6 @@ Since certain critical tasks have to be completed at a given time to avoid more 
 The strategy itself is rather complex but useless in situations where several critical jobs must be completed at the same time\cite{mandl2014Grundkurs},~\cite{brause2017betriebssysteme}.
 Nevertheless, is \ac{edf} a common algorithm for hard realtime systems and an ideal strategy on single core systems with up to 100\% \ac{cpu} utilization\cite{brause2017betriebssysteme}.
 
-
 \subsubsection*{Priority Inversion}\label{sec:priority-inversion}
 Using locking mechanisms like semaphores respectively mutexes may lead to dangerous behavior in context of priority based scheduling.
 For a basic example two jobs, H (high priority) and L (low priority) are given.
